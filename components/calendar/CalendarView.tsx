@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
@@ -16,6 +16,17 @@ type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 
 const byTime = (a: CalendarItem, b: CalendarItem) => (a.time ?? 1e9) - (b.time ?? 1e9) || a.title.localeCompare(b.title);
 const sel = "rounded-lg border border-control bg-white px-2 py-1.5 text-sm";
+const iconBtn = "relative flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-brand-soft";
+const badge = "absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-n-50";
+
+function Pill({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-control bg-white py-0.5 pl-3 pr-1.5">
+      {children}
+      <button onClick={onRemove} aria-label="Remove filter" className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-n-150"><Icon name="x" size={12} /></button>
+    </span>
+  );
+}
 
 function Chip({ item, onOpen }: { item: CalendarItem; onOpen: () => void }) {
   return (
@@ -44,6 +55,19 @@ export function CalendarView() {
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [panel, setPanel] = useState<Panel>(null);
+  const [menu, setMenu] = useState<"tags" | "filter" | "more" | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Close any open popover on outside click or Escape.
+  useEffect(() => {
+    if (!menu) return;
+    const onDown = (e: MouseEvent) => { if (!barRef.current?.contains(e.target as Node)) setMenu(null); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(null); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [menu]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,6 +102,8 @@ export function CalendarView() {
   }, [items]);
 
   const today = todayIso();
+  const otherFilters = [owner, campaign, status, source].filter(Boolean).length;
+  const clearAll = () => { setTypes(new Set()); setOwner(""); setCampaign(""); setStatus(""); setSource(""); };
   const typeCount = (t: ItemType) => all.filter((i) => i.type === t).length;
   const toggleType = (t: ItemType) => setTypes((s) => { const n = new Set(s); if (n.has(t)) n.delete(t); else n.add(t); return n; });
   const problems = results.filter((r) => r.error);
@@ -98,52 +124,100 @@ export function CalendarView() {
 
   return (
     <main className="w-full p-6">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">Calendar</h1>
         <div className="flex items-center gap-1">
-          <button onClick={() => move(-1)} aria-label="Previous" className="flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
+          <button onClick={() => move(-1)} aria-label="Previous" className={iconBtn}><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
           <button onClick={() => setCursor(todayIso())} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Today</button>
-          <button onClick={() => move(1)} aria-label="Next" className="flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
+          <button onClick={() => move(1)} aria-label="Next" className={iconBtn}><Icon name="chevronRight" size={14} /></button>
           <span className="ml-2 text-lg font-semibold">{label}</span>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+
+        <div className="ml-auto flex items-center gap-2" ref={barRef}>
+          {searchOpen || q ? (
+            <label className="relative">
+              <span className="sr-only">Search items</span>
+              <input
+                autoFocus={searchOpen}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Escape") { setQ(""); setSearchOpen(false); } }}
+                onBlur={() => !q && setSearchOpen(false)}
+                placeholder="Search items"
+                className="w-52 rounded-lg border border-control bg-white py-1.5 pl-8 pr-7 text-sm"
+              />
+              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"><Icon name="search" size={14} /></span>
+              {q && <button onClick={() => { setQ(""); setSearchOpen(false); }} aria-label="Clear search" className="absolute right-1.5 top-1/2 -translate-y-1/2"><Icon name="x" size={14} /></button>}
+            </label>
+          ) : (
+            <button onClick={() => setSearchOpen(true)} aria-label="Search" title="Search" className={iconBtn}><Icon name="search" size={16} /></button>
+          )}
+
+          <div className="relative">
+            <button onClick={() => setMenu(menu === "tags" ? null : "tags")} aria-label="Filter by type" aria-expanded={menu === "tags"} title="Types" className={`${iconBtn} ${types.size ? "border-brand bg-brand-soft" : ""}`}>
+              <Icon name="tag" size={16} />
+              {types.size > 0 && <span className={badge}>{types.size}</span>}
+            </button>
+            {menu === "tags" && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-64 rounded-xl border border-line bg-white p-2 shadow-lg">
+                {ITEM_TYPES.map((t) => (
+                  <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-brand-soft">
+                    <input type="checkbox" checked={types.has(t.id)} onChange={() => toggleType(t.id)} />
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: TYPE_BAR[t.id] }} aria-hidden />
+                    <span className="flex-1">{t.label}</span>
+                    <span className="text-xs text-muted">{typeCount(t.id)}</span>
+                  </label>
+                ))}
+                {types.size > 0 && <button onClick={() => setTypes(new Set())} className="mt-1 w-full rounded-lg px-2 py-1.5 text-left text-sm font-medium text-brand hover:bg-brand-soft">Show all types</button>}
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <button onClick={() => setMenu(menu === "filter" ? null : "filter")} aria-label="Filters" aria-expanded={menu === "filter"} title="Filters" className={`${iconBtn} ${otherFilters ? "border-brand bg-brand-soft" : ""}`}>
+              <Icon name="filter" size={16} />
+              {otherFilters > 0 && <span className={badge}>{otherFilters}</span>}
+            </button>
+            {menu === "filter" && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-72 space-y-3 rounded-xl border border-line bg-white p-3 shadow-lg">
+                <label className="block text-xs font-semibold">Owner<select className={`${sel} mt-1 w-full font-normal`} value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Any owner</option>{owners.map((o) => <option key={o}>{o}</option>)}</select></label>
+                <label className="block text-xs font-semibold">Campaign<select className={`${sel} mt-1 w-full font-normal`} value={campaign} onChange={(e) => setCampaign(e.target.value)}><option value="">Any campaign</option>{campaigns.map((o) => <option key={o}>{o}</option>)}</select></label>
+                <label className="block text-xs font-semibold">Status<select className={`${sel} mt-1 w-full font-normal`} value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Any status</option>{STATUSES.map((o) => <option key={o}>{o}</option>)}</select></label>
+                <label className="block text-xs font-semibold">Source<select className={`${sel} mt-1 w-full font-normal`} value={source} onChange={(e) => setSource(e.target.value)}><option value="">Any source</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+                {otherFilters > 0 && <button onClick={() => { setOwner(""); setCampaign(""); setStatus(""); setSource(""); }} className="text-sm font-medium text-brand hover:underline">Clear filters</button>}
+              </div>
+            )}
+          </div>
+
           <div className="flex overflow-hidden rounded-lg border border-control">
             {(["month", "week", "list"] as View[]).map((v) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-3 py-1.5 text-sm capitalize ${view === v ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{v}</button>
             ))}
           </div>
-          <button onClick={load} aria-label="Reload sources" title="Reload sources" className="flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-brand-soft"><Icon name="refresh" size={16} /></button>
-          <Link href="/calendar/sources" className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Sources ({sources.length})</Link>
+
+          <div className="relative">
+            <button onClick={() => setMenu(menu === "more" ? null : "more")} aria-label="More options" aria-expanded={menu === "more"} className={iconBtn}><Icon name="more" size={16} /></button>
+            {menu === "more" && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-xl border border-line bg-white p-1 text-sm shadow-lg">
+                <button onClick={() => { load(); setMenu(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-brand-soft"><Icon name="refresh" size={14} /> Reload sources</button>
+                <Link href="/calendar/sources" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-brand-soft"><Icon name="link" size={14} /> Sources ({sources.length})</Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        {ITEM_TYPES.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => toggleType(t.id)}
-            aria-pressed={types.has(t.id)}
-            className={`rounded-full border px-3 py-1 text-sm font-medium ${types.has(t.id) ? "border-ink bg-ink text-n-50" : "border-control bg-white hover:bg-brand-soft"}`}
-          >
-            <span className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle" style={{ background: TYPE_BAR[t.id] }} aria-hidden />
-            {t.label} <span className="text-xs opacity-70">{typeCount(t.id)}</span>
-          </button>
-        ))}
-        {types.size > 0 && <button onClick={() => setTypes(new Set())} className="text-sm text-brand hover:underline">Show all</button>}
-      </div>
-
-      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-        <label className="relative">
-          <span className="sr-only">Search</span>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search items" className={`${sel} w-56 pl-8`} />
-          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"><Icon name="search" size={14} /></span>
-        </label>
-        <select aria-label="Owner" className={sel} value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Any owner</option>{owners.map((o) => <option key={o}>{o}</option>)}</select>
-        <select aria-label="Campaign" className={sel} value={campaign} onChange={(e) => setCampaign(e.target.value)}><option value="">Any campaign</option>{campaigns.map((o) => <option key={o}>{o}</option>)}</select>
-        <select aria-label="Status" className={sel} value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Any status</option>{STATUSES.map((o) => <option key={o}>{o}</option>)}</select>
-        <select aria-label="Source" className={sel} value={source} onChange={(e) => setSource(e.target.value)}><option value="">Any source</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-        <span className="ml-auto text-muted">{loading ? "Loading sources…" : `${items.length} of ${all.length} items`}</span>
-      </div>
+      {(types.size > 0 || owner || campaign || status || source) && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+          {[...types].map((t) => <Pill key={t} onRemove={() => toggleType(t)}>{ITEM_TYPES.find((x) => x.id === t)?.label}</Pill>)}
+          {owner && <Pill onRemove={() => setOwner("")}>Owner: {owner}</Pill>}
+          {campaign && <Pill onRemove={() => setCampaign("")}>Campaign: {campaign}</Pill>}
+          {status && <Pill onRemove={() => setStatus("")}>{status}</Pill>}
+          {source && <Pill onRemove={() => setSource("")}>{sources.find((s) => s.id === source)?.name}</Pill>}
+          <button onClick={clearAll} className="font-medium text-brand hover:underline">Clear all</button>
+          <span className="ml-auto text-muted">{loading ? "Loading…" : `${items.length} of ${all.length} items`}</span>
+        </div>
+      )}
 
       {problems.length > 0 && (
         <div className="mb-3 space-y-2">
