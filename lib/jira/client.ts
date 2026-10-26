@@ -75,3 +75,23 @@ export async function findCloudId(accessToken: string): Promise<string | undefin
     return undefined;
   }
 }
+
+/**
+ * True if the user belongs to any of the named Jira groups (case-insensitive).
+ * Needs only the user's own token. Returns false on any failure so a lookup problem never grants access.
+ */
+export async function isInJiraGroup(a: JiraAuth, accountId: string, groupNames: string[]): Promise<boolean> {
+  const wanted = groupNames.map((g) => g.trim().toLowerCase()).filter(Boolean);
+  if (!wanted.length || !accountId) return false;
+  try {
+    const res = await fetch(api(a, `/user/groups?accountId=${encodeURIComponent(accountId)}`), {
+      headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return false;
+    const groups: { name: string }[] = await res.json();
+    return groups.some((g) => wanted.includes(g.name.toLowerCase()));
+  } catch {
+    return false;
+  }
+}

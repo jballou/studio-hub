@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Atlassian from "next-auth/providers/atlassian";
-import { findCloudId } from "@/lib/jira/client";
+import { findCloudId, isInJiraGroup } from "@/lib/jira/client";
 
 const ALLOWED_DOMAIN = "@surveymonkey.com";
 const TOKEN_URL = "https://auth.atlassian.com/oauth/token";
@@ -59,14 +59,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, account, profile }) {
       if (account) {
         const email = String(profile?.email ?? token.email ?? "").toLowerCase();
+        const cloudId = account.access_token ? await findCloudId(account.access_token) : undefined;
+        const accountId = String(profile?.account_id ?? token.sub ?? "");
+        // Creative if listed by email, or in a Jira group named in CREATIVE_GROUP. Checked at sign-in,
+        // so a group change applies the next time that person signs in.
+        let creative = creativeEmails().includes(email);
+        if (!creative && cloudId && account.access_token && process.env.CREATIVE_GROUP) {
+          creative = await isInJiraGroup(
+            { accessToken: account.access_token, cloudId },
+            accountId,
+            process.env.CREATIVE_GROUP.split(","),
+          );
+        }
         return {
           ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           expiresAt: account.expires_at,
-          cloudId: account.access_token ? await findCloudId(account.access_token) : undefined,
-          accountId: String(profile?.account_id ?? token.sub ?? ""),
-          role: creativeEmails().includes(email) ? ("creative" as const) : ("requester" as const),
+          cloudId,
+          accountId,
+          role: creative ? ("creative" as const) : ("requester" as const),
           error: undefined,
         };
       }
