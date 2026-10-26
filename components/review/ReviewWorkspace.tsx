@@ -183,7 +183,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       key={t}
       onClick={() => setTool(t)}
       aria-pressed={tool === t}
-      className={`rounded px-3 py-1 text-sm ${tool === t ? "bg-brand text-white" : "border border-line hover:bg-brand-soft"}`}
+      className={`rounded px-3 py-1 text-sm ${tool === t ? "bg-brand text-white" : "border border-control hover:bg-brand-soft"}`}
     >
       {label} <kbd className="ml-1 text-[10px] opacity-60">{key}</kbd>
     </button>
@@ -195,7 +195,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         <Link href="/review" className="text-muted hover:underline">← Assets</Link>
         <span className="font-semibold">{asset.name}</span>
         <span className="rounded bg-line px-1.5 py-0.5 font-mono text-xs">{asset.projectKey}</span>
-        <select value={version.id} onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); }} className="rounded border border-line px-2 py-1">
+        <select value={version.id} onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); }} className="rounded border border-control px-2 py-1">
           {versions.map((v) => <option key={v.id} value={v.id}>Version {v.number}</option>)}
         </select>
         <div className="ml-auto flex items-center gap-3 text-xs">
@@ -214,7 +214,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           </label>
           <label className="flex items-center gap-1">
             Viewing as
-            <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-line px-1 py-1">
+            <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
               {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
             </select>
           </label>
@@ -222,16 +222,16 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <section className="flex min-w-0 flex-1 flex-col bg-stone-200">
+        <section className="flex min-w-0 flex-1 flex-col paper">
           <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2">
             {toolBtn("pointer", "Pointer", "V")}
             {toolBtn("dot", "Dot", "D")}
             {toolBtn("box", "Box", "B")}
             {kind === "pdf" && (
               <div className="ml-auto flex items-center gap-2 text-sm">
-                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded border border-line px-2 py-0.5 disabled:opacity-40">‹</button>
+                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded border border-control px-2 py-0.5 disabled:opacity-40">‹</button>
                 <span>Page {page} / {pageCount}</span>
-                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} className="rounded border border-line px-2 py-0.5 disabled:opacity-40">›</button>
+                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} className="rounded border border-control px-2 py-0.5 disabled:opacity-40">›</button>
               </div>
             )}
           </div>

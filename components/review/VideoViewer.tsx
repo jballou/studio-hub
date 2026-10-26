@@ -147,11 +147,11 @@ export function VideoViewer({
       </Stage>
 
       <div className="flex items-center gap-3 border-t border-line bg-white px-4 py-3">
-        <button onClick={toggle} className="w-12 rounded border border-line px-2 py-1 text-sm hover:bg-brand-soft" aria-label={playing ? "Pause" : "Play"}>
+        <button onClick={toggle} className="w-12 rounded border border-control px-2 py-1 text-sm hover:bg-brand-soft" aria-label={playing ? "Pause" : "Play"}>
           {playing ? "Pause" : "Play"}
         </button>
-        <button onClick={() => step(-1)} className="rounded border border-line px-2 py-1 text-sm hover:bg-brand-soft" aria-label="Back one frame">‹ 1f</button>
-        <button onClick={() => step(1)} className="rounded border border-line px-2 py-1 text-sm hover:bg-brand-soft" aria-label="Forward one frame">1f ›</button>
+        <button onClick={() => step(-1)} className="rounded border border-control px-2 py-1 text-sm hover:bg-brand-soft" aria-label="Back one frame">‹ 1f</button>
+        <button onClick={() => step(1)} className="rounded border border-control px-2 py-1 text-sm hover:bg-brand-soft" aria-label="Forward one frame">1f ›</button>
         <span className="w-24 font-mono text-xs text-muted">{formatTime(ms)} / {formatTime(total)}</span>
 
         <div
@@ -170,8 +170,8 @@ export function VideoViewer({
               className="absolute -top-6 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full text-[9px] font-bold text-white"
               style={{
                 left: `${Math.min(100, (m.timeMs / total) * 100)}%`,
-                background: m.resolved ? "#78716c" : "#089b5e",
-                outline: m.id === selectedId ? "2px solid #1c1917" : "none",
+                background: m.resolved ? "#686764" : "#08794a",
+                outline: m.id === selectedId ? "2px solid #0f2e21" : "none",
               }}
             >
               {m.initials}

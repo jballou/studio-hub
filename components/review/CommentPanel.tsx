@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Thread, User } from "@/lib/types";
+import { Icon } from "@/components/ui/Icon";
+import { Tag } from "@/components/ui/Tag";
 import { formatTime } from "./VideoViewer";
 
 export type Tab = "all" | "open" | "resolved";
@@ -20,7 +22,7 @@ function Mentions({ text, users }: { text: string; users: User[] }) {
     <>
       {parts.map((p, i) =>
         p.startsWith("@") && users.some((u) => `@${u.name}` === p)
-          ? <span key={i} className="rounded bg-brand-soft px-0.5 font-medium text-brand-dark">{p}</span>
+          ? <span key={i} className="rounded bg-brand-soft px-0.5 font-medium text-ink">{p}</span>
           : <span key={i}>{p}</span>,
       )}
     </>
@@ -69,15 +71,15 @@ function ThreadCard({
       <div className="mb-2 flex items-center gap-2">
         <span
           className="flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-bold text-white"
-          style={{ background: resolved ? "#78716c" : thread.anchor ? "#089b5e" : "#a8a29e" }}
+          style={{ background: resolved ? "#686764" : thread.anchor ? "#08794a" : "#464543" }}
         >
           {thread.anchor ? thread.number : "#"}
         </span>
         {!thread.anchor && <span className="text-xs text-muted">General #{thread.number}</span>}
         {anchorLabel && <span className="rounded bg-line px-1.5 py-0.5 font-mono text-xs">{anchorLabel}</span>}
         <span className="ml-auto flex items-center gap-1.5 text-xs">
-          {thread.jira && <span className="rounded bg-brand-soft px-1.5 py-0.5 font-medium text-brand-dark" title={`Pushed ${ago(thread.jira.pushedAt)}`}>✓ In Jira</span>}
-          {resolved && <span className="text-muted">Resolved</span>}
+          {resolved && <Tag tone="neutral" icon="check">Resolved</Tag>}
+          {thread.jira && <Tag tone="ok" icon="check" title={`Pushed ${ago(thread.jira.pushedAt)}`}>In Jira</Tag>}
         </span>
       </div>
 
@@ -93,18 +95,21 @@ function ThreadCard({
       </ul>
 
       {thread.pushError && (
-        <p role="alert" className="mt-2 rounded bg-red-50 px-2 py-1 text-xs text-red-800">Not pushed: {thread.pushError}</p>
+        <div role="alert" className="mt-2 flex items-start gap-1.5 rounded-lg border border-bad-line bg-bad-bg px-2 py-1.5 text-xs text-bad-fg">
+          <Icon name="close" size={14} />
+          <span><strong>Not pushed.</strong> {thread.pushError}</span>
+        </div>
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
-        <button className="font-medium text-brand-dark hover:underline" onClick={() => setReplying((r) => !r)}>Reply</button>
+        <button className="font-medium text-ink hover:underline" onClick={() => setReplying((r) => !r)}>Reply</button>
         {canResolve && (
-          <button className="font-medium text-brand-dark hover:underline" onClick={() => onStatus(resolved ? "open" : "resolved")}>
+          <button className="font-medium text-ink hover:underline" onClick={() => onStatus(resolved ? "open" : "resolved")}>
             {resolved ? "Reopen" : "Resolve"}
           </button>
         )}
         {canPush && !thread.jira && (
-          <button className="ml-auto rounded border border-line px-2 py-0.5 font-medium hover:bg-brand-soft" onClick={onPush}>
+          <button className="ml-auto rounded border border-control px-2 py-0.5 font-medium hover:bg-brand-soft" onClick={onPush}>
             {thread.pushError ? "Retry push" : "Push to Jira"}
           </button>
         )}
@@ -215,7 +220,7 @@ export function CommentPanel({
         </div>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto bg-background p-3">
+      <div className="flex-1 space-y-2 overflow-y-auto bg-paper p-3">
         {threads.length === 0 && <p className="py-8 text-center text-sm text-muted">No comments match.</p>}
         {threads.map((t) => (
           <ThreadCard
@@ -252,7 +257,7 @@ export function CommentPanel({
             )}
             {draft?.hasPin && (
               <div className="mb-2 flex items-center gap-2 text-xs">
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-900">Pin attached</span>
+                <Tag tone="warn" icon="alert">Pin attached</Tag>
                 <button className="text-muted hover:underline" onClick={onClearPin}>Remove</button>
               </div>
             )}

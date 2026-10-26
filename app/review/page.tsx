@@ -9,7 +9,7 @@ async function AssetList() {
       {assets.map((a) => (
         <li key={a.id}>
           <Link href={`/review/${a.id}`} className="flex items-center gap-3 rounded-lg border border-line bg-white p-4 hover:border-brand">
-            <span className="rounded bg-brand-soft px-2 py-0.5 text-xs font-semibold uppercase text-brand-dark">{a.kind}</span>
+            <span className="rounded bg-brand-soft px-2 py-0.5 text-xs font-semibold uppercase text-ink">{a.kind}</span>
             <span className="font-medium">{a.name}</span>
             <span className="ml-auto font-mono text-xs text-muted">{a.projectKey}</span>
           </Link>

@@ -61,7 +61,7 @@ export function PdfViewer({
   return (
     <Stage aspect={aspect}>
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-      {error && <div className="absolute inset-0 flex items-center justify-center text-sm text-red-700">{error}</div>}
+      {error && <div className="absolute inset-0 flex items-center justify-center text-sm text-bad-fg">{error}</div>}
       {overlay}
     </Stage>
   );

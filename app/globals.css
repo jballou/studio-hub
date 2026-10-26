@@ -1,28 +1,57 @@
 @import "tailwindcss";
 
-:root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --brand: #089b5e;
-  --brand-dark: #067a4a;
-  --brand-soft: #e6f6ee;
-  --line: #e7e5e4;
-  --muted: #78716c;
-}
-
+/* SurveyMonkey brand palette (brand-visuals/colors.md). No hexes outside this file. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --color-brand-dark: var(--brand-dark);
-  --color-brand-soft: var(--brand-soft);
-  --color-line: var(--line);
-  --color-muted: var(--muted);
+  /* Core */
+  --color-brand: #08794a; /* Green 600: buttons, links, small UI (AA with Paper text) */
+  --color-brand-dark: #105638; /* Green 700: hover/pressed */
+  --color-brand-fill: #089b5e; /* Green 500: large fills, icons, graphics only */
+  --color-brand-soft: #d6f5de; /* Green 100 */
+  --color-ink: #0f2e21; /* Green 900: primary text [CONFIRM vs Neutral 900] */
+  --color-paper: #f7f5f3; /* Neutral 100 */
+
+  /* Neutrals */
+  --color-n-50: #fefdfb;
+  --color-n-150: #edebe8;
+  --color-n-200: #e2dfda;
+  --color-n-500: #908d89;
+  --color-n-650: #686764;
+  --color-n-700: #5b5a57;
+  --color-n-800: #464543;
+  --color-n-1000: #1a1919;
+
+  /* Roles */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-line: var(--color-n-200); /* dividers, card borders */
+  --color-control: var(--color-n-500); /* interactive control outlines (Neutral 400 and lighter not allowed) */
+  --color-muted: var(--color-n-700); /* secondary text */
+
+  /* Semantic status tints: 100 surface / 200 border / 600-800 text (status always has icon + label) */
+  --color-info-bg: #ededfd; --color-info-line: #c5ccf9; --color-info-fg: #3f4d94; /* Periwinkle 100/200/700 */
+  --color-progress-bg: #d9f0f2; --color-progress-line: #a6dce1; --color-progress-fg: #255b60; /* Teal 100/300/800 */
+  --color-warn-bg: #f9e8d2; --color-warn-line: #f2d0a3; --color-warn-fg: #854813; /* Orange 100/200/700 */
+  --color-ok-bg: #d6f5de; --color-ok-line: #b0e8c3; --color-ok-fg: #0f2e21; /* Green 100/200/900 */
+  --color-bad-bg: #f7dbd4; --color-bad-line: #eab0a9; --color-bad-fg: #8a3734; /* Red 100/200/600 */
+  --color-focus: #5568bf; /* Periwinkle 600 [CONFIRM] */
+
   --font-sans: var(--font-work-sans), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-work-sans), system-ui, sans-serif;
+}
+
+/* Paper: dot grid on Neutral 100. Background only; never inside cards or controls. */
+.paper {
+  background-color: #f7f5f3;
+  background-image: radial-gradient(circle at 1px 1px, #e4e2dd 0.5px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }

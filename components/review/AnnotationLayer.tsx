@@ -138,7 +138,9 @@ export function AnnotationLayer({
       {/* eslint-disable-next-line react-hooks/refs */}
       {items.map((it) => {
         const selected = it.id === selectedId;
-        const color = it.isDraft ? "#d97706" : it.resolved ? "#78716c" : "#089b5e";
+        const color = it.isDraft ? "#d07a2f" : it.resolved ? "#686764" : "#08794a";
+        const ring = it.isDraft ? "#f2d0a3" : it.resolved ? "#d7d3cc" : "#b0e8c3";
+        const ink = it.isDraft ? "#1a1919" : "#ffffff"; // Orange 500 needs dark text
         const label = it.number ?? "+";
         const canEdit = it.editable && (it.isDraft || selected);
         const startMove = (e: RPointerEvent) => {
@@ -156,10 +158,10 @@ export function AnnotationLayer({
             <div
               key={it.id}
               onPointerDown={startMove}
-              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold text-white shadow"
+              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold shadow"
               style={{
-                left: `${it.anchor.x * 100}%`, top: `${it.anchor.y * 100}%`, background: color,
-                outline: selected || it.isDraft ? `3px solid ${color}55` : "2px solid white",
+                left: `${it.anchor.x * 100}%`, top: `${it.anchor.y * 100}%`, background: color, color: ink,
+                outline: selected || it.isDraft ? `3px solid ${ring}` : "2px solid white",
                 cursor: "pointer",
               }}
             >
@@ -177,13 +179,13 @@ export function AnnotationLayer({
             style={{
               left: `${b.x * 100}%`, top: `${b.y * 100}%`, width: `${b.w * 100}%`, height: `${b.h * 100}%`,
               border: `2px ${it.isDraft ? "dashed" : "solid"} ${color}`,
-              background: `${color}1f`, cursor: "pointer",
-              boxShadow: selected ? `0 0 0 3px ${color}55` : undefined,
+              cursor: "pointer",
+              boxShadow: selected ? `0 0 0 3px ${ring}, 0 0 0 1px #fff inset` : "0 0 0 1px #fff",
             }}
           >
             <span
-              className="absolute -left-0.5 -top-6 rounded px-1.5 py-0.5 text-xs font-bold text-white"
-              style={{ background: color }}
+              className="absolute -left-0.5 -top-6 rounded px-1.5 py-0.5 text-xs font-bold"
+              style={{ background: color, color: ink }}
             >
               {label}
             </span>
