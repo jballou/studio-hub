@@ -142,8 +142,8 @@ export function ProjectsView() {
                           {p.assetIds.slice(0, 2).map((a) => <span key={a} className="h-10 w-10 rounded bg-brand-soft" aria-hidden />)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate font-medium">{p.title}</span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="font-medium">{p.title}</span>
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
