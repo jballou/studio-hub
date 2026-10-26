@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { projectsRepo, repo } from "@/lib/data";
-import { Callout, StageTag, Tag, UnreadDot } from "@/components/ui/Tag";
+import { Callout, StageTag, Tag } from "@/components/ui/Tag";
 import type { Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
 
 const GROUPS: { id: ProjectGroup; label: string }[] = [
@@ -55,7 +55,7 @@ export function ProjectsView() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [action, setAction] = useState(false);
-  const [unread, setUnread] = useState(false);
+  const [newOnly, setNewOnly] = useState(false);
   const [stage, setStage] = useState<Stage | "">("");
   const [type, setType] = useState<ProjectType | "">("");
   const [collab, setCollab] = useState("");
@@ -71,11 +71,13 @@ export function ProjectsView() {
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "Unknown";
 
   const actionCount = projects.filter((p) => p.actionRequired).length;
+  const newTotal = projects.reduce((n, p) => n + p.newComments, 0);
+  const newProjects = projects.filter((p) => p.newComments > 0).length;
 
   const filtered = useMemo(() => projects.filter((p) =>
-    (!action || p.actionRequired) && (!unread || p.unread) && (!stage || p.stage === stage) &&
+    (!action || p.actionRequired) && (!newOnly || p.newComments > 0) && (!stage || p.stage === stage) &&
     (!type || p.type === type) && (!collab || p.collaboratorIds.includes(collab) || p.requesterId === collab) &&
-    (!before || p.deadline <= before)), [projects, action, unread, stage, type, collab, before]);
+    (!before || p.deadline <= before)), [projects, action, newOnly, stage, type, collab, before]);
 
   return (
     <main className="mx-auto w-full max-w-5xl p-6">
@@ -97,7 +99,7 @@ export function ProjectsView() {
 
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <label className="flex items-center gap-1"><input type="checkbox" checked={action} onChange={(e) => setAction(e.target.checked)} /> Action required</label>
-        <label className="flex items-center gap-1"><input type="checkbox" checked={unread} onChange={(e) => setUnread(e.target.checked)} /> Unread</label>
+        <label className="flex items-center gap-1"><input type="checkbox" checked={newOnly} onChange={(e) => setNewOnly(e.target.checked)} /> New comments</label>
         <select aria-label="Status" value={stage} onChange={(e) => setStage(e.target.value as Stage | "")} className="rounded border border-control px-2 py-1">
           <option value="">Any status</option>{STAGES.map((s) => <option key={s}>{s}</option>)}
         </select>
@@ -110,11 +112,18 @@ export function ProjectsView() {
         <label className="flex items-center gap-1">Due by <input type="date" value={before} onChange={(e) => setBefore(e.target.value)} className="rounded border border-control px-2 py-1" /></label>
       </div>
 
-      {actionCount > 0 && (
-        <div className="mb-6">
-          <Callout tone="warn" icon="alert">
-            {actionCount === 1 ? "1 project needs" : `${actionCount} projects need`} your action
-          </Callout>
+      {(actionCount > 0 || newTotal > 0) && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
+          {actionCount > 0 && (
+            <Callout tone="warn" icon="alert">
+              {actionCount === 1 ? "1 project needs" : `${actionCount} projects need`} your action
+            </Callout>
+          )}
+          {newTotal > 0 && (
+            <Callout tone="info" icon="feedback">
+              {newTotal} new {newTotal === 1 ? "comment" : "comments"} on {newProjects} {newProjects === 1 ? "project" : "projects"}
+            </Callout>
+          )}
         </div>
       )}
 
@@ -135,8 +144,8 @@ export function ProjectsView() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="truncate font-medium">{p.title}</span>
-                            {p.unread && <UnreadDot />}
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
+                            {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
                           <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {name(p.requesterId)}</div>
                         </div>

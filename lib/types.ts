@@ -84,7 +84,8 @@ export type Project = {
   collaboratorIds: string[];
   deadline: string; // YYYY-MM-DD
   actionRequired: boolean;
-  unread: boolean;
+  /** comments added since the viewer last opened the project */
+  newComments: number;
   /** asset ids for thumbnail strip */
   assetIds: string[];
 };

@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { mockControls, repo } from "@/lib/data";
-import type { Anchor, Asset, AssetVersion, Thread, User } from "@/lib/types";
-import { AnnotationLayer, type Pin, type Tool } from "./AnnotationLayer";
-import { CommentPanel, type Draft, type Tab } from "./CommentPanel";
+import { Icon } from "@/components/ui/Icon";
+import { StageTag } from "@/components/ui/Tag";
+import { mockControls, projectsRepo, repo } from "@/lib/data";
+import type { Anchor, Asset, AssetVersion, Stage, Thread, User } from "@/lib/types";
+import { AnnotationLayer, type Pin } from "./AnnotationLayer";
+import { CommentList, Composer, type Draft, type Tab } from "./CommentPanel";
 import { ImageViewer } from "./ImageViewer";
 import { PdfViewer } from "./PdfViewer";
 import { VideoViewer, type Marker, type VideoHandle } from "./VideoViewer";
@@ -20,8 +22,11 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [tool, setTool] = useState<Tool>("pointer");
+  const [stage, setStage] = useState<Stage>("In feedback");
+  const [commenting, setCommenting] = useState(true);
+  const [showPins, setShowPins] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [seen, setSeen] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<Tab>("all");
   const [mine, setMine] = useState(false);
   const [unpushed, setUnpushed] = useState(false);
@@ -32,6 +37,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [pageCount, setPageCount] = useState(1);
   const [localSrc, setLocalSrc] = useState<string | null>(null);
   const [simFail, setSimFail] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const video = useRef<VideoHandle>(null);
 
   useEffect(() => {
@@ -43,6 +49,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       setVersions(vs);
       setVersionId(vs[vs.length - 1]?.id ?? null);
       setUsers(await repo.listUsers());
+      const project = (await projectsRepo.listProjects("u-avery")).find((p) => p.jiraKey === a.projectKey);
+      if (project) setStage(project.stage);
     })();
   }, [assetId]);
 
@@ -58,63 +66,45 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const kind = asset?.kind;
 
   const resetDraft = useCallback(() => { setAnchor(null); setDraft(null); }, []);
-
   const replace = (t: Thread) => setThreads((ts) => ts.map((x) => (x.id === t.id ? t : x)));
 
-  // Tool shortcuts: V pointer, D dot, B box (ignored while typing).
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement;
-      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || e.metaKey || e.ctrlKey) return;
-      if (e.key === "v") setTool("pointer");
-      if (e.key === "d") setTool("dot");
-      if (e.key === "b") setTool("box");
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  const capture = useCallback((): number | null => {
+    if (kind !== "video") return null;
+    video.current?.pause();
+    return video.current?.currentMs() ?? 0;
+  }, [kind]);
 
   const startComment = useCallback(() => {
-    setDraft((d) => {
-      if (d) return d;
-      let capturedMs: number | null = null;
-      if (kind === "video") {
-        video.current?.pause();
-        capturedMs = video.current?.currentMs() ?? 0;
-      }
-      return { hasPin: false, capturedMs };
-    });
-  }, [kind]);
+    setDraft((d) => d ?? { hasPin: false, capturedMs: capture() });
+  }, [capture]);
 
   const onDraftAnchor = useCallback((a: Anchor) => {
     setAnchor(a);
     setSelectedId(null);
-    setDraft((d) => {
-      if (d) return { ...d, hasPin: true };
-      let capturedMs: number | null = null;
-      if (kind === "video") {
-        video.current?.pause();
-        capturedMs = video.current?.currentMs() ?? 0;
-      }
-      return { hasPin: true, capturedMs };
-    });
-  }, [kind]);
+    setDraft((d) => (d ? { ...d, hasPin: true } : { hasPin: true, capturedMs: capture() }));
+  }, [capture]);
 
   if (!asset || !version || !me) {
     return <div className="p-8 text-sm text-muted">{asset === null ? "Loading…" : ""}</div>;
   }
 
-  const canComment = true; // mock: every user is invited; real adapter enforces invitations
   const canResolve = (t: Thread) => me.role === "creative" || t.authorId === me.id;
   const canPush = (t: Thread) => me.role === "creative" || t.authorId === me.id;
+  const closed = stage === "Delivered";
+
+  const markSeen = (id: string) => setSeen((s) => new Set(s).add(id));
 
   const select = (t: Thread) => {
     setSelectedId(t.id);
+    markSeen(t.id);
     resetDraft();
     if (kind === "pdf" && t.page) setPage(t.page);
     if (kind === "video" && t.timeMs != null) video.current?.seek(t.timeMs);
   };
   const selectById = (id: string) => { const t = threads.find((x) => x.id === id); if (t) select(t); };
+
+  const unreadIds = new Set(threads.filter((t) => t.authorId !== me.id && !seen.has(t.id)).map((t) => t.id));
+  const firstUnread = threads.find((t) => unreadIds.has(t.id));
 
   const submit = async (body: string, withTime: boolean) => {
     const t = await repo.createThread({
@@ -126,6 +116,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       page: kind === "pdf" ? page : null,
     });
     setThreads((ts) => [...ts, t]);
+    markSeen(t.id);
     resetDraft();
     setSelectedId(t.id);
   };
@@ -144,10 +135,11 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     return true;
   });
 
-  const pins: Pin[] = visibleOnCanvas.map((t) => ({
-    id: t.id, number: t.number, anchor: t.anchor!, resolved: t.status === "resolved",
-    editable: canResolve(t),
-  }));
+  const pins: Pin[] = showPins
+    ? visibleOnCanvas.map((t) => ({
+        id: t.id, number: t.number, anchor: t.anchor!, resolved: t.status === "resolved", editable: canResolve(t),
+      }))
+    : [];
 
   const markers: Marker[] = threads
     .filter((t) => t.timeMs != null)
@@ -166,10 +158,10 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
 
   const overlay = (
     <AnnotationLayer
-      tool={tool}
+      enabled={commenting && showPins}
       pins={pins}
       selectedId={selectedId}
-      draft={anchor}
+      draft={showPins ? anchor : null}
       onSelect={selectById}
       onDraftChange={onDraftAnchor}
       onEditAnchor={async (id, a) => replace(await repo.updateAnchor(id, a))}
@@ -177,67 +169,111 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   );
 
   const src = localSrc ?? version.src;
-
-  const toolBtn = (t: Tool, label: string, key: string) => (
-    <button
-      key={t}
-      onClick={() => setTool(t)}
-      aria-pressed={tool === t}
-      className={`rounded px-3 py-1 text-sm ${tool === t ? "bg-brand text-white" : "border border-control hover:bg-brand-soft"}`}
-    >
-      {label} <kbd className="ml-1 text-[10px] opacity-60">{key}</kbd>
-    </button>
-  );
+  const btn = "rounded-full border border-control px-4 py-1.5 text-sm font-medium hover:bg-brand-soft disabled:opacity-40";
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-2 text-sm">
-        <Link href="/review" className="text-muted hover:underline">← Assets</Link>
-        <span className="font-semibold">{asset.name}</span>
-        <span className="rounded bg-line px-1.5 py-0.5 font-mono text-xs">{asset.projectKey}</span>
-        <select value={version.id} onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); }} className="rounded border border-control px-2 py-1">
-          {versions.map((v) => <option key={v.id} value={v.id}>Version {v.number}</option>)}
-        </select>
-        <div className="ml-auto flex items-center gap-3 text-xs">
-          {kind === "video" && (
-            <label className="cursor-pointer rounded border border-line px-2 py-1 hover:bg-brand-soft">
-              Load local video
-              <input type="file" accept="video/*" className="hidden" onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) setLocalSrc(URL.createObjectURL(f));
-              }} />
-            </label>
+    <div className="paper flex h-screen flex-col">
+      <header className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-5 py-2.5 text-sm">
+        <Link href="/projects" className="font-medium text-brand hover:underline">Projects</Link>
+        <Link href="/review" className="font-medium text-brand hover:underline">Designs</Link>
+        <span className="h-5 w-px bg-line" />
+        <h1 className="truncate font-semibold">{asset.projectKey} · {asset.name}</h1>
+        <StageTag stage={stage} />
+        <span className="h-5 w-px bg-line" />
+        <button className={btn} disabled={closed} onClick={() => setStage("In progress")}>Ask for changes</button>
+        <button
+          disabled={closed}
+          onClick={() => setStage("Delivered")}
+          className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
+        >
+          <Icon name="delivered" size={16} /> {closed ? "Approved" : "Mark as approved"}
+        </button>
+
+        <div className="relative ml-auto">
+          <button onClick={() => setMenuOpen((o) => !o)} aria-label="More options" aria-expanded={menuOpen} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-brand-soft">
+            <Icon name="more" size={18} />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-20 mt-1 w-72 space-y-3 rounded-xl border border-line bg-white p-3 text-xs shadow-lg">
+              <p className="font-semibold uppercase tracking-wide text-muted">Demo controls (mock data)</p>
+              <label className="flex items-center justify-between gap-2">Viewing as
+                <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
+                  {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                </select>
+              </label>
+              <label className="flex items-center gap-1.5">
+                <input type="checkbox" checked={simFail} onChange={(e) => { setSimFail(e.target.checked); mockControls.simulatePushFailure = e.target.checked; }} />
+                Make the next Jira push fail
+              </label>
+              {kind === "video" && (
+                <label className="block cursor-pointer rounded border border-control px-2 py-1.5 text-center hover:bg-brand-soft">
+                  Load a local video file
+                  <input type="file" accept="video/*" className="hidden" onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) setLocalSrc(URL.createObjectURL(f));
+                  }} />
+                </label>
+              )}
+            </div>
           )}
-          <label className="flex items-center gap-1" title="Mock only: makes the next Jira push fail">
-            <input type="checkbox" checked={simFail} onChange={(e) => { setSimFail(e.target.checked); mockControls.simulatePushFailure = e.target.checked; }} />
-            Simulate push failure
-          </label>
-          <label className="flex items-center gap-1">
-            Viewing as
-            <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
-              {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
-            </select>
-          </label>
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <section className="flex min-w-0 flex-1 flex-col paper">
-          <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2">
-            {toolBtn("pointer", "Pointer", "V")}
-            {toolBtn("dot", "Dot", "D")}
-            {toolBtn("box", "Box", "B")}
-            {kind === "pdf" && (
-              <div className="ml-auto flex items-center gap-2 text-sm">
-                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded border border-control px-2 py-0.5 disabled:opacity-40">‹</button>
-                <span>Page {page} / {pageCount}</span>
-                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} className="rounded border border-control px-2 py-0.5 disabled:opacity-40">›</button>
-              </div>
-            )}
-          </div>
+      <div className="flex items-center gap-3 border-b border-line bg-white px-5 py-2">
+        <label className="relative">
+          <span className="sr-only">Version</span>
+          <select
+            value={version.id}
+            onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); }}
+            className="appearance-none rounded-full border border-control bg-white py-1.5 pl-4 pr-9 text-sm"
+          >
+            {versions.map((v) => <option key={v.id} value={v.id}>Version {v.number}</option>)}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevronDown" size={14} /></span>
+        </label>
+        <button
+          onClick={() => setCommenting((c) => !c)}
+          aria-pressed={commenting}
+          title={commenting ? "Commenting is on. Click the design to add a pin" : "Turn commenting on"}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${commenting ? "bg-brand-soft text-ink" : "border border-control"}`}
+        >
+          <Icon name="comment" size={16} /> Comment
+        </button>
 
+        <div className="ml-auto flex items-center gap-2">
+          {firstUnread && (
+            <button onClick={() => select(firstUnread)} className="flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-medium text-n-50 hover:bg-brand-dark">
+              {unreadIds.size} unread <Icon name="chevronRight" size={12} />
+            </button>
+          )}
+          <button
+            onClick={() => setShowPins((s) => !s)}
+            aria-pressed={!showPins}
+            aria-label={showPins ? "Hide pins" : "Show pins"}
+            title={showPins ? "Hide pins on the design" : "Show pins on the design"}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-n-150 hover:bg-n-200"
+          >
+            <Icon name={showPins ? "eye" : "eyeOff"} size={16} />
+          </button>
+          <Link href="/projects" aria-label="Close review" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150">
+            <Icon name="x" size={16} />
+          </Link>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1">
+        <section className="flex min-w-0 flex-1 flex-col">
           {kind === "image" && <ImageViewer src={src} aspect={version.aspect} overlay={overlay} />}
-          {kind === "pdf" && <PdfViewer src={src} page={page} onPageCount={setPageCount} overlay={overlay} />}
+          {kind === "pdf" && (
+            <>
+              <PdfViewer src={src} page={page} onPageCount={setPageCount} overlay={overlay} />
+              <div className="flex items-center justify-center gap-3 pb-1 text-sm">
+                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page" className="rounded-full border border-control px-3 py-0.5 disabled:opacity-40">‹</button>
+                <span>Page {page} of {pageCount}</span>
+                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} aria-label="Next page" className="rounded-full border border-control px-3 py-0.5 disabled:opacity-40">›</button>
+              </div>
+            </>
+          )}
           {kind === "video" && (
             <VideoViewer
               src={src}
@@ -250,20 +286,30 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
               handleRef={video}
             />
           )}
+          <div className="px-5 pb-5 pt-3">
+            <Composer
+              users={users}
+              me={me}
+              isVideo={kind === "video"}
+              draft={draft}
+              hasPdfPage={kind === "pdf" ? page : null}
+              onStart={startComment}
+              onClearPin={resetDraft}
+              onSubmit={submit}
+            />
+          </div>
         </section>
 
-        <CommentPanel
+        <CommentList
           threads={listed}
-          allCount={counts}
+          counts={counts}
           users={users}
           me={me}
           selectedId={selectedId}
+          unreadIds={unreadIds}
           tab={tab}
           mine={mine}
           unpushed={unpushed}
-          isVideo={kind === "video"}
-          draft={draft}
-          canComment={canComment}
           canResolve={canResolve}
           canPush={canPush}
           onTab={setTab}
@@ -274,9 +320,6 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           onStatus={async (id, s) => replace(await repo.setStatus(id, s))}
           onPush={push}
           onPushAll={pushAll}
-          onStartComposer={startComment}
-          onClearPin={resetDraft}
-          onSubmit={submit}
         />
       </div>
     </div>

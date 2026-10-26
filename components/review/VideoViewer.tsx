@@ -146,32 +146,32 @@ export function VideoViewer({
         {overlay}
       </Stage>
 
-      <div className="flex items-center gap-3 border-t border-line bg-white px-4 py-3">
-        <button onClick={toggle} className="w-12 rounded border border-control px-2 py-1 text-sm hover:bg-brand-soft" aria-label={playing ? "Pause" : "Play"}>
+      <div className="flex items-center gap-3 bg-ink px-4 py-3 text-n-50">
+        <button onClick={toggle} className="w-12 rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label={playing ? "Pause" : "Play"}>
           {playing ? "Pause" : "Play"}
         </button>
-        <button onClick={() => step(-1)} className="rounded border border-control px-2 py-1 text-sm hover:bg-brand-soft" aria-label="Back one frame">‹ 1f</button>
-        <button onClick={() => step(1)} className="rounded border border-control px-2 py-1 text-sm hover:bg-brand-soft" aria-label="Forward one frame">1f ›</button>
-        <span className="w-24 font-mono text-xs text-muted">{formatTime(ms)} / {formatTime(total)}</span>
+        <button onClick={() => step(-1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Back one frame">‹ 1f</button>
+        <button onClick={() => step(1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Forward one frame">1f ›</button>
+        <span className="w-24 font-mono text-xs text-n-50">{formatTime(ms)} / {formatTime(total)}</span>
 
         <div
           ref={barRef}
-          className="relative mt-5 h-2 flex-1 cursor-pointer rounded-full bg-line"
+          className="relative mt-5 h-2 flex-1 cursor-pointer rounded-full bg-brand-dark"
           onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); scrub(e.clientX); }}
           onPointerMove={(e) => { if (e.buttons) scrub(e.clientX); }}
         >
-          <div className="absolute inset-y-0 left-0 rounded-full bg-brand" style={{ width: total ? `${(ms / total) * 100}%` : 0 }} />
+          <div className="absolute inset-y-0 left-0 rounded-full bg-brand-fill" style={{ width: total ? `${(ms / total) * 100}%` : 0 }} />
           {total > 0 && markers.map((m) => (
             <button
               key={m.id}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => onMarkerClick(m.id)}
               title={`#${m.number} at ${formatTime(m.timeMs)}`}
-              className="absolute -top-6 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full text-[9px] font-bold text-white"
+              className="absolute -top-6 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full text-[9px] font-bold"
               style={{
                 left: `${Math.min(100, (m.timeMs / total) * 100)}%`,
-                background: m.resolved ? "#686764" : "#08794a",
-                outline: m.id === selectedId ? "2px solid #0f2e21" : "none",
+                background: m.resolved ? "#9e9b94" : "#39c67f", color: "#0f2e21",
+                outline: m.id === selectedId ? "2px solid #fefdfb" : "none",
               }}
             >
               {m.initials}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Thread, User } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
-import { Tag } from "@/components/ui/Tag";
+import { Tag, UnreadDot } from "@/components/ui/Tag";
+import type { Thread, User } from "@/lib/types";
+import { Avatar } from "./Avatar";
 import { formatTime } from "./VideoViewer";
 
 export type Tab = "all" | "open" | "resolved";
@@ -33,16 +34,18 @@ function ago(iso: string) {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
   if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
-  return `${Math.round(m / 60)}h ago`;
+  if (m < 1440) return `${Math.round(m / 60)}h ago`;
+  return `${Math.round(m / 1440)}d ago`;
 }
 
 function ThreadCard({
-  thread, users, me, selected, canResolve, canPush, onSelect, onReply, onStatus, onPush,
+  thread, users, me, selected, unread, canResolve, canPush, onSelect, onReply, onStatus, onPush,
 }: {
   thread: Thread;
   users: User[];
   me: User;
   selected: boolean;
+  unread: boolean;
   canResolve: boolean;
   canPush: boolean;
   onSelect: () => void;
@@ -55,69 +58,90 @@ function ThreadCard({
   const [text, setText] = useState("");
   const byId = (id: string) => users.find((u) => u.id === id);
   const resolved = thread.status === "resolved";
+  const [first, ...replies] = thread.comments;
+  const author = byId(first.authorId);
 
   useEffect(() => {
     if (selected) ref.current?.scrollIntoView({ block: "nearest" });
   }, [selected]);
 
-  const anchorLabel = thread.timeMs != null ? formatTime(thread.timeMs) : thread.page != null ? `p. ${thread.page}` : null;
+  const where = thread.timeMs != null ? formatTime(thread.timeMs) : thread.page != null ? `Page ${thread.page}` : null;
 
   return (
     <div
       ref={ref}
       onClick={onSelect}
-      className={`cursor-pointer rounded-lg border p-3 text-sm ${selected ? "border-brand bg-brand-soft/40" : "border-line bg-white"} ${resolved ? "opacity-70" : ""}`}
+      className={`cursor-pointer rounded-xl border bg-white p-4 text-sm shadow-sm ${selected ? "border-brand" : "border-line"} ${resolved ? "opacity-75" : ""}`}
     >
-      <div className="mb-2 flex items-center gap-2">
-        <span
-          className="flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-bold text-white"
-          style={{ background: resolved ? "#686764" : thread.anchor ? "#08794a" : "#464543" }}
-        >
-          {thread.anchor ? thread.number : "#"}
-        </span>
-        {!thread.anchor && <span className="text-xs text-muted">General #{thread.number}</span>}
-        {anchorLabel && <span className="rounded bg-line px-1.5 py-0.5 font-mono text-xs">{anchorLabel}</span>}
-        <span className="ml-auto flex items-center gap-1.5 text-xs">
-          {resolved && <Tag tone="neutral" icon="check">Resolved</Tag>}
-          {thread.jira && <Tag tone="ok" icon="check" title={`Pushed ${ago(thread.jira.pushedAt)}`}>In Jira</Tag>}
+      <div className="flex items-center gap-2">
+        <Avatar user={author} />
+        <span className="font-semibold">{author?.name ?? "Unknown"}</span>
+        {unread && <UnreadDot />}
+        <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
+          {canResolve ? (
+            <button
+              onClick={() => onStatus(resolved ? "open" : "resolved")}
+              aria-label={resolved ? "Reopen comment" : "Resolve comment"}
+              title={resolved ? "Resolved. Click to reopen" : "Mark as resolved"}
+              className={`flex h-7 w-7 items-center justify-center rounded-full ${resolved ? "bg-brand text-n-50" : "text-n-700 hover:bg-brand-soft"}`}
+            >
+              <Icon name={resolved ? "check" : "delivered"} size={resolved ? 14 : 18} />
+            </button>
+          ) : resolved ? (
+            <Tag tone="neutral" icon="check">Resolved</Tag>
+          ) : null}
         </span>
       </div>
 
-      <ul className="space-y-2">
-        {thread.comments.map((c) => (
-          <li key={c.id}>
-            <div className="text-xs text-muted">
-              <span className="font-semibold text-foreground">{byId(c.authorId)?.name ?? "Unknown"}</span> · {ago(c.createdAt)}
-            </div>
-            <p className="whitespace-pre-wrap break-words"><Mentions text={c.body} users={users} /></p>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+        {thread.anchor && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 font-bold text-n-50" title="Pin number on the design">
+            {thread.number}
+          </span>
+        )}
+        {where && <span className="font-medium text-brand">{where}</span>}
+        <span>{ago(first.createdAt)}</span>
+        {thread.jira && <span className="ml-auto"><Tag tone="ok" icon="check" title={`Pushed ${ago(thread.jira.pushedAt)}`}>In Jira</Tag></span>}
+      </div>
+
+      <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-snug"><Mentions text={first.body} users={users} /></p>
+
+      {replies.length > 0 && (
+        <ul className="mt-3 space-y-3 border-l-2 border-line pl-3">
+          {replies.map((c) => (
+            <li key={c.id}>
+              <div className="flex items-center gap-2 text-xs text-muted">
+                <Avatar user={byId(c.authorId)} size={20} />
+                <span className="font-semibold text-ink">{byId(c.authorId)?.name ?? "Unknown"}</span>
+                <span>{ago(c.createdAt)}</span>
+              </div>
+              <p className="mt-1 whitespace-pre-wrap break-words"><Mentions text={c.body} users={users} /></p>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {thread.pushError && (
-        <div role="alert" className="mt-2 flex items-start gap-1.5 rounded-lg border border-bad-line bg-bad-bg px-2 py-1.5 text-xs text-bad-fg">
+        <div role="alert" className="mt-3 flex items-start gap-1.5 rounded-lg border border-bad-line bg-bad-bg px-2 py-1.5 text-xs text-bad-fg">
           <Icon name="close" size={14} />
-          <span><strong>Not pushed.</strong> {thread.pushError}</span>
+          <span><strong>Not pushed to Jira.</strong> {thread.pushError}</span>
         </div>
       )}
 
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
-        <button className="font-medium text-ink hover:underline" onClick={() => setReplying((r) => !r)}>Reply</button>
-        {canResolve && (
-          <button className="font-medium text-ink hover:underline" onClick={() => onStatus(resolved ? "open" : "resolved")}>
-            {resolved ? "Reopen" : "Resolve"}
-          </button>
-        )}
+      <div className="mt-3 flex items-center gap-3 text-xs" onClick={(e) => e.stopPropagation()}>
+        <button className="flex items-center gap-1 font-medium text-ink hover:underline" onClick={() => setReplying((r) => !r)}>
+          <Icon name="reply" size={13} /> Reply
+        </button>
         {canPush && !thread.jira && (
-          <button className="ml-auto rounded border border-control px-2 py-0.5 font-medium hover:bg-brand-soft" onClick={onPush}>
-            {thread.pushError ? "Retry push" : "Push to Jira"}
+          <button className="ml-auto font-medium text-brand hover:underline" onClick={onPush}>
+            {thread.pushError ? "Retry push to Jira" : "Push to Jira"}
           </button>
         )}
       </div>
 
       {replying && (
         <form
-          className="mt-2 flex gap-2"
+          className="mt-3 flex gap-2"
           onClick={(e) => e.stopPropagation()}
           onSubmit={(e) => {
             e.preventDefault();
@@ -132,31 +156,28 @@ function ThreadCard({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={`Reply as ${me.name}`}
-            className="min-w-0 flex-1 rounded border border-line px-2 py-1 text-sm"
+            className="min-w-0 flex-1 rounded-lg border border-control px-3 py-1.5 text-sm"
           />
-          <button className="rounded bg-brand px-3 py-1 text-sm font-medium text-white hover:bg-brand-dark">Send</button>
+          <button className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">Send</button>
         </form>
       )}
     </div>
   );
 }
 
-export function CommentPanel({
-  threads, allCount, users, me, selectedId, tab, mine, unpushed, isVideo, draft, canComment,
-  canResolve, canPush, onTab, onMine, onUnpushed, onSelect, onReply, onStatus, onPush, onPushAll,
-  onStartComposer, onClearPin, onSubmit,
+export function CommentList({
+  threads, counts, users, me, selectedId, unreadIds, tab, mine, unpushed, canResolve, canPush,
+  onTab, onMine, onUnpushed, onSelect, onReply, onStatus, onPush, onPushAll,
 }: {
   threads: Thread[];
-  allCount: Record<Tab, number>;
+  counts: Record<Tab, number>;
   users: User[];
   me: User;
   selectedId: string | null;
+  unreadIds: Set<string>;
   tab: Tab;
   mine: boolean;
   unpushed: boolean;
-  isVideo: boolean;
-  draft: Draft | null;
-  canComment: boolean;
   canResolve: (t: Thread) => boolean;
   canPush: (t: Thread) => boolean;
   onTab: (t: Tab) => void;
@@ -167,13 +188,83 @@ export function CommentPanel({
   onStatus: (id: string, s: Thread["status"]) => void;
   onPush: (id: string) => void;
   onPushAll: () => void;
-  onStartComposer: () => void;
+}) {
+  const anyPushable = threads.some((t) => !t.jira && canPush(t));
+  const pill = (t: Tab, label: string) => (
+    <button
+      key={t}
+      onClick={() => onTab(t)}
+      aria-pressed={tab === t}
+      className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === t ? "bg-brand-soft text-ink" : "bg-n-150 text-n-800 hover:bg-n-200"}`}
+    >
+      {label} <span className="text-xs text-muted">{counts[t]}</span>
+    </button>
+  );
+
+  return (
+    <aside className="flex w-[420px] shrink-0 flex-col">
+      <div className="space-y-2 p-4 pb-2">
+        <div className="flex gap-2">{pill("all", "All")}{pill("open", "Open")}{pill("resolved", "Resolved")}</div>
+        <div className="flex items-center gap-3 text-xs text-muted">
+          <label className="flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => onMine(e.target.checked)} /> Only mine</label>
+          {me.role === "creative" && (
+            <>
+              <label className="flex items-center gap-1"><input type="checkbox" checked={unpushed} onChange={(e) => onUnpushed(e.target.checked)} /> Not in Jira</label>
+              <button disabled={!anyPushable} onClick={onPushAll} className="ml-auto font-medium text-brand enabled:hover:underline disabled:opacity-40">
+                Push all to Jira
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto p-4 pt-2">
+        {threads.length === 0 && (
+          <p className="rounded-xl border border-dashed border-control bg-white/60 p-6 text-center text-sm text-muted">
+            No comments yet. Click anywhere on the design, then type your comment.
+          </p>
+        )}
+        {threads.map((t) => (
+          <ThreadCard
+            key={t.id}
+            thread={t}
+            users={users}
+            me={me}
+            selected={t.id === selectedId}
+            unread={unreadIds.has(t.id)}
+            canResolve={canResolve(t)}
+            canPush={canPush(t)}
+            onSelect={() => onSelect(t)}
+            onReply={(b) => onReply(t.id, b)}
+            onStatus={(s) => onStatus(t.id, s)}
+            onPush={() => onPush(t.id)}
+          />
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+export function Composer({
+  users, me, isVideo, draft, hasPdfPage, onStart, onClearPin, onSubmit,
+}: {
+  users: User[];
+  me: User;
+  isVideo: boolean;
+  draft: Draft | null;
+  hasPdfPage: number | null;
+  onStart: () => void;
   onClearPin: () => void;
   onSubmit: (body: string, withTime: boolean) => void;
 }) {
   const [body, setBody] = useState("");
   const [withTime, setWithTime] = useState(true);
   const area = useRef<HTMLTextAreaElement>(null);
+
+  // Dropping a pin should lead straight into typing.
+  const pinned = draft?.hasPin ?? false;
+  useEffect(() => {
+    if (pinned) area.current?.focus();
+  }, [pinned]);
 
   const mentionQuery = /@([\w ]*)$/.exec(body)?.[1];
   const suggestions = mentionQuery === undefined
@@ -191,100 +282,64 @@ export function CommentPanel({
     setBody("");
   };
 
-  const pushable = threads.some((t) => !t.jira && canPush(t));
-
-  const tabBtn = (t: Tab, label: string): ReactNode => (
-    <button
-      key={t}
-      onClick={() => onTab(t)}
-      className={`rounded-full px-3 py-1 text-sm ${tab === t ? "bg-brand text-white" : "hover:bg-brand-soft"}`}
-    >
-      {label} <span className="opacity-70">{allCount[t]}</span>
-    </button>
-  );
-
   return (
-    <aside className="flex w-[360px] shrink-0 flex-col border-l border-line bg-white">
-      <div className="space-y-2 border-b border-line p-3">
-        <div className="flex gap-1">{tabBtn("all", "All")}{tabBtn("open", "Open")}{tabBtn("resolved", "Resolved")}</div>
-        <div className="flex items-center gap-3 text-xs">
-          <label className="flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => onMine(e.target.checked)} /> Mine</label>
-          <label className="flex items-center gap-1"><input type="checkbox" checked={unpushed} onChange={(e) => onUnpushed(e.target.checked)} /> Unpushed</label>
-          <button
-            disabled={!pushable}
-            onClick={onPushAll}
-            className="ml-auto rounded border border-line px-2 py-0.5 font-medium enabled:hover:bg-brand-soft disabled:opacity-40"
-          >
-            Push all unpushed
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-2 overflow-y-auto bg-paper p-3">
-        {threads.length === 0 && <p className="py-8 text-center text-sm text-muted">No comments match.</p>}
-        {threads.map((t) => (
-          <ThreadCard
-            key={t.id}
-            thread={t}
-            users={users}
-            me={me}
-            selected={t.id === selectedId}
-            canResolve={canResolve(t)}
-            canPush={canPush(t)}
-            onSelect={() => onSelect(t)}
-            onReply={(b) => onReply(t.id, b)}
-            onStatus={(s) => onStatus(t.id, s)}
-            onPush={() => onPush(t.id)}
-          />
-        ))}
-      </div>
-
-      <div className="relative border-t border-line p-3">
-        {!canComment ? (
-          <p className="text-sm text-muted">You can comment once you are invited to review this asset.</p>
-        ) : (
-          <>
-            {suggestions.length > 0 && (
-              <ul className="absolute bottom-full left-3 right-3 mb-1 rounded border border-line bg-white shadow">
-                {suggestions.map((u) => (
-                  <li key={u.id}>
-                    <button className="w-full px-3 py-1.5 text-left text-sm hover:bg-brand-soft" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
-                      {u.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {draft?.hasPin && (
-              <div className="mb-2 flex items-center gap-2 text-xs">
-                <Tag tone="warn" icon="alert">Pin attached</Tag>
-                <button className="text-muted hover:underline" onClick={onClearPin}>Remove</button>
-              </div>
-            )}
-            <textarea
-              ref={area}
-              value={body}
-              rows={3}
-              onFocus={onStartComposer}
-              onChange={(e) => setBody(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(); }}
-              placeholder="Add a comment. Use @ to mention."
-              className="w-full resize-none rounded border border-line p-2 text-sm"
-            />
-            <div className="mt-2 flex items-center gap-3">
-              {isVideo && (
-                <label className="flex items-center gap-1.5 text-xs">
-                  <input type="checkbox" checked={withTime} onChange={(e) => setWithTime(e.target.checked)} />
-                  <span className="font-mono">{formatTime(draft?.capturedMs ?? 0)}</span>
-                </label>
-              )}
-              <button onClick={submit} disabled={!body.trim()} className="ml-auto rounded bg-brand px-4 py-1.5 text-sm font-medium text-white enabled:hover:bg-brand-dark disabled:opacity-40">
-                Comment
+    <div className="relative mx-auto w-full max-w-2xl rounded-xl border border-line bg-white p-3 shadow-md">
+      {suggestions.length > 0 && (
+        <ul className="absolute bottom-full left-3 right-3 mb-1 rounded-lg border border-line bg-white shadow">
+          {suggestions.map((u) => (
+            <li key={u.id}>
+              <button className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-brand-soft" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
+                <Avatar user={u} size={20} /> {u.name}
               </button>
-            </div>
-          </>
+            </li>
+          ))}
+        </ul>
+      )}
+      <textarea
+        ref={area}
+        value={body}
+        rows={2}
+        onFocus={onStart}
+        onChange={(e) => setBody(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
+        placeholder="Write a comment…"
+        aria-label="Write a comment"
+        className="w-full resize-none bg-transparent px-1 text-[15px] outline-none placeholder:text-n-650"
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+        <button
+          type="button"
+          onClick={() => { setBody((b) => `${b}@`); area.current?.focus(); }}
+          aria-label="Mention someone"
+          title="Mention someone"
+          className="flex h-7 w-7 items-center justify-center rounded text-n-800 hover:bg-brand-soft"
+        >
+          <Icon name="at" size={16} />
+        </button>
+        {draft?.hasPin ? (
+          <span className="flex items-center gap-1">
+            <Tag tone="ok" icon="check">Pinned on design</Tag>
+            <button onClick={onClearPin} className="text-muted hover:underline">Remove</button>
+          </span>
+        ) : (
+          <span className="text-muted">
+            {isVideo ? "Tip: click the video to pin a spot" : hasPdfPage ? `Commenting on page ${hasPdfPage}. Click to pin a spot` : "Tip: click the design to pin a spot"}
+          </span>
         )}
+        {isVideo && (
+          <label className="flex items-center gap-1">
+            <input type="checkbox" checked={withTime} onChange={(e) => setWithTime(e.target.checked)} />
+            At <span className="font-mono">{formatTime(draft?.capturedMs ?? 0)}</span>
+          </label>
+        )}
+        <button
+          onClick={submit}
+          disabled={!body.trim()}
+          className="ml-auto rounded-lg bg-brand px-5 py-1.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650"
+        >
+          Send
+        </button>
       </div>
-    </aside>
+    </div>
   );
 }

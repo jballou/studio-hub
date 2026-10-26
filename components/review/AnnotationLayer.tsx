@@ -3,8 +3,6 @@
 import { useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import type { Anchor, BoxAnchor } from "@/lib/types";
 
-export type Tool = "pointer" | "dot" | "box";
-
 export type Pin = {
   id: string;
   number: number;
@@ -34,9 +32,10 @@ function shift(a: Anchor, dx: number, dy: number): Anchor {
 }
 
 export function AnnotationLayer({
-  tool, pins, selectedId, draft, onSelect, onDraftChange, onEditAnchor,
+  enabled, pins, selectedId, draft, onSelect, onDraftChange, onEditAnchor,
 }: {
-  tool: Tool;
+  /** When true, clicking the canvas drops a pin and dragging draws a box. */
+  enabled: boolean;
   pins: Pin[];
   selectedId: string | null;
   draft: Anchor | null;
@@ -61,7 +60,7 @@ export function AnnotationLayer({
   };
 
   const onBackgroundDown = (e: RPointerEvent) => {
-    if (tool === "pointer") return;
+    if (!enabled) return;
     const p = norm(e);
     begin(e, { mode: "new", sx: p.x, sy: p.y });
     setLive({ target: DRAFT, anchor: { kind: "dot", x: p.x, y: p.y } });
@@ -75,7 +74,7 @@ export function AnnotationLayer({
       const far = Math.max(Math.abs(p.x - d.sx), Math.abs(p.y - d.sy)) > MIN_DRAG;
       setLive({
         target: DRAFT,
-        anchor: tool === "box" && far ? boxFrom(d.sx, d.sy, p.x, p.y) : { kind: "dot", x: d.sx, y: d.sy },
+        anchor: far ? boxFrom(d.sx, d.sy, p.x, p.y) : { kind: "dot", x: d.sx, y: d.sy },
       });
     } else if (d.mode === "move") {
       if (d.locked) return;
@@ -122,7 +121,7 @@ export function AnnotationLayer({
   const draftAnchor = live?.target === DRAFT ? live.anchor : draft;
   if (draftAnchor) items.push({ id: DRAFT, number: null, anchor: draftAnchor, resolved: false, editable: true, isDraft: true });
 
-  const cursor = tool === "pointer" ? "default" : "crosshair";
+  const cursor = enabled ? "crosshair" : "default";
 
   return (
     <div
