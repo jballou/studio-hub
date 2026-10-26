@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { projectsRepo, repo } from "@/lib/data";
 import { parseSource } from "@/lib/sources";
@@ -27,6 +27,7 @@ const field = "w-full rounded-lg border border-control bg-white px-3 py-2 text-s
 
 export function SubmitForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -34,7 +35,7 @@ export function SubmitForm() {
   const [url, setUrl] = useState("");
   const [device, setDevice] = useState<Device>("desktop");
   const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(params.get("title") ?? "");
   const [projectKey, setProjectKey] = useState("");
   const [target, setTarget] = useState(""); // "" = new asset, else existing asset id
   const [reviewerIds, setReviewerIds] = useState<string[]>([]);
@@ -45,8 +46,12 @@ export function SubmitForm() {
   useEffect(() => {
     repo.listUsers().then(setUsers);
     repo.listAssets().then(setAssets);
-    projectsRepo.listProjects("u-avery").then((p) => { setProjects(p); setProjectKey((k) => k || p[0]?.jiraKey || ""); });
-  }, []);
+    projectsRepo.listProjects("u-avery").then((p) => {
+      setProjects(p);
+      const ticket = params.get("ticket");
+      setProjectKey((k) => k || (ticket && p.some((x) => x.jiraKey === ticket) ? ticket : p[0]?.jiraKey || ""));
+    });
+  }, [params]);
 
   const parsed = useMemo(
     () => (source === "upload" ? null : parseSource(source, url, device)),

@@ -13,6 +13,7 @@ const PREF_KEY = "sidebar-pref-v1";
 
 const ITEMS: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
+  { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },
   { href: "/submit", label: "Submit for feedback", icon: "upload", match: (p) => p === "/submit" },
 ];

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Stage } from "@/lib/types";
 import { Icon, type IconName } from "./Icon";
 
-export type Tone = "neutral" | "info" | "progress" | "warn" | "ok" | "bad";
+export type Tone = "neutral" | "info" | "progress" | "warn" | "ok" | "bad" | "gold";
 
 const TONES: Record<Tone, string> = {
   neutral: "bg-n-150 border-n-200 text-n-800",
@@ -11,6 +11,7 @@ const TONES: Record<Tone, string> = {
   warn: "bg-warn-bg border-warn-line text-warn-fg",
   ok: "bg-ok-bg border-ok-line text-ok-fg",
   bad: "bg-bad-bg border-bad-line text-bad-fg",
+  gold: "bg-gold-bg border-gold-line text-gold-fg",
 };
 
 /** Pill with tint surface, matching border and a leading icon, so status never relies on color alone. */

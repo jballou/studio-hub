@@ -33,6 +33,7 @@
   --color-warn-bg: #f9e8d2; --color-warn-line: #f2d0a3; --color-warn-fg: #854813; /* Orange 100/200/700 */
   --color-ok-bg: #d6f5de; --color-ok-line: #b0e8c3; --color-ok-fg: #0f2e21; /* Green 100/200/900 */
   --color-bad-bg: #f7dbd4; --color-bad-line: #eab0a9; --color-bad-fg: #8a3734; /* Red 100/200/600 */
+  --color-gold-bg: #f9f2d2; --color-gold-line: #f2e2a6; --color-gold-fg: #7c6403; /* Yellow 100/200/700 */
   --color-focus: #5568bf; /* Periwinkle 600 [CONFIRM] */
 
   --font-sans: var(--font-work-sans), system-ui, sans-serif;
