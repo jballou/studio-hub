@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
+import { isJira } from "@/lib/data/mode";
 import { toCsvExportUrl } from "@/lib/calendar/gsheet";
 import { loadSource, loadSources, saveUserSources } from "@/lib/calendar/store";
 import { ITEM_TYPES, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
@@ -76,7 +77,7 @@ export function SourcesView() {
                   {!r ? "Loading…" : r.error ? <span className="text-bad-fg">{r.error}</span> : `${r.items.length} items${r.warnings.length ? ` · ${r.warnings.join(" ")}` : ""}`}
                 </span>
               </span>
-              {s.builtin ? <span className="text-xs text-muted">Sample</span> : (
+              {s.builtin ? <span className="text-xs text-muted">{isJira ? "Built in" : "Sample"}</span> : (
                 <button onClick={() => remove(s.id)} className="text-xs font-medium text-bad-fg hover:underline">Remove</button>
               )}
             </li>

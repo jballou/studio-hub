@@ -31,6 +31,7 @@ export function BriefForm() {
   const [submitting, setSubmitting] = useState(false);
   const [key, setKey] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     repo.listUsers().then(setUsers);
@@ -58,9 +59,14 @@ export function BriefForm() {
   const submit = async () => {
     setSubmitting(true);
     // Real adapter creates the MKTGCRTV issue as the signed-in user (reporter = requester).
-    const res = await projectsRepo.createBrief(form, "u-riley");
-    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
-    setKey(res.jiraKey);
+    setError(null);
+    try {
+      const res = await projectsRepo.createBrief(form, "u-riley");
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      setKey(res.jiraKey);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't create the ticket.");
+    }
     setSubmitting(false);
   };
 
@@ -120,6 +126,7 @@ export function BriefForm() {
       <button onClick={submit} disabled={!valid || submitting} className="rounded bg-brand px-5 py-2 font-medium text-white enabled:hover:bg-brand-dark disabled:opacity-40">
         {submitting ? "Submitting…" : "Submit brief"}
       </button>
+      {error && <p role="alert" className="mt-3 rounded-lg border border-bad-line bg-bad-bg px-3 py-2 text-sm text-bad-fg">{error}</p>}
       {!valid && <p className="mt-2 text-xs text-muted">Title, problem statement, deadline and at least one asset type are required.</p>}
     </main>
   );

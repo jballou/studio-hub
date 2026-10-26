@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { projectsRepo, repo } from "@/lib/data";
+import { isJira, projectsRepo, repo } from "@/lib/data";
 import type { User } from "@/lib/types";
 import { Avatar } from "@/components/review/Avatar";
 import { SearchDialog } from "./SearchDialog";
@@ -36,6 +36,12 @@ export function Sidebar() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (v === "expanded" || v === "collapsed") setPref(v);
     } catch { /* storage unavailable */ }
+    if (isJira) {
+      fetch("/api/me", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((m) => m && setMe({ id: m.accountId, name: m.name, role: m.role, initials: String(m.name).split(/\s+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() }));
+      return;
+    }
     repo.listUsers().then((u) => setMe(u.find((x) => x.id === "u-avery")));
     projectsRepo.listProjects("u-avery").then((ps) =>
       setAlerts(ps.reduce((n, p) => n + p.newComments + (p.actionRequired ? 1 : 0), 0)));
@@ -49,6 +55,7 @@ export function Sidebar() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  if (pathname === "/signin") return null;
   const inWorkspace = /^\/review\/[^/]+/.test(pathname);
   const collapsed = (pref ?? (inWorkspace ? "collapsed" : "expanded")) === "collapsed";
 

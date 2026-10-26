@@ -103,7 +103,7 @@ export type NewThread = {
 // Requester-facing stages mapped from Jira status.
 export type Stage = "Submitted" | "In review" | "In progress" | "In feedback" | "Delivered";
 export type ProjectGroup = "open" | "ideas" | "closed";
-export type ProjectType = "Social" | "Video" | "Print" | "Web";
+export type ProjectType = "Social" | "Video" | "Print" | "Web" | "Graphic" | "Copy" | "Campaign" | "Other";
 
 export type Project = {
   id: string;
@@ -123,6 +123,10 @@ export type Project = {
   /** YYYY-MM-DD the brief was submitted */
   submittedAt: string;
   brief?: Partial<BriefInput>;
+  /** plain-text ticket description when there is no structured brief (Jira data) */
+  description?: string;
+  requesterName?: string;
+  collaboratorNames?: string[];
 };
 
 export type BriefInput = {

@@ -1,3 +1,4 @@
+import { isJira } from "@/lib/data/mode";
 import { demoJiraItems, demoLaunchCsv, demoSocialCsv } from "./demo";
 import { ingestSheet } from "./sheet";
 import type { CalendarSource, SourceResult } from "./types";
@@ -10,10 +11,15 @@ const BUILTIN: CalendarSource[] = [
   { id: "jira-mktgcrtv", name: "MKTGCRTV (Jira, sample)", kind: "jira", defaultType: "other", jql: "project = MKTGCRTV AND duedate is not EMPTY", dateField: "Due date", builtin: true },
 ];
 
+const JIRA_SOURCE: CalendarSource = {
+  id: "jira-mktgcrtv", name: "MKTGCRTV (Jira)", kind: "jira", defaultType: "other", builtin: true,
+  jql: "project = MKTGCRTV AND duedate is not EMPTY AND statusCategory != Done ORDER BY duedate ASC", dateField: "duedate",
+};
+
 export function loadSources(): CalendarSource[] {
   let saved: CalendarSource[] = [];
   try { saved = JSON.parse(localStorage.getItem(KEY) ?? "[]"); } catch { /* ignore corrupt data */ }
-  return [...BUILTIN, ...saved];
+  return [...(isJira ? [JIRA_SOURCE] : BUILTIN), ...saved];
 }
 
 export function saveUserSources(all: CalendarSource[]): boolean {
@@ -34,6 +40,14 @@ export async function loadSource(src: CalendarSource): Promise<SourceResult> {
   try {
     if (src.id === "demo-social") return ingestSheet(demoSocialCsv(), src);
     if (src.id === "demo-launches") return ingestSheet(demoLaunchCsv(), src);
+    if (src.kind === "jira" && isJira) {
+      const qs = new URLSearchParams({ jql: src.jql ?? "", dateField: src.dateField ?? "duedate", sourceId: src.id, sourceName: src.name });
+      const res = await fetch(`/api/jira/calendar?${qs}`, { cache: "no-store" });
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 401) return fail("Sign in again to load Jira.");
+      if (!res.ok) return fail(body.error ?? `Jira request failed (${res.status}).`);
+      return { sourceId: src.id, items: body.items, warnings: body.skipped ? [`${body.skipped} tickets skipped: no date.`] : [], loadedAt: new Date().toISOString() };
+    }
     if (src.kind === "jira") {
       // Real adapter: query Jira with the signed-in user's token using src.jql and src.dateField.
       return { sourceId: src.id, items: src.id === "jira-mktgcrtv" ? demoJiraItems() : [], warnings: ["Sample data. Live Jira sync needs Atlassian sign-in."], loadedAt: new Date().toISOString() };

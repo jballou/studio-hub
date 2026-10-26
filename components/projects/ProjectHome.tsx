@@ -109,11 +109,11 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           <div className="space-y-5">
             <Card title="Details">
               <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
-                <div><dt className="inline text-muted">Requester: </dt><dd className="inline">{person(project.requesterId)?.name ?? "Unknown"}</dd></div>
+                <div><dt className="inline text-muted">Requester: </dt><dd className="inline">{project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"}</dd></div>
                 <div><dt className="inline text-muted">Type: </dt><dd className="inline">{project.type}</dd></div>
                 <div><dt className="inline text-muted">Date submitted: </dt><dd className="inline">{dayLabel(project.submittedAt, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
-                <div><dt className="inline text-muted">Deadline: </dt><dd className="inline">{dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
-                <div className="sm:col-span-2"><dt className="inline text-muted">Collaborators: </dt><dd className="inline">{project.collaboratorIds.map((id) => person(id)?.name).filter(Boolean).join(", ") || "None yet"}</dd></div>
+                <div><dt className="inline text-muted">Deadline: </dt><dd className="inline">{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}</dd></div>
+                <div className="sm:col-span-2"><dt className="inline text-muted">Collaborators: </dt><dd className="inline">{(project.collaboratorNames ?? project.collaboratorIds.map((id) => person(id)?.name).filter(Boolean)).join(", ") || "None yet"}</dd></div>
               </dl>
             </Card>
 
@@ -132,12 +132,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                   </li>
                 ))}
               </ol>
-              <p className="mt-4 text-sm text-muted">Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</p>
+              {project.deadline && <p className="mt-4 text-sm text-muted">Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</p>}
             </Card>
 
-            <Card title="Project brief">
+            <Card title={project.brief ? "Project brief" : "Description"}>
               {brief.length === 0 ? (
-                <p className="text-sm text-muted">No brief on file for this project.</p>
+                project.description
+                  ? <p className="whitespace-pre-wrap text-sm">{project.description}</p>
+                  : <p className="text-sm text-muted">No brief on file for this project.</p>
               ) : (
                 <div className="space-y-4">
                   {brief.map((s) => (

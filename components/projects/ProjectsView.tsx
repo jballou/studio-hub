@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { projectsRepo, repo } from "@/lib/data";
+import { isJira, projectsRepo, repo } from "@/lib/data";
 import { Callout, StageTag, Tag } from "@/components/ui/Tag";
 import type { Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
 
@@ -12,7 +12,9 @@ const GROUPS: { id: ProjectGroup; label: string }[] = [
   { id: "closed", label: "Closed" },
 ];
 const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
-const TYPES: ProjectType[] = ["Social", "Video", "Print", "Web"];
+const TYPES: ProjectType[] = isJira
+  ? ["Graphic", "Video", "Web", "Copy", "Campaign", "Other"]
+  : ["Social", "Video", "Print", "Web"];
 
 function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" | "week" }) {
   const [cursor, setCursor] = useState(() => new Date("2026-10-26T00:00:00"));
@@ -68,10 +70,11 @@ export function ProjectsView() {
   const [collab, setCollab] = useState("");
   const [before, setBefore] = useState("");
 
-  useEffect(() => { repo.listUsers().then(setUsers); }, []);
+  useEffect(() => { if (!isJira) repo.listUsers().then(setUsers); }, []);
+  const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    projectsRepo.listProjects(meId).then((p) => { if (live) setProjects(p); });
+    projectsRepo.listProjects(meId).then((p) => { if (live) { setProjects(p); setLoadError(null); } }).catch((e: Error) => { if (live) setLoadError(e.message); });
     return () => { live = false; };
   }, [meId]);
 
@@ -91,11 +94,11 @@ export function ProjectsView() {
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">Projects</h1>
         <div className="ml-auto flex items-center gap-3 text-xs">
-          <label className="flex items-center gap-1">Viewing as
+          {!isJira && <label className="flex items-center gap-1">Viewing as
             <select value={meId} onChange={(e) => setMeId(e.target.value)} className="rounded border border-control px-1 py-1">
               {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
             </select>
-          </label>
+          </label>}
           <div className="flex overflow-hidden rounded border border-line">
             {(["list", "month", "week"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-3 py-1 capitalize ${view === v ? "bg-brand text-white" : "bg-white"}`}>{v}</button>
@@ -118,6 +121,8 @@ export function ProjectsView() {
         </select>
         <label className="flex items-center gap-1">Due by <input type="date" value={before} onChange={(e) => setBefore(e.target.value)} className="rounded border border-control px-2 py-1" /></label>
       </div>
+
+      {loadError && <div className="mb-4"><Callout tone="bad" icon="alert">Couldn&apos;t load projects: {loadError}</Callout></div>}
 
       {(actionCount > 0 || newTotal > 0) && (
         <div className="mb-6 grid gap-3 sm:grid-cols-2">
@@ -154,10 +159,10 @@ export function ProjectsView() {
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
-                          <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {name(p.requesterId)}</div>
+                          <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {p.requesterName ?? name(p.requesterId)}</div>
                         </div>
                         <StageTag stage={p.stage} />
-                        <span className="w-24 text-right text-xs text-muted">Due {p.deadline}</span>
+                        <span className="w-24 text-right text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>
                       </Link>
                     </li>
                   ))}
