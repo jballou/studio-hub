@@ -1,54 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { isJira, projectsRepo, repo } from "@/lib/data";
+import { blocksRepo, isJira } from "@/lib/data";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useMe } from "@/hooks/useMe";
 import type { User } from "@/lib/types";
 import { Avatar } from "@/components/review/Avatar";
 import { SearchDialog } from "./SearchDialog";
 
 const PREF_KEY = "sidebar-pref-v1";
+const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
 
-const ITEMS: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
+type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean };
+
+const ITEMS: Item[] = [
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },
   { href: "/submit", label: "Submit for feedback", icon: "upload", match: (p) => p === "/submit" },
+  { href: "/blocking", label: "Blocking you", icon: "block", match: (p) => p.startsWith("/blocking") },
 ];
 
-const ADMIN_ITEM: (typeof ITEMS)[number] = { href: "/admin/users", label: "Team & access", icon: "users", match: (p) => p.startsWith("/admin") };
+const ADMIN_ITEM: Item = { href: "/admin/users", label: "Admin", icon: "users", match: (p) => p.startsWith("/admin") };
 
 /**
- * Persistent app nav with an expanded and a collapsed (icon rail) mode. The toggle is
- * always visible. Without a saved choice it starts collapsed inside the review
- * workspace (to give the design room) and expanded elsewhere.
+ * Persistent app nav with an expanded and a collapsed (icon rail) mode. The toggle is always visible.
+ * Without a saved choice it starts collapsed inside the review workspace (to give the design room)
+ * and expanded elsewhere. Admin and your own name sit at the bottom.
  */
 export function Sidebar() {
   const pathname = usePathname();
+  const me = useMe();
+  const favs = useFavorites();
   const [pref, setPref] = useState<"expanded" | "collapsed" | null>(null);
+  const [favOpen, setFavOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [me, setMe] = useState<User>();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [alerts, setAlerts] = useState(0);
+  const [waiting, setWaiting] = useState(0);
 
   useEffect(() => {
     try {
       const v = localStorage.getItem(PREF_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (v === "expanded" || v === "collapsed") setPref(v);
+      if (localStorage.getItem(FAV_OPEN_KEY) === "closed") setFavOpen(false);
     } catch { /* storage unavailable */ }
-    if (isJira) {
-      fetch("/api/me", { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((m) => m && (setIsAdmin(!!m.isAdmin), setMe({ id: m.accountId, name: m.name, role: m.role, initials: String(m.name).split(/\s+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() })));
-      return;
-    }
-    repo.listUsers().then((u) => setMe(u.find((x) => x.id === "u-avery")));
-    projectsRepo.listProjects("u-avery").then((ps) =>
-      setAlerts(ps.reduce((n, p) => n + p.newComments + (p.actionRequired ? 1 : 0), 0)));
   }, []);
+
+  // How many projects are waiting on me. Refreshed when blocks change and once a minute so a new block shows up unprompted.
+  const refreshWaiting = useCallback(() => {
+    blocksRepo.mine().then((b) => setWaiting(b.length)).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (isJira && !me) return;
+    refreshWaiting();
+    window.addEventListener("blocks-changed", refreshWaiting);
+    const t = setInterval(() => { if (document.visibilityState === "visible") refreshWaiting(); }, 60_000);
+    return () => { window.removeEventListener("blocks-changed", refreshWaiting); clearInterval(t); };
+  }, [me, refreshWaiting]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -62,14 +73,36 @@ export function Sidebar() {
   const inWorkspace = /^\/review\/[^/]+/.test(pathname);
   const collapsed = (pref ?? (inWorkspace ? "collapsed" : "expanded")) === "collapsed";
 
-  const toggle = () => {
-    const next = collapsed ? "expanded" : "collapsed";
+  const setMode = (next: "expanded" | "collapsed") => {
     setPref(next);
     try { localStorage.setItem(PREF_KEY, next); } catch { /* ignore */ }
   };
+  const toggle = () => setMode(collapsed ? "expanded" : "collapsed");
+  const toggleFav = () => {
+    const next = !favOpen;
+    setFavOpen(next);
+    try { localStorage.setItem(FAV_OPEN_KEY, next ? "open" : "closed"); } catch { /* ignore */ }
+  };
+
+  const user: User | undefined = me
+    ? { id: me.id, name: me.name, role: me.role, initials: me.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase() }
+    : undefined;
 
   const row = (active: boolean) =>
-    `flex items-center gap-3 rounded-lg py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-3"} ${active ? "bg-n-200 text-ink" : "text-n-800 hover:bg-n-150"}`;
+    `relative flex items-center gap-3 rounded-lg py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-3"} ${active ? "bg-n-200 text-ink" : "text-n-800 hover:bg-n-150"}`;
+
+  const navLink = (i: Item, badge?: number) => {
+    const active = i.match(pathname);
+    return (
+      <Link key={i.href} href={i.href} title={i.label} aria-label={badge ? `${i.label}, ${badge} waiting` : i.label} aria-current={active ? "page" : undefined} className={row(active)}>
+        <Icon name={i.icon} size={18} />
+        {!collapsed && <span className="flex-1">{i.label}</span>}
+        {!!badge && (collapsed
+          ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-bad-fg ring-2 ring-n-50" />
+          : <span className="rounded-full bg-bad-fg px-1.5 text-xs font-semibold text-n-50">{badge}</span>)}
+      </Link>
+    );
+  };
 
   const toggleBtn = (
     <button
@@ -117,35 +150,66 @@ export function Sidebar() {
           {!collapsed && "New brief"}
         </Link>
 
-        <div className="flex flex-col gap-1">
-          {[...ITEMS, ...(isAdmin ? [ADMIN_ITEM] : [])].map((i) => {
-            const active = i.match(pathname);
-            return (
-              <Link key={i.href} href={i.href} title={i.label} aria-label={i.label} aria-current={active ? "page" : undefined} className={row(active)}>
-                <Icon name={i.icon} size={18} />
-                {!collapsed && i.label}
-              </Link>
-            );
-          })}
+        <div className="flex flex-col gap-1">{ITEMS.map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
+
+        {/* Favorites folder */}
+        <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+          {collapsed ? (
+            <button onClick={() => setMode("expanded")} title="Favorites" aria-label="Show favorites" className={row(false)}>
+              <Icon name="star" size={18} />
+            </button>
+          ) : (
+            <section aria-label="Favorites">
+              <button onClick={toggleFav} aria-expanded={favOpen} className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-n-700 hover:bg-n-150">
+                <Icon name="star" size={14} />
+                <span className="flex-1 text-left">Favorites</span>
+                <span className={favOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
+              </button>
+              {favOpen && (
+                favs.items.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-muted">Star a project to pin it here.</p>
+                ) : (
+                  <ul className="mt-0.5 space-y-0.5">
+                    {favs.items.map((f) => (
+                      <li key={f.key}>
+                        <Link
+                          href={`/projects/${f.key}`}
+                          title={`${f.key} · ${f.title}`}
+                          aria-current={pathname === `/projects/${f.key}` ? "page" : undefined}
+                          className={`block truncate rounded-lg py-1.5 pl-9 pr-3 text-sm ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-n-150"}`}
+                        >
+                          {f.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </section>
+          )}
         </div>
 
-        <div className={`mt-auto flex border-t border-line pt-3 ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
-          <Avatar user={me} size={32} />
-          {!collapsed && (
-            <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-sm font-medium">{me?.name ?? ""}</span>
-              <span className="block text-xs capitalize text-muted">{me?.role ?? ""}</span>
-            </span>
-          )}
-          <Link
-            href="/projects"
-            aria-label={alerts > 0 ? `Notifications: ${alerts} need attention` : "Notifications"}
-            title="Notifications"
-            className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
-          >
-            <Icon name="bell" size={18} />
-            {alerts > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-bad-fg ring-2 ring-n-50" />}
-          </Link>
+        {/* Bottom: Admin, then you */}
+        <div className="border-t border-line pt-2">
+          {me?.isAdmin && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
+          <div className={`flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
+            <Avatar user={user} size={32} />
+            {!collapsed && (
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-sm font-medium">{user?.name ?? ""}</span>
+                <span className="block text-xs capitalize text-muted">{me ? (me.isAdmin ? "Admin" : me.role) : ""}</span>
+              </span>
+            )}
+            <Link
+              href={waiting > 0 ? "/blocking" : "/projects"}
+              aria-label={waiting > 0 ? `Notifications: ${waiting} ${waiting === 1 ? "project is" : "projects are"} waiting on you` : "Notifications"}
+              title={waiting > 0 ? `${waiting} waiting on you` : "Notifications"}
+              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
+            >
+              <Icon name="bell" size={18} />
+              {waiting > 0 && <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-bad-fg px-1 text-[10px] font-bold leading-none text-n-50 ring-2 ring-n-50">{waiting}</span>}
+            </Link>
+          </div>
         </div>
       </nav>
       {searchOpen && <SearchDialog onClose={() => setSearchOpen(false)} />}

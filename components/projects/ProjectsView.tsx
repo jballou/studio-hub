@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { isJira, projectsRepo, repo } from "@/lib/data";
+import { blocksRepo, isJira, projectsRepo, repo } from "@/lib/data";
+import { FlagTags } from "@/components/blocks/BlockedTag";
+import { StarButton } from "@/components/ui/StarButton";
+import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StageTag, Tag } from "@/components/ui/Tag";
-import type { Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
+import type { Block, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
 
 const GROUPS: { id: ProjectGroup; label: string }[] = [
   { id: "open", label: "Open" },
@@ -65,6 +68,10 @@ export function ProjectsView() {
   const [view, setView] = useState<"list" | "month" | "week">("list");
   const [action, setAction] = useState(false);
   const [newOnly, setNewOnly] = useState(false);
+  const [starredOnly, setStarredOnly] = useState(false);
+  const [blockedOnly, setBlockedOnly] = useState(false);
+  const [blocks, setBlocks] = useState<Record<string, Block>>({});
+  const favs = useFavorites();
   const [stage, setStage] = useState<Stage | "">("");
   const [type, setType] = useState<ProjectType | "">("");
   const [collab, setCollab] = useState("");
@@ -74,7 +81,12 @@ export function ProjectsView() {
   const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    projectsRepo.listProjects(meId).then((p) => { if (live) { setProjects(p); setLoadError(null); } }).catch((e: Error) => { if (live) setLoadError(e.message); });
+    projectsRepo.listProjects(meId).then((p) => {
+      if (!live) return;
+      setProjects(p);
+      setLoadError(null);
+      blocksRepo.list(p.map((x) => x.jiraKey)).then((bs) => { if (live) setBlocks(Object.fromEntries(bs.map((b) => [b.key, b]))); }).catch(() => {});
+    }).catch((e: Error) => { if (live) setLoadError(e.message); });
     return () => { live = false; };
   }, [meId]);
 
@@ -85,9 +97,9 @@ export function ProjectsView() {
   const newProjects = projects.filter((p) => p.newComments > 0).length;
 
   const filtered = useMemo(() => projects.filter((p) =>
-    (!action || p.actionRequired) && (!newOnly || p.newComments > 0) && (!stage || p.stage === stage) &&
+    (!action || p.actionRequired) && (!newOnly || p.newComments > 0) && (!starredOnly || favs.isStarred(p.jiraKey)) && (!blockedOnly || p.flag === "blocked" || !!blocks[p.jiraKey]) && (!stage || p.stage === stage) &&
     (!type || p.type === type) && (!collab || p.collaboratorIds.includes(collab) || p.requesterId === collab) &&
-    (!before || p.deadline <= before)), [projects, action, newOnly, stage, type, collab, before]);
+    (!before || p.deadline <= before)), [projects, action, newOnly, starredOnly, blockedOnly, blocks, favs, stage, type, collab, before]);
 
   return (
     <main className="mx-auto w-full max-w-5xl p-6">
@@ -110,6 +122,8 @@ export function ProjectsView() {
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <label className="flex items-center gap-1"><input type="checkbox" checked={action} onChange={(e) => setAction(e.target.checked)} /> Action required</label>
         <label className="flex items-center gap-1"><input type="checkbox" checked={newOnly} onChange={(e) => setNewOnly(e.target.checked)} /> New comments</label>
+        <label className="flex items-center gap-1"><input type="checkbox" checked={starredOnly} onChange={(e) => setStarredOnly(e.target.checked)} /> Starred</label>
+        <label className="flex items-center gap-1"><input type="checkbox" checked={blockedOnly} onChange={(e) => setBlockedOnly(e.target.checked)} /> Blocked</label>
         <select aria-label="Status" value={stage} onChange={(e) => setStage(e.target.value as Stage | "")} className="rounded border border-control px-2 py-1">
           <option value="">Any status</option>{STAGES.map((s) => <option key={s}>{s}</option>)}
         </select>
@@ -148,14 +162,13 @@ export function ProjectsView() {
               {rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
                   {rows.map((p) => (
-                    <li key={p.id}>
-                      <Link href={`/projects/${p.jiraKey}`} className="flex items-center gap-4 rounded-lg border border-line bg-white p-3 hover:border-brand">
-                        <div className="flex w-14 gap-1">
-                          {p.assetIds.slice(0, 2).map((a) => <span key={a} className="h-10 w-10 rounded bg-brand-soft" aria-hidden />)}
-                        </div>
+                    <li key={p.id} className="flex items-center gap-1 rounded-lg border border-line bg-white pl-2 hover:border-brand">
+                      <StarButton starred={favs.isStarred(p.jiraKey)} onToggle={() => favs.toggle(p.jiraKey, p.title)} label={p.title} />
+                      <Link href={`/projects/${p.jiraKey}`} className="flex min-w-0 flex-1 items-center gap-4 p-3 pl-1">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span className="font-medium">{p.title}</span>
+                            <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>

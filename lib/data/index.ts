@@ -14,3 +14,5 @@ export const projectsRepo: ProjectsRepo = isJira ? jiraProjects : mockProjects;
 export { isJira };
 
 export { peopleRepo, knownPeople } from "./people";
+export { blocksRepo } from "./blocks";
+export { favoritesRepo } from "./favorites";

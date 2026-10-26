@@ -10,8 +10,13 @@ import { dayLabel } from "@/lib/calendar/dates";
 import { formatDue } from "@/lib/time";
 import { loadSource, loadSources } from "@/lib/calendar/store";
 import type { CalendarItem } from "@/lib/calendar/types";
-import { projectsRepo, repo } from "@/lib/data";
-import type { Asset, BriefInput, Project, Stage, User } from "@/lib/types";
+import { blocksRepo, projectsRepo, repo } from "@/lib/data";
+import { BlockDialog } from "@/components/blocks/BlockDialog";
+import { daysSince, FlagTags } from "@/components/blocks/BlockedTag";
+import { StarButton } from "@/components/ui/StarButton";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useMe } from "@/hooks/useMe";
+import type { Asset, BriefInput, Block, Project, Stage, User } from "@/lib/types";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
 const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
@@ -46,12 +51,23 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [items, setItems] = useState<CalendarItem[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
+  const [block, setBlock] = useState<Block | undefined>();
+  const [dialog, setDialog] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [note, setNote] = useState("");
+  const [blockError, setBlockError] = useState<string | null>(null);
+  const me = useMe();
+  const favs = useFavorites();
 
   useEffect(() => {
     projectsRepo.getProject(jiraKey, "u-avery").then(setProject);
+    const loadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
+    loadBlock();
+    window.addEventListener("blocks-changed", loadBlock);
     repo.listUsers().then(setUsers);
     repo.listAssets().then((a) => setAssets(a.filter((x) => x.projectKey === jiraKey)));
     Promise.all(loadSources().map(loadSource)).then((rs) => setItems(rs.flatMap((r) => r.items).filter((i) => i.jiraKey === jiraKey).sort((a, b) => a.date.localeCompare(b.date))));
+    return () => window.removeEventListener("blocks-changed", loadBlock);
   }, [jiraKey]);
 
   if (project === undefined) return <p className="p-8 text-sm text-muted">Loading…</p>;
@@ -61,7 +77,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         <h1 className="text-2xl font-bold">Project not found</h1>
         <p className="mt-2 text-sm text-muted">There&apos;s no project {jiraKey}, or you don&apos;t have access to it in Jira.</p>
         <Link href="/projects" className="mt-4 inline-block font-medium text-brand hover:underline">Back to projects</Link>
-      </main>
+    </main>
     );
   }
 
@@ -69,6 +85,22 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const people = [project.requesterId, ...project.collaboratorIds].map(person).filter((u): u is User => !!u);
   const current = STAGES.indexOf(project.stage);
   const next = STAGES.slice(current + 1);
+  const canManage = me?.role === "creative";
+  const iHoldIt = !!block && me?.id === block.blockedBy.id;
+  const reloadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
+
+  const clearBlock = async () => {
+    setBlockError(null);
+    try {
+      await blocksRepo.resolve(jiraKey, note);
+      setClearing(false);
+      setNote("");
+      reloadBlock();
+    } catch (e) {
+      setBlockError(e instanceof Error ? e.message : "Couldn't clear the block.");
+    }
+  };
+
   const brief = BRIEF_SECTIONS.filter((s) => project.brief?.[s.key]);
 
   return (
@@ -79,14 +111,19 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         <span>{project.jiraKey}</span>
       </nav>
       <div className="mb-4 flex flex-wrap items-center gap-3">
+        <StarButton starred={favs.isStarred(project.jiraKey)} onToggle={() => favs.toggle(project.jiraKey, project.title)} label={project.title} />
         <h1 className="text-2xl font-bold">{project.title}</h1>
         <StageTag stage={project.stage} />
+        <FlagTags flag={project.flag} block={block} />
         <div className="ml-auto flex items-center gap-3">
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>
             {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-full ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
           </div>
           <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>
           <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Open in Jira</a>
+          {canManage && !block && project.group !== "closed" && (
+            <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Mark as blocked</button>
+          )}
         </div>
       </div>
 
@@ -108,6 +145,34 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
       {tab === "overview" && (
         <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
           <div className="space-y-5">
+            {(block || project.flag === "blocked") && (
+              <section className="rounded-xl border border-bad-line bg-bad-bg p-5 text-bad-fg" aria-label="Blocked">
+                <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Icon name="close" size={18} /> {block ? `Blocked by ${block.blockedBy.name}` : "Blocked in Jira, but nobody is named"}</h2>
+                {block ? (
+                  <>
+                    <p className="text-sm">{block.reason}</p>
+                    <p className="mt-1 text-xs">For {daysSince(block.since)} {daysSince(block.since) === 1 ? "day" : "days"} · marked by {block.setBy}</p>
+                    {iHoldIt && <p className="mt-2 text-sm font-medium">This is waiting on you. Clear it once you&apos;ve done what&apos;s needed.</p>}
+                  </>
+                ) : (
+                  <p className="text-sm">Say who it&apos;s waiting on so they get a notification and can act on it.</p>
+                )}
+                {blockError && <p role="alert" className="mt-2 text-sm font-medium">{blockError}</p>}
+                {clearing ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note, e.g. Approved in Slack" aria-label="Note" className="min-w-64 flex-1 rounded-lg border border-control bg-white px-3 py-1.5 text-sm text-ink" />
+                    <button onClick={clearBlock} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">Clear block</button>
+                    <button onClick={() => { setClearing(false); setNote(""); }} className="rounded-lg border border-control bg-white px-4 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft">Cancel</button>
+                  </div>
+                ) : (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {block && (iHoldIt || canManage) && <button onClick={() => setClearing(true)} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">{iHoldIt ? "I\u2019ve unblocked this" : "Clear block"}</button>}
+                    {canManage && <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
+                  </div>
+                )}
+              </section>
+            )}
+
             <Card title="Details">
               <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
                 <div><dt className="inline text-muted">Requester: </dt><dd className="inline">{project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"}</dd></div>
@@ -209,6 +274,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           </ul>
         )
       )}
+      {dialog && <BlockDialog ticketKey={project.jiraKey} existing={block} onClose={() => setDialog(false)} onSaved={() => { setDialog(false); reloadBlock(); }} />}
     </main>
   );
 }

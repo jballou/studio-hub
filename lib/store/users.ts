@@ -181,7 +181,7 @@ export async function removeUser(actor: string, emailRaw: string): Promise<void>
 
 const AUDIT_CAP = 500;
 
-async function audit(e: Omit<AuditEntry, "at">): Promise<void> {
+export async function audit(e: Omit<AuditEntry, "at">): Promise<void> {
   try {
     await updateDoc("audit", emptyAudit, (d) => ({
       data: { entries: [...d.entries, { at: now(), ...e }].slice(-AUDIT_CAP) },

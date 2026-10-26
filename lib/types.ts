@@ -111,6 +111,22 @@ export type NewThread = {
 
 // Requester-facing stages mapped from Jira status.
 export type Stage = "Submitted" | "In review" | "In progress" | "In feedback" | "Delivered";
+/** Who a ticket is blocked by. Jira has no field for this, so the app keeps it. */
+export type Block = {
+  key: string;
+  blockedBy: Person;
+  reason: string;
+  since: string;
+  setBy: string;
+  status: "active" | "resolved";
+  resolvedAt?: string;
+  resolvedBy?: string;
+  note?: string;
+};
+
+/** Jira statuses that need attention without being a stage. */
+export type ProjectFlag = "blocked" | "at-risk" | "on-hold" | "needs-info";
+
 export type ProjectGroup = "open" | "ideas" | "closed";
 export type ProjectType = "Social" | "Video" | "Print" | "Web" | "Graphic" | "Copy" | "Campaign" | "Other";
 
@@ -132,6 +148,7 @@ export type Project = {
   /** YYYY-MM-DD the brief was submitted */
   submittedAt: string;
   brief?: Partial<BriefInput>;
+  flag?: ProjectFlag;
   /** plain-text ticket description when there is no structured brief (Jira data) */
   description?: string;
   requesterName?: string;

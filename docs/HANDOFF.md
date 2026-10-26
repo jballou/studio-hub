@@ -34,7 +34,13 @@ Items marked **(verify)** are from memory of how the vendor consoles work; confi
 ## 4. Where data lives
 - **Jira**: tickets, statuses, people (read with each user's own token).
 - **Vercel Blob** (private): `production/users.json` (people and roles) and `production/audit.json` (last 500 changes). Writes are conditional, so simultaneous edits don't overwrite each other.
+- `production/blocks.json`: who each blocked ticket is waiting on, with reason and history (resolved blocks are kept, so time-blocked can be reported later).
+- `production/fav-<hash>.json`: one small file per person with their starred projects.
 - Review assets, comments and feedback requests are still **demo data**; they move to Blob (or Postgres) next.
+
+## 4b. Blocked work
+- Jira's workflow has a **Blocked** status (also At Risk, On Hold, Need More Info) but no field for *who* a ticket is waiting on, so the app records that. Creatives and admins mark a project blocked and name the person; that person sees it under **Blocking you** and in the sidebar bell, and can clear it.
+- The app does **not** yet change the Jira status when you mark something blocked (that needs the `write:jira-work` scope to be requested at sign-in). Until then, move the ticket to Blocked in Jira as well.
 
 ## 5. If someone is locked out
 1. Another admin changes their role in Team & access, or

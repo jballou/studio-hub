@@ -10,13 +10,15 @@ import { Icon } from "./Icon";
  * Results come from peopleRepo (Jira user search when signed in; demo users otherwise).
  */
 export function PeoplePicker({
-  label, hint, value, onChange, placeholder = "Search by name",
+  label, hint, value, onChange, placeholder = "Search by name", max,
 }: {
   label: string;
   hint?: string;
   value: Person[];
   onChange: (people: Person[]) => void;
   placeholder?: string;
+  /** limit how many people can be chosen (e.g. 1 for "blocked by") */
+  max?: number;
 }) {
   const id = useId();
   const [q, setQ] = useState("");
@@ -71,7 +73,7 @@ export function PeoplePicker({
               </button>
             </span>
           ))}
-          <input
+          {(max === undefined || value.length < max) && <input
             id={id}
             role="combobox"
             aria-expanded={open}
@@ -90,7 +92,7 @@ export function PeoplePicker({
             }}
             placeholder={value.length ? "Add another" : placeholder}
             className="min-w-32 flex-1 bg-transparent py-0.5 font-normal outline-none"
-          />
+          />}
         </div>
         {open && q.trim() && (
           <ul id={`${id}-list`} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-line bg-white p-1 shadow-lg">

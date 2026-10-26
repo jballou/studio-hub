@@ -1,16 +1,17 @@
 import type { CalendarItem, CalStatus, ItemType } from "@/lib/calendar/types";
-import type { Project, ProjectGroup, ProjectType, Stage } from "@/lib/types";
+import type { Project, ProjectFlag, ProjectGroup, ProjectType, Stage } from "@/lib/types";
 import type { JiraIssue } from "./client";
 
 export const PROJECT_KEY = "MKTGCRTV";
 
 // Real MKTGCRTV statuses seen so far: Intake, Open, In Progress. Extend as the full workflow is confirmed.
 const STATUS_TO_STAGE: Record<string, Stage> = {
-  intake: "Submitted", open: "Submitted", "to do": "Submitted", backlog: "Submitted",
+  intake: "Submitted", open: "Submitted", "to do": "Submitted", backlog: "Submitted", "on hold": "Submitted", "need more info": "Submitted",
   "in review": "In review", scoping: "In review",
-  "in progress": "In progress", "in design": "In progress", "in production": "In progress",
+  planning: "In progress", "in progress": "In progress", "in design": "In progress", "in production": "In progress", blocked: "In progress", "at risk": "In progress",
   "in feedback": "In feedback", "feedback": "In feedback", "awaiting feedback": "In feedback", "ready for review": "In feedback",
   done: "Delivered", closed: "Delivered", resolved: "Delivered", delivered: "Delivered", complete: "Delivered", completed: "Delivered",
+  cancelled: "Delivered", "won't do": "Delivered", duplicate: "Delivered",
 };
 
 export function stageOf(issue: JiraIssue): Stage {
@@ -24,6 +25,12 @@ const TYPE_BY_ISSUETYPE: Record<string, ProjectType> = {
   "graphic production": "Graphic", "video production": "Video", "animation production": "Video",
   "web design/ux": "Web", "copywriting support": "Copy", "campaigns or activations": "Campaign",
 };
+// Real MKTGCRTV statuses that mean "look at this" but are not a stage of the work.
+const FLAG_BY_STATUS: Record<string, ProjectFlag> = {
+  blocked: "blocked", "at risk": "at-risk", "on hold": "on-hold", "need more info": "needs-info",
+};
+export const flagOf = (i: JiraIssue): ProjectFlag | undefined => FLAG_BY_STATUS[i.fields.status.name.toLowerCase()];
+
 export const projectTypeOf = (i: JiraIssue): ProjectType => TYPE_BY_ISSUETYPE[i.fields.issuetype.name.toLowerCase()] ?? "Other";
 
 /** Plain text from Atlassian Document Format. Good enough for a read-only summary. */
@@ -47,6 +54,7 @@ export function toProject(issue: JiraIssue): Project {
     title: f.summary,
     group,
     stage: stageOf(issue),
+    flag: flagOf(issue),
     type: projectTypeOf(issue),
     requesterId: f.reporter?.accountId ?? "",
     requesterName: f.reporter?.displayName,
