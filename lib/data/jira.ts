@@ -24,6 +24,9 @@ export const jiraProjects: ProjectsRepo = {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });
     return (await get<{ projects: Project[] }>(`/api/jira/projects?${qs}`)).projects;
   },
+  async myWork() {
+    return (await get<{ projects: Project[] }>("/api/jira/mine")).projects;
+  },
   async getProject(jiraKey) {
     try {
       return (await get<{ project: Project }>(`/api/jira/projects/${encodeURIComponent(jiraKey)}`)).project;

@@ -29,10 +29,11 @@ export function BlockingYou() {
     setBusy(true);
     setError(null);
     try {
-      await blocksRepo.resolve(key, note);
+      const { jira } = await blocksRepo.resolve(key, note);
       setOpenKey(null);
       setNote("");
       load();
+      if (jira && !jira.ok) setError(`Cleared here, but Jira's status didn't change. ${jira.reason}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't clear that.");
     }

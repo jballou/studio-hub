@@ -71,22 +71,24 @@ export function ItemPanel({
           <>
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <Tag tone={TYPE_TONE[item.type]}>{ITEM_TYPES.find((t) => t.id === item.type)?.label}</Tag>
-              <Tag tone={STATUS_TONE[item.status]}>{item.status}</Tag>
-              {item.statusDerived && <span className="text-xs text-muted" title="This source has no status column, so status is estimated from dates">estimated</span>}
+              {item.type === "task" ? <Tag tone={item.status === "Published" ? "ok" : "neutral"}>{item.status === "Published" ? "Done" : "To do"}</Tag> : <Tag tone={STATUS_TONE[item.status]}>{item.status}</Tag>}
+              {item.statusDerived && item.type !== "task" && <span className="text-xs text-muted" title="This source has no status column, so status is estimated from dates">estimated</span>}
             </div>
             <h2 className="mb-3 text-xl font-bold leading-tight">{item.title}</h2>
             <dl className="divide-y divide-line border-y border-line">
               <Row label="Date">{dayLabel(item.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}{item.endDate && item.endDate !== item.date ? ` to ${dayLabel(item.endDate, { month: "short", day: "numeric" })}` : ""}{item.time != null ? ` · ${formatTime(item.time)}` : ""}</Row>
-              {item.dueDate && <Row label="Creative due">{dayLabel(item.dueDate, { weekday: "short", month: "short", day: "numeric" })}</Row>}
-              <Row label="Owner">{item.owner}</Row>
+              {item.type !== "task" && item.dueDate && <Row label="Creative due">{dayLabel(item.dueDate, { weekday: "short", month: "short", day: "numeric" })}</Row>}
+              {item.type !== "task" && <Row label="Owner">{item.owner}</Row>}
               {item.campaign && <Row label="Campaign">{item.campaign}</Row>}
               {item.channel && <Row label="Channel">{item.channel}</Row>}
-              <Row label="Source">{item.sourceName} · {item.sourceRef}</Row>
+              {item.type === "task" ? <Row label="Visible to">Only you</Row> : <Row label="Source">{item.sourceName} · {item.sourceRef}</Row>}
             </dl>
             {item.description && <p className="mt-3 whitespace-pre-wrap text-sm">{item.description}</p>}
             <div className="mt-5 flex flex-wrap gap-2">
               {/* Primary action first. Items tied to a known project open its home; others start a feedback request. */}
-              {item.jiraKey && projectKeys.has(item.jiraKey) ? (
+              {item.type === "task" ? (
+                <Link href="/my-day" className={primary}>Open My Day</Link>
+              ) : item.jiraKey && projectKeys.has(item.jiraKey) ? (
                 <>
                   <Link href={`/projects/${item.jiraKey}`} className={primary}>Open project</Link>
                   <Link href={feedbackHref} className={secondary}>Submit for feedback</Link>

@@ -41,8 +41,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorization: {
         params: {
           audience: "api.atlassian.com",
-          // Read scopes only until ticket creation and comment push are built.
-          scope: "read:me read:jira-work read:jira-user offline_access",
+          // write:jira-work lets the app move a ticket to Blocked and back (and, later, create tickets and push comments).
+          scope: "read:me read:jira-work write:jira-work read:jira-user offline_access",
           prompt: "consent",
         },
       },

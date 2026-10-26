@@ -55,6 +55,7 @@ export function toProject(issue: JiraIssue): Project {
     group,
     stage: stageOf(issue),
     flag: flagOf(issue),
+    statusName: f.status.name,
     type: projectTypeOf(issue),
     requesterId: f.reporter?.accountId ?? "",
     requesterName: f.reporter?.displayName,

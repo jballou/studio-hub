@@ -2,16 +2,16 @@ import type { Tone } from "@/components/ui/Tag";
 import type { CalStatus, ItemType } from "@/lib/calendar/types";
 
 export const TYPE_TONE: Record<ItemType, Tone> = {
-  social: "info", campaign: "ok", pr: "progress", event: "warn", product: "gold", other: "neutral",
+  social: "info", campaign: "ok", pr: "progress", event: "warn", product: "gold", other: "neutral", task: "progress",
 };
 
 /** Solid bar color per type (palette steps with 3:1+ on white), used as a chip accent beside the text label. */
 export const TYPE_BAR: Record<ItemType, string> = {
-  social: "#5568bf", campaign: "#08794a", pr: "#348289", event: "#a95c18", product: "#a18102", other: "#686764",
+  social: "#5568bf", campaign: "#08794a", pr: "#348289", event: "#a95c18", product: "#a18102", other: "#686764", task: "#464543",
 };
 
 export const TYPE_SHORT: Record<ItemType, string> = {
-  social: "Social", campaign: "Launch", pr: "PR", event: "Event", product: "Product", other: "Other",
+  social: "Social", campaign: "Launch", pr: "PR", event: "Event", product: "Product", other: "Other", task: "Task",
 };
 
 export const STATUS_TONE: Record<CalStatus, Tone> = {

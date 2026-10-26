@@ -17,6 +17,7 @@ const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
 type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean };
 
 const ITEMS: Item[] = [
+  { href: "/my-day", label: "My Day", icon: "check", match: (p) => p.startsWith("/my-day") },
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },

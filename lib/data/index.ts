@@ -18,3 +18,7 @@ export { blocksRepo } from "./blocks";
 export { favoritesRepo } from "./favorites";
 export { flowRepo } from "./flow";
 export type { FlowVersion } from "./flow";
+export { tasksRepo } from "./tasks";
+export type { TaskDraft, TasksState } from "./tasks";
+export { googleRepo, GoogleUnavailable } from "./google";
+export type { GoogleStatus } from "./google";

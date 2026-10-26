@@ -7,7 +7,7 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { isJira } from "@/lib/data/mode";
 import { toCsvExportUrl } from "@/lib/calendar/gsheet";
 import { loadSource, loadSources, saveUserSources } from "@/lib/calendar/store";
-import { ITEM_TYPES, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
+import { SOURCE_TYPES, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
 
 const field = "w-full rounded-lg border border-control bg-white px-3 py-2 text-sm";
 
@@ -102,7 +102,7 @@ export function SourcesView() {
           </details>
           <label className="block text-sm font-semibold">What do the rows represent?
             <select className={`${field} mt-1 font-normal sm:w-1/2`} value={type} onChange={(e) => setType(e.target.value as ItemType)}>
-              {ITEM_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+              {SOURCE_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
             <span className="mt-1 block text-xs font-normal text-muted">If the sheet has a Category column (PR, Event, Product launch…), that wins per row.</span>
           </label>

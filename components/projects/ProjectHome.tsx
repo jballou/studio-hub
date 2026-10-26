@@ -92,10 +92,11 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const clearBlock = async () => {
     setBlockError(null);
     try {
-      await blocksRepo.resolve(jiraKey, note);
+      const { jira } = await blocksRepo.resolve(jiraKey, note);
       setClearing(false);
       setNote("");
       reloadBlock();
+      if (jira && !jira.ok) setBlockError(`Cleared here, but Jira's status didn't change. ${jira.reason}`);
     } catch (e) {
       setBlockError(e instanceof Error ? e.message : "Couldn't clear the block.");
     }

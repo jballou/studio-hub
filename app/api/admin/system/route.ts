@@ -39,6 +39,9 @@ export async function GET(req: Request) {
       detail: missing.length ? `Missing: ${missing.join(", ")}` : `All ${REQUIRED_ENV.length} present`,
     });
 
+    const google = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
+    checks.push({ id: "google", label: "Google (My Day calendar and Tasks backup)", ok: google, detail: google ? "Client credentials present" : "Not set up. My Day shows Jira work only. See docs/google-setup.md" });
+
     const admins = (process.env.ADMIN_EMAILS ?? "").split(",").map((x) => x.trim()).filter(Boolean);
     checks.push({ id: "owners", label: "Locked admins", ok: admins.length >= 2, detail: admins.length >= 2 ? `${admins.length} owners set` : "Set at least two in ADMIN_EMAILS so access survives someone leaving" });
 

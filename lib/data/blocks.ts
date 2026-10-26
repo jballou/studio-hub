@@ -1,4 +1,4 @@
-import type { Block, Person, Project } from "@/lib/types";
+import type { Block, JiraSync, Person, Project } from "@/lib/types";
 import { isJira } from "./mode";
 
 export type MyBlock = Block & { project: Project | null };
@@ -8,8 +8,9 @@ export interface BlocksRepo {
   list(keys: string[]): Promise<Block[]>;
   /** Tickets waiting on the signed-in person. */
   mine(): Promise<MyBlock[]>;
-  block(key: string, blockedBy: Person, reason: string): Promise<Block>;
-  resolve(key: string, note: string): Promise<void>;
+  /** The block is always saved; `jira` says whether the ticket's status followed (absent in demo mode). */
+  block(key: string, blockedBy: Person, reason: string): Promise<{ block: Block; jira?: JiraSync }>;
+  resolve(key: string, note: string): Promise<{ jira?: JiraSync }>;
 }
 
 const changed = () => typeof window !== "undefined" && window.dispatchEvent(new Event("blocks-changed"));
@@ -30,13 +31,14 @@ const jiraBlocks: BlocksRepo = {
     return (await call<{ blocks: MyBlock[] }>("/api/blocks?mine=1")).blocks;
   },
   async block(key, blockedBy, reason) {
-    const b = (await call<{ block: Block }>("/api/blocks", { method: "POST", body: JSON.stringify({ key, blockedBy, reason }) })).block;
+    const out = await call<{ block: Block; jira: JiraSync }>("/api/blocks", { method: "POST", body: JSON.stringify({ key, blockedBy, reason }) });
     changed();
-    return b;
+    return out;
   },
   async resolve(key, note) {
-    await call(`/api/blocks/${encodeURIComponent(key)}/resolve`, { method: "POST", body: JSON.stringify({ note }) });
+    const out = await call<{ jira: JiraSync }>(`/api/blocks/${encodeURIComponent(key)}/resolve`, { method: "POST", body: JSON.stringify({ note }) });
     changed();
+    return { jira: out.jira };
   },
 };
 
@@ -72,7 +74,7 @@ const demoBlocks: BlocksRepo = {
     else all.push(block);
     writeLocal(all);
     changed();
-    return block;
+    return { block };
   },
   async resolve(key, note) {
     const all = readLocal();
@@ -81,6 +83,7 @@ const demoBlocks: BlocksRepo = {
     b.status = "resolved"; b.resolvedAt = new Date().toISOString(); b.note = note || undefined;
     writeLocal(all);
     changed();
+    return {};
   },
 };
 

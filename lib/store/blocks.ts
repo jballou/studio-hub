@@ -30,7 +30,7 @@ export async function blocksHeldBy(accountId: string): Promise<Block[]> {
   return (await activeBlocks()).filter((b) => b.blockedBy.id === accountId);
 }
 
-export async function createBlock(actor: string, input: { key: string; blockedBy: Person; reason: string }): Promise<Block> {
+export async function createBlock(actor: string, input: { key: string; blockedBy: Person; reason: string; previousStatus?: string }): Promise<Block> {
   const key = input.key.trim().toUpperCase();
   const reason = input.reason.trim().slice(0, 500);
   if (!KEY_RE.test(key)) throw new AdminError(400, "That doesn't look like a Jira key.");
@@ -46,7 +46,7 @@ export async function createBlock(actor: string, input: { key: string; blockedBy
       existing.reason = reason;
       return { data: d, result: { block: existing, reassigned: true } };
     }
-    const block: Block = { key, blockedBy, reason, since: now(), setBy: actor, status: "active" };
+    const block: Block = { key, blockedBy, reason, since: now(), setBy: actor, status: "active", previousStatus: input.previousStatus };
     d.blocks.push(block);
     return { data: d, result: { block, reassigned: false } };
   });

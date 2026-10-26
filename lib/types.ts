@@ -122,7 +122,12 @@ export type Block = {
   resolvedAt?: string;
   resolvedBy?: string;
   note?: string;
+  /** The Jira status the ticket had before it was blocked, so clearing the block can put it back. */
+  previousStatus?: string;
 };
+
+/** What happened in Jira when a block was set or cleared. The block itself is always saved. */
+export type JiraSync = { ok: true; changed: boolean; status?: string } | { ok: false; reason: string };
 
 /** Jira statuses that need attention without being a stage. */
 export type ProjectFlag = "blocked" | "at-risk" | "on-hold" | "needs-info";
@@ -149,6 +154,8 @@ export type Project = {
   submittedAt: string;
   brief?: Partial<BriefInput>;
   flag?: ProjectFlag;
+  /** Jira's own status name (real data only), e.g. "In Progress" */
+  statusName?: string;
   /** brief as labelled sections, from the wizard */
   briefSections?: { label: string; value: string }[];
   /** plain-text ticket description when there is no structured brief (Jira data) */
@@ -183,4 +190,23 @@ export type BriefInput = {
   deadline: string;
   assetTypes: ProjectType[];
   stakeholderIds: string[];
+};
+
+/** A to-do the person made for themselves. Lives in this app and is backed up to Google Tasks; never written to Jira. */
+export type PersonalTask = {
+  id: string;
+  title: string;
+  notes?: string;
+  /** YYYY-MM-DD in the person's own time zone */
+  date?: string;
+  /** HH:MM, 24-hour, in `tz` */
+  time?: string;
+  /** IANA zone the date and time were entered in */
+  tz?: string;
+  done: boolean;
+  doneAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  /** "synced" = copy is in Google Tasks; "pending" = last attempt failed, will retry; "off" = Google not connected */
+  backup: "synced" | "pending" | "off";
 };

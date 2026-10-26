@@ -7,7 +7,8 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { formatTime } from "@/lib/calendar/csv";
 import { addDays, dayLabel, fromIso, monthGrid, monthLabel, shiftMonth, spanDays, startOfWeek, todayIso } from "@/lib/calendar/dates";
 import { loadSource, loadSources } from "@/lib/calendar/store";
-import { projectsRepo } from "@/lib/data";
+import { projectsRepo, tasksRepo } from "@/lib/data";
+import { MY_TASKS_SOURCE, tasksResult } from "@/lib/calendar/tasks";
 import { ITEM_TYPES, STATUSES, type CalendarItem, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
 import { ItemPanel } from "./ItemPanel";
 import { STATUS_TONE, TYPE_BAR, TYPE_SHORT, TYPE_TONE } from "./meta";
@@ -75,14 +76,21 @@ export function CalendarView() {
     setLoading(true);
     projectsRepo.listProjects("u-avery").then((ps) => setProjectKeys(new Set(ps.map((p) => p.jiraKey))));
     const srcs = loadSources();
-    setSources(srcs);
-    setResults(await Promise.all(srcs.map(loadSource)));
+    setSources([...srcs, MY_TASKS_SOURCE]);
+    const [loaded, mine] = await Promise.all([
+      Promise.all(srcs.map(loadSource)),
+      tasksRepo.list().then((s) => tasksResult(s.tasks)).catch(() => tasksResult([])),
+    ]);
+    setResults([...loaded, mine]);
     setLoading(false);
   }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
+    // Tasks added or ticked off on My Day show up here without a reload.
+    window.addEventListener("tasks-changed", load);
+    return () => window.removeEventListener("tasks-changed", load);
   }, [load]);
 
   const all = useMemo(() => results.flatMap((r) => r.items), [results]);

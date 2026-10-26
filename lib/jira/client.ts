@@ -11,9 +11,11 @@ export type JiraAuth = { accessToken: string; cloudId: string };
 
 const api = (a: JiraAuth, path: string) => `https://api.atlassian.com/ex/jira/${a.cloudId}/rest/api/3${path}`;
 
-async function request<T>(a: JiraAuth, path: string): Promise<T> {
+async function request<T>(a: JiraAuth, path: string, init?: { method: string; body?: unknown }): Promise<T> {
   const res = await fetch(api(a, path), {
-    headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json" },
+    method: init?.method,
+    headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
+    body: init?.body ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
   });
   if (!res.ok) {
@@ -24,6 +26,7 @@ async function request<T>(a: JiraAuth, path: string): Promise<T> {
     } catch { /* non-JSON error body */ }
     throw new JiraError(res.status, detail || `Jira returned HTTP ${res.status}`);
   }
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
 
@@ -95,4 +98,21 @@ export async function searchUsers(a: JiraAuth, query: string, limit = 8): Promis
       .filter((u) => !u.accountType || u.accountType === "atlassian")
       .map((u) => ({ accountId: u.accountId, displayName: u.displayName, emailAddress: u.html?.match(/[\w.+-]+@[\w.-]+\.\w+/)?.[0] }));
   }
+}
+
+export type TransitionResult = "moved" | "already" | "no-transition";
+
+/**
+ * Moves a ticket to the status with this name, using whichever transition leads there.
+ * Needs the write:jira-work scope; a token without it gets a 401/403 from Jira, which the caller reports plainly.
+ */
+export async function transitionToStatus(a: JiraAuth, key: string, statusName: string): Promise<TransitionResult> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  const issue = await getIssue(a, key);
+  if (issue.fields.status.name.toLowerCase() === statusName.toLowerCase()) return "already";
+  const { transitions } = await request<{ transitions: { id: string; to: { name: string } }[] }>(a, `/issue/${key}/transitions`);
+  const t = transitions.find((x) => x.to.name.toLowerCase() === statusName.toLowerCase());
+  if (!t) return "no-transition";
+  await request<void>(a, `/issue/${key}/transitions`, { method: "POST", body: { transition: { id: t.id } } });
+  return "moved";
 }

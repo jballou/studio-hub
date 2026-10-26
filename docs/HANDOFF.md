@@ -50,3 +50,11 @@ Items marked **(verify)** are from memory of how the vendor consoles work; confi
 - Deploys: every push to `main` deploys to production automatically.
 - Roll back to demo mode: `vercel env rm NEXT_PUBLIC_DATA_SOURCE production --yes`, then redeploy.
 - Atlassian setup steps: `docs/atlassian-oauth-setup.md`.
+
+## 7. My Day, personal tasks and Google
+
+- **My Day** (`/my-day`) combines the person's open Jira tickets, today's Google Calendar events and their own tasks. Ranking is rule-based (`lib/myday/plan.ts`), not AI.
+- **Personal tasks** are stored in Vercel Blob (`tasks/<hash of email>`), one document per person, and are never written to Jira. They appear on the Calendar as "My task" items visible only to their owner.
+- **Google** is a per-person connection (not the sign-in). Tokens are encrypted with a key derived from `AUTH_SECRET` and stored in Blob (`google/<hash>`). Rotating `AUTH_SECRET` means everyone reconnects Google. Setup and ownership of the Google Cloud project: `docs/google-setup.md`.
+- **Backup is one-way** (app to Google Tasks list "Brand Creative Hub"). Edits made in Google Tasks are not pulled back.
+- **Jira status write-back:** marking a ticket Blocked moves it to Jira status "Blocked"; clearing the block moves it back to the status it had. This needs the `write:jira-work` scope; people who signed in before it was added must sign out and back in once.

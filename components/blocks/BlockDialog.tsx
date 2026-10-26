@@ -19,6 +19,7 @@ export function BlockDialog({
   const [reason, setReason] = useState(existing?.reason ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +33,13 @@ export function BlockDialog({
     setBusy(true);
     setError(null);
     try {
-      await blocksRepo.block(ticketKey, who[0], reason);
+      const { jira } = await blocksRepo.block(ticketKey, who[0], reason);
+      if (jira && !jira.ok) {
+        // Saved here, but Jira's status didn't change: say so instead of closing silently.
+        setNotice(jira.reason);
+        setBusy(false);
+        return;
+      }
       onSaved();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't save.");
@@ -63,14 +70,19 @@ export function BlockDialog({
               className="mt-1 w-full rounded-lg border border-control bg-white px-3 py-2 text-sm font-normal"
             />
           </label>
-          <p className="text-xs text-muted">This doesn&apos;t change the ticket&apos;s status in Jira yet. If it isn&apos;t already, move it to Blocked there too.</p>
+          <p className="text-xs text-muted">The ticket&apos;s status in Jira moves to Blocked too, and goes back when the block is cleared.</p>
           {error && <Callout tone="bad" icon="alert">{error}</Callout>}
+          {notice && <Callout tone="warn" icon="alert">Saved here, but Jira&apos;s status didn&apos;t change. {notice}</Callout>}
+          {notice ? (
+            <button onClick={onSaved} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Done</button>
+          ) : (
           <div className="flex gap-2">
             <button onClick={save} disabled={busy || !who.length || !reason.trim()} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">
               {busy ? "Saving…" : existing ? "Save" : "Mark as blocked"}
             </button>
             <button onClick={onClose} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
           </div>
+          )}
         </div>
       </div>
     </div>

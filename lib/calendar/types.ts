@@ -1,4 +1,4 @@
-export type ItemType = "social" | "campaign" | "pr" | "event" | "product" | "other";
+export type ItemType = "social" | "campaign" | "pr" | "event" | "product" | "other" | "task";
 
 export const ITEM_TYPES: { id: ItemType; label: string }[] = [
   { id: "social", label: "Social post" },
@@ -7,7 +7,11 @@ export const ITEM_TYPES: { id: ItemType; label: string }[] = [
   { id: "event", label: "Event" },
   { id: "product", label: "Product launch" },
   { id: "other", label: "Other" },
+  { id: "task", label: "My task" },
 ];
+
+/** Types a calendar source can be assigned. "My task" only comes from the person's own task list. */
+export const SOURCE_TYPES = ITEM_TYPES.filter((t) => t.id !== "task");
 
 export const STATUSES = ["Idea", "Drafting", "Needs Review", "Scheduled", "Published"] as const;
 export type CalStatus = (typeof STATUSES)[number];

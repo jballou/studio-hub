@@ -1,8 +1,10 @@
 import { activeBlocks, blocksHeldBy, createBlock } from "@/lib/store/blocks";
-import { searchIssues } from "@/lib/jira/client";
+import { getIssue, searchIssues, transitionToStatus } from "@/lib/jira/client";
+import { jiraSyncFailure } from "@/lib/jira/sync";
 import { toProject } from "@/lib/jira/map";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
 import { AdminError } from "@/lib/store/users";
+import type { JiraSync } from "@/lib/types";
 
 const KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
 
@@ -35,8 +37,23 @@ export async function POST(req: Request) {
     const s = await jiraSession(req);
     if (s.role !== "creative") throw new AdminError(403, "Only the creative team can mark a project as blocked.");
     const body = await req.json().catch(() => ({}));
-    const block = await createBlock(s.email, { key: String(body.key ?? ""), blockedBy: body.blockedBy, reason: String(body.reason ?? "") });
-    return Response.json({ block }, { status: 201 });
+    const key = String(body.key ?? "").trim().toUpperCase();
+    // Remember where the ticket was so clearing the block can put it back; a ticket already Blocked has nothing to restore.
+    let previousStatus: string | undefined;
+    try {
+      const current = (await getIssue(s.auth, key)).fields.status.name;
+      if (current.toLowerCase() !== "blocked") previousStatus = current;
+    } catch { /* the block is still recorded; Jira is told below */ }
+    const block = await createBlock(s.email, { key, blockedBy: body.blockedBy, reason: String(body.reason ?? ""), previousStatus });
+    // The block lives here either way; this only reports whether Jira's status followed.
+    let jira: JiraSync;
+    try {
+      const r = await transitionToStatus(s.auth, key, "Blocked");
+      jira = r === "no-transition" ? { ok: false, reason: "Jira's workflow doesn't allow moving this ticket to Blocked from its current status." } : { ok: true, changed: r === "moved", status: "Blocked" };
+    } catch (e) {
+      jira = jiraSyncFailure(e);
+    }
+    return Response.json({ block, jira }, { status: 201 });
   } catch (e) {
     return errorResponse(e);
   }
