@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { TicketPicker } from "./TicketPicker";
 import { projectsRepo, repo } from "@/lib/data";
 import { parseSource, SHAPES, type Shape } from "@/lib/sources";
+import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
 import type { Asset, AssetKind, Device, Project, SourceKind, User } from "@/lib/types";
 
 const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; placeholder?: string }[] = [
@@ -41,15 +42,28 @@ export function SubmitForm() {
   const [target, setTarget] = useState(""); // "" = new asset, else existing asset id
   const [reviewerIds, setReviewerIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("17:00");
+  const [dueTz, setDueTz] = useState("UTC");
+  const [approverIds, setApproverIds] = useState<string[]>([]);
   const [instructions, setInstructions] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDueTz(localTimezone());
     repo.listUsers().then(setUsers);
     repo.listAssets().then(setAssets);
     const want = params.get("ticket");
     if (want) projectsRepo.getProject(want, "u-avery").then((p) => p && setTicket((t) => t ?? p));
   }, [params]);
+
+  // Default the approver to the ticket's requester when we know who that is.
+  useEffect(() => {
+    if (ticket && users.some((u) => u.id === ticket.requesterId)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setApproverIds((a) => (a.length ? a : [ticket.requesterId]));
+    }
+  }, [ticket, users]);
 
   const parsed = useMemo(
     () => (source === "upload" ? null : parseSource(source, url, device, shape)),
@@ -61,13 +75,14 @@ export function SubmitForm() {
   const projectKey = ticket?.jiraKey ?? "";
   const versionTargets = assets.filter((a) => a.projectKey === projectKey);
   const finalTitle = title.trim() || (parsed?.ok ? parsed.suggestedTitle : file?.name ?? "");
-  const valid = sourceOk && !!finalTitle && !!projectKey && reviewerIds.length > 0 && !!dueDate;
+  const valid = sourceOk && !!finalTitle && !!projectKey && reviewerIds.length > 0 && approverIds.length > 0 && !!dueDate && !!dueTime;
 
+  const toggleApprover = (id: string) => setApproverIds((r) => (r.includes(id) ? r.filter((x) => x !== id) : [...r, id]));
   const toggleReviewer = (id: string) => setReviewerIds((r) => (r.includes(id) ? r.filter((x) => x !== id) : [...r, id]));
 
   const submit = async () => {
     setBusy(true);
-    const common = { title: finalTitle, projectKey, existingAssetId: target || null, reviewerIds, dueDate, instructions: instructions.trim(), submittedBy: "u-avery" };
+    const common = { title: finalTitle, projectKey, existingAssetId: target || null, reviewerIds: [...new Set([...reviewerIds, ...approverIds])], approverIds, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: "u-avery" };
     let res;
     if (source === "upload" && file && fileKind) {
       res = await repo.submitForReview({
@@ -188,9 +203,29 @@ export function SubmitForm() {
             ))}
           </div>
         </fieldset>
-        <label className="block text-sm font-semibold sm:w-1/2">Feedback needed by
-          <input type="date" className={`${field} mt-1 font-normal`} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-        </label>
+        <fieldset>
+          <legend className="mb-1 text-sm font-semibold">Who can mark it approved?</legend>
+          <div className="flex flex-wrap gap-2">
+            {users.map((u) => (
+              <label key={u.id} className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${approverIds.includes(u.id) ? "border-brand bg-brand-soft" : "border-control bg-white"}`}>
+                <input type="checkbox" className="sr-only" checked={approverIds.includes(u.id)} onChange={() => toggleApprover(u.id)} />
+                {approverIds.includes(u.id) && <Icon name="check" size={14} />}
+                {u.name}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-muted">Only these people see the approve button. Everyone else can comment or ask for changes. Approvers are added as reviewers.</p>
+        </fieldset>
+        <div>
+          <span className="text-sm font-semibold">Feedback needed by</span>
+          <div className="mt-1 flex flex-wrap gap-2">
+            <input aria-label="Date" type="date" className={`${field} w-44 font-normal`} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <input aria-label="Time" type="time" className={`${field} w-32 font-normal`} value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+            <select aria-label="Timezone" className={`${field} min-w-56 flex-1 font-normal`} value={dueTz} onChange={(e) => setDueTz(e.target.value)}>
+              {timezoneOptions(dueTz).map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+          </div>
+        </div>
         <label className="block text-sm font-semibold">What feedback do you want?
           <textarea rows={3} className={`${field} mt-1 font-normal`} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="e.g. Is the headline clear? Ignore the placeholder photo." />
         </label>
@@ -199,7 +234,7 @@ export function SubmitForm() {
       <button onClick={submit} disabled={!valid || busy} className="rounded-lg bg-brand px-6 py-2.5 font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">
         {busy ? "Sending…" : "Send for feedback"}
       </button>
-      {!valid && <p className="mt-2 text-xs text-muted">Add a valid link or file, at least one reviewer, and a due date.</p>}
+      {!valid && <p className="mt-2 text-xs text-muted">Add a valid link or file, at least one reviewer, one approver, and a due date and time.</p>}
     </main>
   );
 }

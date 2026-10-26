@@ -9,9 +9,9 @@ const users: User[] = [
 ];
 
 const assets: Asset[] = [
-  { id: "a-ad", projectKey: "MKTGCRTV-101", name: "Spring campaign: social ad", kind: "image", versionIds: ["v-ad-1", "v-ad-2"] },
-  { id: "a-video", projectKey: "MKTGCRTV-102", name: "Product teaser (15s)", kind: "video", versionIds: ["v-video-1"] },
-  { id: "a-pdf", projectKey: "MKTGCRTV-103", name: "Brand one-pager", kind: "pdf", versionIds: ["v-pdf-1"] },
+  { id: "a-ad", projectKey: "MKTGCRTV-101", name: "Spring campaign: social ad", kind: "image", versionIds: ["v-ad-1", "v-ad-2"], approverIds: ["u-riley"] },
+  { id: "a-video", projectKey: "MKTGCRTV-102", name: "Product teaser (15s)", kind: "video", versionIds: ["v-video-1"], approverIds: ["u-riley"] },
+  { id: "a-pdf", projectKey: "MKTGCRTV-103", name: "Brand one-pager", kind: "pdf", versionIds: ["v-pdf-1"], approverIds: ["u-jordan"] },
 ];
 
 const versions: AssetVersion[] = [
@@ -115,12 +115,14 @@ export const mockRepo: ReviewRepo = {
     if (asset) {
       asset.versionIds.push(versionId);
       asset.reviewerIds = input.reviewerIds;
-      asset.dueDate = input.dueDate;
+      asset.dueAt = input.dueAt;
+      asset.dueTz = input.dueTz;
+      asset.approverIds = input.approverIds;
       asset.instructions = input.instructions;
     } else {
       asset = {
         id: nid("a-"), projectKey: input.projectKey, name: input.title, kind: input.assetKind, versionIds: [versionId],
-        source: input.source, reviewerIds: input.reviewerIds, dueDate: input.dueDate,
+        source: input.source, reviewerIds: input.reviewerIds, dueAt: input.dueAt, dueTz: input.dueTz, approverIds: input.approverIds,
         instructions: input.instructions, submittedBy: input.submittedBy,
       };
       assets.push(asset);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Tag } from "@/components/ui/Tag";
 import { repo } from "@/lib/data";
+import { formatDue } from "@/lib/time";
 import type { Asset, SourceKind, User } from "@/lib/types";
 
 const SOURCE_LABEL: Record<SourceKind, string> = {
@@ -33,7 +34,7 @@ export function ReviewIndex() {
                 <Tag tone="neutral">{a.source ? SOURCE_LABEL[a.source.kind] : a.kind}</Tag>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{a.name}</span>
-                  {a.submittedBy && <span className="block text-xs text-muted">From {users.find((u) => u.id === a.submittedBy)?.name ?? "a teammate"}{a.dueDate ? ` · feedback by ${a.dueDate}` : ""}</span>}
+                  {a.submittedBy && <span className="block text-xs text-muted">From {users.find((u) => u.id === a.submittedBy)?.name ?? "a teammate"}{a.dueAt ? ` · feedback by ${formatDue(a.dueAt, a.dueTz)}` : ""}</span>}
                 </span>
                 <span className="font-mono text-xs text-muted">{a.projectKey}</span>
               </Link>

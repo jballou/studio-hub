@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { StageTag } from "@/components/ui/Tag";
+import { formatDue } from "@/lib/time";
 import { mockControls, projectsRepo, repo } from "@/lib/data";
 import type { Anchor, Asset, AssetVersion, Stage, Thread, User } from "@/lib/types";
 import { AnnotationLayer, type Pin } from "./AnnotationLayer";
@@ -96,6 +97,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const canResolve = (t: Thread) => me.role === "creative" || t.authorId === me.id;
   const canPush = (t: Thread) => me.role === "creative" || t.authorId === me.id;
   const closed = stage === "Delivered";
+  // Only people named as approvers on the feedback request see the approve button.
+  const canApprove = !!asset.approverIds?.includes(me.id);
 
   const markSeen = (id: string) => setSeen((s) => new Set(s).add(id));
 
@@ -183,13 +186,15 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         <StageTag stage={stage} />
         <span className="h-5 w-px bg-line" />
         <button className={btn} disabled={closed} onClick={() => setStage("In progress")}>Ask for changes</button>
-        <button
-          disabled={closed}
-          onClick={() => setStage("Delivered")}
-          className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
-        >
-          <Icon name="delivered" size={16} /> {closed ? "Approved" : "Mark as approved"}
-        </button>
+        {canApprove && (
+          <button
+            disabled={closed}
+            onClick={() => setStage("Delivered")}
+            className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
+          >
+            <Icon name="delivered" size={16} /> {closed ? "Approved" : "Mark as approved"}
+          </button>
+        )}
 
         <div className="relative ml-auto">
           <button onClick={() => setMenuOpen((o) => !o)} aria-label="More options" aria-expanded={menuOpen} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-brand-soft">
@@ -264,14 +269,17 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         </div>
       </div>
 
-      {(asset.instructions || asset.dueDate) && (
+      {(asset.instructions || asset.dueAt) && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-brand-soft px-5 py-2 text-sm">
           <Icon name="feedback" size={16} />
           <span className="font-medium">
             {users.find((u) => u.id === asset.submittedBy)?.name ?? "A teammate"} asked for your feedback
-            {asset.dueDate ? ` by ${asset.dueDate}` : ""}
+            {asset.dueAt ? ` by ${formatDue(asset.dueAt, asset.dueTz)}` : ""}
           </span>
           {asset.instructions && <span className="min-w-0 flex-1 truncate text-n-800" title={asset.instructions}>{asset.instructions}</span>}
+          {!!asset.approverIds?.length && (
+            <span className="text-xs text-n-800">Approver: {asset.approverIds.map((id) => users.find((u) => u.id === id)?.name).filter(Boolean).join(", ")}</span>
+          )}
         </div>
       )}
 

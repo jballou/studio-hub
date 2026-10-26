@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/Icon";
 import { StageTag, Tag } from "@/components/ui/Tag";
 import { TYPE_TONE, TYPE_SHORT } from "@/components/calendar/meta";
 import { dayLabel } from "@/lib/calendar/dates";
+import { formatDue } from "@/lib/time";
 import { loadSource, loadSources } from "@/lib/calendar/store";
 import type { CalendarItem } from "@/lib/calendar/types";
 import { projectsRepo, repo } from "@/lib/data";
@@ -184,7 +185,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                 <Link href={`/review/${a.id}`} className="block rounded-xl border border-line bg-white p-4 hover:border-brand">
                   <span className="mb-2 flex items-center gap-2"><Tag tone="neutral">{a.source ? a.source.label : a.kind}</Tag><span className="text-xs text-muted">{a.versionIds.length} version{a.versionIds.length > 1 ? "s" : ""}</span></span>
                   <span className="block font-medium">{a.name}</span>
-                  {a.dueDate && <span className="mt-1 block text-xs text-muted">Feedback by {a.dueDate}</span>}
+                  {a.dueAt && <span className="mt-1 block text-xs text-muted">Feedback by {formatDue(a.dueAt, a.dueTz)}</span>}
                 </Link>
               </li>
             ))}

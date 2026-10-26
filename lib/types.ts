@@ -29,7 +29,11 @@ export type Asset = {
   /** where the asset came from; absent for seed data */
   source?: AssetSource;
   reviewerIds?: string[];
-  dueDate?: string;
+  /** exact deadline as a UTC instant (ISO), shown in dueTz */
+  dueAt?: string;
+  dueTz?: string;
+  /** people who can mark this approved; everyone else can only comment or ask for changes */
+  approverIds?: string[];
   /** what the creative wants feedback on */
   instructions?: string;
   submittedBy?: string;
@@ -60,7 +64,9 @@ export type SubmitInput = {
   /** add a new version to this asset instead of creating one */
   existingAssetId: string | null;
   reviewerIds: string[];
-  dueDate: string;
+  dueAt: string;
+  dueTz: string;
+  approverIds: string[];
   instructions: string;
   submittedBy: string;
 };
