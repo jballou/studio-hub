@@ -8,6 +8,7 @@ import { mockControls, projectsRepo, repo } from "@/lib/data";
 import type { Anchor, Asset, AssetVersion, Stage, Thread, User } from "@/lib/types";
 import { AnnotationLayer, type Pin } from "./AnnotationLayer";
 import { CommentList, Composer, type Draft, type Tab } from "./CommentPanel";
+import { EmbedViewer } from "./EmbedViewer";
 import { ImageViewer } from "./ImageViewer";
 import { PdfViewer } from "./PdfViewer";
 import { VideoViewer, type Marker, type VideoHandle } from "./VideoViewer";
@@ -64,15 +65,16 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const me = users.find((u) => u.id === meId);
   const version = versions.find((v) => v.id === versionId);
   const kind = asset?.kind;
+  const timed = kind === "video" || kind === "audio";
 
   const resetDraft = useCallback(() => { setAnchor(null); setDraft(null); }, []);
   const replace = (t: Thread) => setThreads((ts) => ts.map((x) => (x.id === t.id ? t : x)));
 
   const capture = useCallback((): number | null => {
-    if (kind !== "video") return null;
+    if (!timed) return null;
     video.current?.pause();
     return video.current?.currentMs() ?? 0;
-  }, [kind]);
+  }, [timed]);
 
   const startComment = useCallback(() => {
     setDraft((d) => d ?? { hasPin: false, capturedMs: capture() });
@@ -99,7 +101,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     markSeen(t.id);
     resetDraft();
     if (kind === "pdf" && t.page) setPage(t.page);
-    if (kind === "video" && t.timeMs != null) video.current?.seek(t.timeMs);
+    if (timed && t.timeMs != null) video.current?.seek(t.timeMs);
   };
   const selectById = (id: string) => { const t = threads.find((x) => x.id === id); if (t) select(t); };
 
@@ -112,7 +114,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       authorId: me.id,
       body,
       anchor,
-      timeMs: kind === "video" && withTime ? draft?.capturedMs ?? video.current?.currentMs() ?? 0 : null,
+      timeMs: timed && withTime ? draft?.capturedMs ?? video.current?.currentMs() ?? 0 : null,
       page: kind === "pdf" ? page : null,
     });
     setThreads((ts) => [...ts, t]);
@@ -258,9 +260,29 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         </div>
       </div>
 
+      {(asset.instructions || asset.dueDate) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-brand-soft px-5 py-2 text-sm">
+          <Icon name="feedback" size={16} />
+          <span className="font-medium">
+            {users.find((u) => u.id === asset.submittedBy)?.name ?? "A teammate"} asked for your feedback
+            {asset.dueDate ? ` by ${asset.dueDate}` : ""}
+          </span>
+          {asset.instructions && <span className="min-w-0 flex-1 truncate text-n-800" title={asset.instructions}>{asset.instructions}</span>}
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1">
         <section className="flex min-w-0 flex-1 flex-col">
           {kind === "image" && <ImageViewer src={src} aspect={version.aspect} overlay={overlay} />}
+          {kind === "embed" && version.embedUrl && (
+            <EmbedViewer
+              embedUrl={version.embedUrl}
+              openUrl={asset.source?.url ?? version.embedUrl}
+              aspect={version.aspect}
+              commenting={commenting && showPins}
+              overlay={overlay}
+            />
+          )}
           {kind === "pdf" && (
             <>
               <PdfViewer src={src} page={page} onPageCount={setPageCount} overlay={overlay} />
@@ -271,11 +293,12 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
               </div>
             </>
           )}
-          {kind === "video" && (
+          {timed && (
             <VideoViewer
+              audio={kind === "audio"}
               src={src}
               aspect={version.aspect}
-              overlay={overlay}
+              overlay={kind === "audio" ? null : overlay}
               markers={markers}
               selectedId={selectedId}
               onMarkerClick={selectById}
@@ -287,7 +310,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
             <Composer
               users={users}
               me={me}
-              isVideo={kind === "video"}
+              isVideo={timed}
               draft={draft}
               hasPdfPage={kind === "pdf" ? page : null}
               onStart={startComment}

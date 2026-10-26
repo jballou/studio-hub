@@ -14,7 +14,11 @@ export type DotAnchor = { kind: "dot"; x: number; y: number };
 export type BoxAnchor = { kind: "box"; x: number; y: number; w: number; h: number };
 export type Anchor = DotAnchor | BoxAnchor;
 
-export type AssetKind = "image" | "video" | "pdf";
+export type AssetKind = "image" | "video" | "audio" | "pdf" | "embed";
+export type SourceKind = "figma" | "staging" | "drive" | "slides" | "upload";
+export type Device = "desktop" | "mobile";
+
+export type AssetSource = { kind: SourceKind; url: string; label: string };
 
 export type Asset = {
   id: string;
@@ -22,6 +26,13 @@ export type Asset = {
   name: string;
   kind: AssetKind;
   versionIds: string[];
+  /** where the asset came from; absent for seed data */
+  source?: AssetSource;
+  reviewerIds?: string[];
+  dueDate?: string;
+  /** what the creative wants feedback on */
+  instructions?: string;
+  submittedBy?: string;
 };
 
 export type AssetVersion = {
@@ -31,6 +42,24 @@ export type AssetVersion = {
   src: string;
   /** width / height; used to fit the stage before media metadata loads */
   aspect: number;
+  /** iframe src for link-based assets (Figma, Slides, Drive, staging) */
+  embedUrl?: string;
+};
+
+export type SubmitInput = {
+  source: AssetSource;
+  assetKind: AssetKind;
+  src: string;
+  embedUrl?: string;
+  aspect: number;
+  title: string;
+  projectKey: string;
+  /** add a new version to this asset instead of creating one */
+  existingAssetId: string | null;
+  reviewerIds: string[];
+  dueDate: string;
+  instructions: string;
+  submittedBy: string;
 };
 
 export type Comment = {

@@ -1,5 +1,5 @@
 import type { ReviewRepo } from "./repo";
-import type { Anchor, Asset, AssetVersion, NewThread, Thread, User } from "@/lib/types";
+import type { Anchor, Asset, AssetVersion, NewThread, SubmitInput, Thread, User } from "@/lib/types";
 
 const users: User[] = [
   { id: "u-avery", name: "Avery Chen", initials: "AC", role: "creative" },
@@ -103,6 +103,30 @@ export const mockRepo: ReviewRepo = {
     const t = must(threadId);
     t.anchor = anchor;
     return delay(t);
+  },
+
+  async submitForReview(input: SubmitInput) {
+    let asset = input.existingAssetId ? assets.find((a) => a.id === input.existingAssetId) : undefined;
+    const number = asset ? asset.versionIds.length + 1 : 1;
+    const versionId = nid("v-");
+    versions.push({
+      id: versionId, assetId: asset?.id ?? "", number, src: input.src, aspect: input.aspect, embedUrl: input.embedUrl,
+    });
+    if (asset) {
+      asset.versionIds.push(versionId);
+      asset.reviewerIds = input.reviewerIds;
+      asset.dueDate = input.dueDate;
+      asset.instructions = input.instructions;
+    } else {
+      asset = {
+        id: nid("a-"), projectKey: input.projectKey, name: input.title, kind: input.assetKind, versionIds: [versionId],
+        source: input.source, reviewerIds: input.reviewerIds, dueDate: input.dueDate,
+        instructions: input.instructions, submittedBy: input.submittedBy,
+      };
+      assets.push(asset);
+    }
+    versions[versions.length - 1].assetId = asset.id;
+    return delay({ assetId: asset.id, versionId });
   },
 
   async pushToJira(threadId, actorId) {

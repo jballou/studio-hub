@@ -127,7 +127,7 @@ export function AnnotationLayer({
     <div
       ref={layerRef}
       className="absolute inset-0 touch-none select-none"
-      style={{ cursor }}
+      style={{ cursor, pointerEvents: enabled ? "auto" : "none" }}
       onPointerDown={onBackgroundDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
@@ -157,7 +157,7 @@ export function AnnotationLayer({
             <div
               key={it.id}
               onPointerDown={startMove}
-              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold shadow"
+              className="pointer-events-auto absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold shadow"
               style={{
                 left: `${it.anchor.x * 100}%`, top: `${it.anchor.y * 100}%`, background: color, color: ink,
                 outline: selected || it.isDraft ? `3px solid ${ring}` : "2px solid white",
@@ -174,7 +174,7 @@ export function AnnotationLayer({
           <div
             key={it.id}
             onPointerDown={startMove}
-            className="absolute"
+            className="pointer-events-auto absolute"
             style={{
               left: `${b.x * 100}%`, top: `${b.y * 100}%`, width: `${b.w * 100}%`, height: `${b.h * 100}%`,
               border: `2px ${it.isDraft ? "dashed" : "solid"} ${color}`,

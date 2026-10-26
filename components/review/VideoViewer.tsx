@@ -17,7 +17,7 @@ export function formatTime(ms: number) {
 }
 
 export function VideoViewer({
-  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef,
+  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, audio = false,
 }: {
   src: string;
   aspect: number;
@@ -27,6 +27,8 @@ export function VideoViewer({
   onMarkerClick: (id: string) => void;
   onTime: (ms: number) => void;
   handleRef: Ref<VideoHandle>;
+  /** Audio files play in the same element; no frames or pins, timecoded comments only. */
+  audio?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -138,6 +140,14 @@ export function VideoViewer({
           onPause={() => setPlaying(false)}
           onError={() => setFailed(true)}
         />
+        {audio && !failed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-ink text-n-50">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />
+            </svg>
+            <span className="text-sm">Audio. Comment at any point on the timeline.</span>
+          </div>
+        )}
         {failed && (
           <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 p-6 text-center text-sm text-white">
             Video could not be loaded. Use “Load local video” to review an MP4 from your machine.
@@ -150,8 +160,8 @@ export function VideoViewer({
         <button onClick={toggle} className="w-12 rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label={playing ? "Pause" : "Play"}>
           {playing ? "Pause" : "Play"}
         </button>
-        <button onClick={() => step(-1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Back one frame">‹ 1f</button>
-        <button onClick={() => step(1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Forward one frame">1f ›</button>
+        {!audio && <button onClick={() => step(-1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Back one frame">‹ 1f</button>}
+        {!audio && <button onClick={() => step(1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Forward one frame">1f ›</button>}
         <span className="w-24 font-mono text-xs text-n-50">{formatTime(ms)} / {formatTime(total)}</span>
 
         <div

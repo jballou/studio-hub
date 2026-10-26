@@ -7,6 +7,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 const ITEMS: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" },
   { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },
+  { href: "/submit", label: "Submit for feedback", icon: "upload", match: (p) => p === "/submit" },
 ];
 
 /**
