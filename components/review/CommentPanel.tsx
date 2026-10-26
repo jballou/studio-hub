@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Tag, UnreadDot } from "@/components/ui/Tag";
-import type { Thread, User } from "@/lib/types";
+import { knownPeople, peopleRepo } from "@/lib/data/people";
+import type { Person, Thread, User } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { formatTime } from "./VideoViewer";
 
@@ -17,12 +18,13 @@ export type Draft = {
 
 function Mentions({ text, users }: { text: string; users: User[] }) {
   if (!users.length) return <>{text}</>;
-  const names = users.map((u) => u.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const all = [...users, ...knownPeople()];
+  const names = [...new Set(all.map((u) => u.name))].filter(Boolean).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const parts = text.split(new RegExp(`(@(?:${names.join("|")}))`, "g"));
   return (
     <>
       {parts.map((p, i) =>
-        p.startsWith("@") && users.some((u) => `@${u.name}` === p)
+        p.startsWith("@") && all.some((u) => `@${u.name}` === p)
           ? <span key={i} className="rounded bg-brand-soft px-0.5 font-medium text-ink">{p}</span>
           : <span key={i}>{p}</span>,
       )}
@@ -245,9 +247,8 @@ export function CommentList({
 }
 
 export function Composer({
-  users, me, isVideo, draft, hasPdfPage, onStart, onClearPin, onSubmit,
+  me, isVideo, draft, hasPdfPage, onStart, onClearPin, onSubmit,
 }: {
-  users: User[];
   me: User;
   isVideo: boolean;
   draft: Draft | null;
@@ -268,13 +269,25 @@ export function Composer({
     if (pinned) area.current?.focus();
   }, [pinned]);
 
-  const mentionQuery = /@([\w ]*)$/.exec(body)?.[1];
-  const suggestions = mentionQuery === undefined
-    ? []
-    : users.filter((u) => u.name.toLowerCase().includes(mentionQuery.toLowerCase()) && u.id !== me.id).slice(0, 5);
+  // @mentions search real people (Jira users when signed in), not a fixed list.
+  const mentionQuery = /@([\p{L}\p{N}_ '.-]*)$/u.exec(body)?.[1];
+  const [suggestions, setSuggestions] = useState<Person[]>([]);
+  useEffect(() => {
+    if (mentionQuery === undefined || !mentionQuery.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuggestions([]);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      peopleRepo.search(mentionQuery, 6).then((r) => { if (live) setSuggestions(r.filter((p) => p.id !== me.id)); }, () => { if (live) setSuggestions([]); });
+    }, 180);
+    return () => { live = false; clearTimeout(t); };
+  }, [mentionQuery, me.id]);
 
-  const insertMention = (u: User) => {
-    setBody((b) => b.replace(/@([\w ]*)$/, `@${u.name} `));
+  const insertMention = (p: Person) => {
+    setBody((b) => b.replace(/@([\p{L}\p{N}_ '.-]*)$/u, `@${p.name} `));
+    setSuggestions([]);
     area.current?.focus();
   };
 
@@ -295,7 +308,7 @@ export function Composer({
           {suggestions.map((u) => (
             <li key={u.id}>
               <button className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-brand-soft" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
-                <Avatar user={u} size={20} /> {u.name}
+                <Avatar user={{ id: u.id, name: u.name, initials: u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase(), role: "requester" }} size={20} /> {u.name}
               </button>
             </li>
           ))}

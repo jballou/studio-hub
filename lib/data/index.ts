@@ -12,3 +12,5 @@ import type { ProjectsRepo } from "./projects";
 /** Mock demo data by default; real Jira when NEXT_PUBLIC_DATA_SOURCE=jira. */
 export const projectsRepo: ProjectsRepo = isJira ? jiraProjects : mockProjects;
 export { isJira };
+
+export { peopleRepo, knownPeople } from "./people";

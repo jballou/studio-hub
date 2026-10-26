@@ -1,4 +1,5 @@
 import type { ReviewRepo } from "./repo";
+import { isJira } from "./mode";
 import type { Anchor, Asset, AssetVersion, NewThread, SubmitInput, Thread, User } from "@/lib/types";
 
 const users: User[] = [
@@ -9,9 +10,9 @@ const users: User[] = [
 ];
 
 const assets: Asset[] = [
-  { id: "a-ad", projectKey: "MKTGCRTV-101", name: "Spring campaign: social ad", kind: "image", versionIds: ["v-ad-1", "v-ad-2"], approverIds: ["u-riley"] },
-  { id: "a-video", projectKey: "MKTGCRTV-102", name: "Product teaser (15s)", kind: "video", versionIds: ["v-video-1"], approverIds: ["u-riley"] },
-  { id: "a-pdf", projectKey: "MKTGCRTV-103", name: "Brand one-pager", kind: "pdf", versionIds: ["v-pdf-1"], approverIds: ["u-jordan"] },
+  { id: "a-ad", projectKey: "MKTGCRTV-101", name: "Spring campaign: social ad", kind: "image", versionIds: ["v-ad-1", "v-ad-2"], approvers: [{ id: "u-riley", name: "Riley Brooks" }] },
+  { id: "a-video", projectKey: "MKTGCRTV-102", name: "Product teaser (15s)", kind: "video", versionIds: ["v-video-1"], approvers: [{ id: "u-riley", name: "Riley Brooks" }] },
+  { id: "a-pdf", projectKey: "MKTGCRTV-103", name: "Brand one-pager", kind: "pdf", versionIds: ["v-pdf-1"], approvers: [{ id: "u-jordan", name: "Jordan Patel" }] },
 ];
 
 const versions: AssetVersion[] = [
@@ -54,6 +55,9 @@ const threads: Thread[] = [
   },
 ];
 
+// Real mode starts empty: the seeded demo assets and comments refer to tickets and people that don't exist.
+if (isJira) { assets.length = 0; versions.length = 0; threads.length = 0; }
+
 let seq = 100;
 const nid = (p: string) => `${p}${++seq}`;
 const delay = <T,>(v: T) => new Promise<T>((r) => setTimeout(() => r(structuredClone(v)), 40));
@@ -67,7 +71,8 @@ function must(id: string): Thread {
 export const mockControls = { simulatePushFailure: false };
 
 export const mockRepo: ReviewRepo = {
-  listUsers: () => delay(users),
+  // Real mode has no demo people; names come from Jira user search and the signed-in account.
+  listUsers: () => delay(isJira ? [] : users),
   listAssets: () => delay(assets),
   getAsset: (id) => delay(assets.find((a) => a.id === id) ?? null),
   getVersion: (id) => delay(versions.find((v) => v.id === id) ?? null),
@@ -114,15 +119,15 @@ export const mockRepo: ReviewRepo = {
     });
     if (asset) {
       asset.versionIds.push(versionId);
-      asset.reviewerIds = input.reviewerIds;
+      asset.reviewers = input.reviewers;
       asset.dueAt = input.dueAt;
       asset.dueTz = input.dueTz;
-      asset.approverIds = input.approverIds;
+      asset.approvers = input.approvers;
       asset.instructions = input.instructions;
     } else {
       asset = {
         id: nid("a-"), projectKey: input.projectKey, name: input.title, kind: input.assetKind, versionIds: [versionId],
-        source: input.source, reviewerIds: input.reviewerIds, dueAt: input.dueAt, dueTz: input.dueTz, approverIds: input.approverIds,
+        source: input.source, reviewers: input.reviewers, dueAt: input.dueAt, dueTz: input.dueTz, approvers: input.approvers,
         instructions: input.instructions, submittedBy: input.submittedBy,
       };
       assets.push(asset);

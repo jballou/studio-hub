@@ -1,6 +1,9 @@
 // Domain types shared by the mock adapter and (later) the Drizzle-backed one.
 // Anchor coordinates are normalized 0-1 so they survive any render size.
 
+/** Someone you can pick: a Jira account in real mode, a demo user in mock mode. */
+export type Person = { id: string; name: string; email?: string };
+
 export type Role = "creative" | "requester";
 
 export type User = {
@@ -28,12 +31,12 @@ export type Asset = {
   versionIds: string[];
   /** where the asset came from; absent for seed data */
   source?: AssetSource;
-  reviewerIds?: string[];
+  reviewers?: Person[];
   /** exact deadline as a UTC instant (ISO), shown in dueTz */
   dueAt?: string;
   dueTz?: string;
   /** people who can mark this approved; everyone else can only comment or ask for changes */
-  approverIds?: string[];
+  approvers?: Person[];
   /** what the creative wants feedback on */
   instructions?: string;
   submittedBy?: string;
@@ -63,10 +66,10 @@ export type SubmitInput = {
   projectKey: string;
   /** add a new version to this asset instead of creating one */
   existingAssetId: string | null;
-  reviewerIds: string[];
+  reviewers: Person[];
   dueAt: string;
   dueTz: string;
-  approverIds: string[];
+  approvers: Person[];
   instructions: string;
   submittedBy: string;
 };

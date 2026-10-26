@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { PeoplePicker } from "@/components/ui/PeoplePicker";
 import { TicketPicker } from "./TicketPicker";
-import { projectsRepo, repo } from "@/lib/data";
+import { peopleRepo, projectsRepo, repo } from "@/lib/data";
 import { parseSource, SHAPES, type Shape } from "@/lib/sources";
 import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
-import type { Asset, AssetKind, Device, Project, SourceKind, User } from "@/lib/types";
+import type { Asset, AssetKind, Device, Person, Project, SourceKind } from "@/lib/types";
 
 const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; placeholder?: string }[] = [
   { id: "figma", label: "Figma frame", hint: "Link to one frame", icon: "link", placeholder: "https://www.figma.com/design/…?node-id=12-34" },
@@ -30,7 +31,6 @@ const field = "w-full rounded-lg border border-control bg-white px-3 py-2 text-s
 export function SubmitForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [users, setUsers] = useState<User[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [ticket, setTicket] = useState<Project | null>(null);
   const [source, setSource] = useState<SourceKind>("figma");
@@ -40,18 +40,17 @@ export function SubmitForm() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState(params.get("title") ?? "");
   const [target, setTarget] = useState(""); // "" = new asset, else existing asset id
-  const [reviewerIds, setReviewerIds] = useState<string[]>([]);
+  const [reviewers, setReviewers] = useState<Person[]>([]);
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("17:00");
   const [dueTz, setDueTz] = useState("UTC");
-  const [approverIds, setApproverIds] = useState<string[]>([]);
+  const [approvers, setApprovers] = useState<Person[]>([]);
   const [instructions, setInstructions] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDueTz(localTimezone());
-    repo.listUsers().then(setUsers);
     repo.listAssets().then(setAssets);
     const want = params.get("ticket");
     if (want) projectsRepo.getProject(want, "u-avery").then((p) => p && setTicket((t) => t ?? p));
@@ -59,11 +58,16 @@ export function SubmitForm() {
 
   // Default the approver to the ticket's requester when we know who that is.
   useEffect(() => {
-    if (ticket && users.some((u) => u.id === ticket.requesterId)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setApproverIds((a) => (a.length ? a : [ticket.requesterId]));
-    }
-  }, [ticket, users]);
+    if (!ticket?.requesterId) return;
+    let live = true;
+    (async () => {
+      const person: Person | undefined = ticket.requesterName
+        ? { id: ticket.requesterId, name: ticket.requesterName }
+        : (await peopleRepo.search("")).find((p) => p.id === ticket.requesterId);
+      if (live && person) setApprovers((a) => (a.length ? a : [person]));
+    })();
+    return () => { live = false; };
+  }, [ticket]);
 
   const parsed = useMemo(
     () => (source === "upload" ? null : parseSource(source, url, device, shape)),
@@ -75,14 +79,12 @@ export function SubmitForm() {
   const projectKey = ticket?.jiraKey ?? "";
   const versionTargets = assets.filter((a) => a.projectKey === projectKey);
   const finalTitle = title.trim() || (parsed?.ok ? parsed.suggestedTitle : file?.name ?? "");
-  const valid = sourceOk && !!finalTitle && !!projectKey && reviewerIds.length > 0 && approverIds.length > 0 && !!dueDate && !!dueTime;
+  const valid = sourceOk && !!finalTitle && !!projectKey && reviewers.length > 0 && approvers.length > 0 && !!dueDate && !!dueTime;
 
-  const toggleApprover = (id: string) => setApproverIds((r) => (r.includes(id) ? r.filter((x) => x !== id) : [...r, id]));
-  const toggleReviewer = (id: string) => setReviewerIds((r) => (r.includes(id) ? r.filter((x) => x !== id) : [...r, id]));
 
   const submit = async () => {
     setBusy(true);
-    const common = { title: finalTitle, projectKey, existingAssetId: target || null, reviewerIds: [...new Set([...reviewerIds, ...approverIds])], approverIds, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: "u-avery" };
+    const common = { title: finalTitle, projectKey, existingAssetId: target || null, reviewers: [...new Map([...reviewers, ...approvers].map((p) => [p.id, p])).values()], approvers, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: "u-avery" };
     let res;
     if (source === "upload" && file && fileKind) {
       res = await repo.submitForReview({
@@ -191,31 +193,14 @@ export function SubmitForm() {
       </section>
 
       <section className="mb-6 space-y-4">
-        <fieldset>
-          <legend className="mb-1 text-sm font-semibold">Who should review it?</legend>
-          <div className="flex flex-wrap gap-2">
-            {users.map((u) => (
-              <label key={u.id} className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${reviewerIds.includes(u.id) ? "border-brand bg-brand-soft" : "border-control bg-white"}`}>
-                <input type="checkbox" className="sr-only" checked={reviewerIds.includes(u.id)} onChange={() => toggleReviewer(u.id)} />
-                {reviewerIds.includes(u.id) && <Icon name="check" size={14} />}
-                {u.name}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend className="mb-1 text-sm font-semibold">Who can mark it approved?</legend>
-          <div className="flex flex-wrap gap-2">
-            {users.map((u) => (
-              <label key={u.id} className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${approverIds.includes(u.id) ? "border-brand bg-brand-soft" : "border-control bg-white"}`}>
-                <input type="checkbox" className="sr-only" checked={approverIds.includes(u.id)} onChange={() => toggleApprover(u.id)} />
-                {approverIds.includes(u.id) && <Icon name="check" size={14} />}
-                {u.name}
-              </label>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-muted">Only these people see the approve button. Everyone else can comment or ask for changes. Approvers are added as reviewers.</p>
-        </fieldset>
+        <PeoplePicker label="Who should review it?" value={reviewers} onChange={setReviewers} placeholder="Search by name" />
+        <PeoplePicker
+          label="Who can mark it approved?"
+          value={approvers}
+          onChange={setApprovers}
+          placeholder="Search by name"
+          hint="Only these people see the approve button. Everyone else can comment or ask for changes. Approvers are added as reviewers."
+        />
         <div>
           <span className="text-sm font-semibold">Feedback needed by</span>
           <div className="mt-1 flex flex-wrap gap-2">

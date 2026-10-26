@@ -75,3 +75,24 @@ export async function findCloudId(accessToken: string): Promise<string | undefin
     return undefined;
   }
 }
+
+export type JiraPerson = { accountId: string; displayName: string; emailAddress?: string; active?: boolean; accountType?: string };
+
+/** Active human accounts matching a name or email fragment. Runs as the signed-in user, so Jira's own visibility rules apply. */
+export async function searchUsers(a: JiraAuth, query: string, limit = 8): Promise<JiraPerson[]> {
+  const q = query.trim().slice(0, 80);
+  if (!q) return [];
+  try {
+    const qs = new URLSearchParams({ query: q, maxResults: String(Math.min(limit * 3, 50)) });
+    const users = await request<JiraPerson[]>(a, `/user/search?${qs}`);
+    return users.filter((u) => u.active !== false && (!u.accountType || u.accountType === "atlassian")).slice(0, limit);
+  } catch (e) {
+    // Some sites restrict user search; the picker endpoint (what Jira's own people fields use) is the fallback.
+    if (!(e instanceof JiraError) || (e.status !== 403 && e.status !== 404)) throw e;
+    const qs = new URLSearchParams({ query: q, maxResults: String(limit) });
+    const data = await request<{ users: { accountId: string; displayName: string; accountType?: string; html?: string }[] }>(a, `/user/picker?${qs}`);
+    return data.users
+      .filter((u) => !u.accountType || u.accountType === "atlassian")
+      .map((u) => ({ accountId: u.accountId, displayName: u.displayName, emailAddress: u.html?.match(/[\w.+-]+@[\w.-]+\.\w+/)?.[0] }));
+  }
+}

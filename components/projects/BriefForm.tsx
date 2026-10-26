@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { projectsRepo, repo } from "@/lib/data";
-import type { BriefInput, ProjectType, User } from "@/lib/types";
+import { PeoplePicker } from "@/components/ui/PeoplePicker";
+import { projectsRepo } from "@/lib/data";
+import type { BriefInput, Person, ProjectType } from "@/lib/types";
 
 const DRAFT_KEY = "brief-draft-v1";
 const TYPES: ProjectType[] = ["Social", "Video", "Print", "Web"];
@@ -26,7 +27,7 @@ const SECTIONS: { key: keyof BriefInput; label: string; hint: string }[] = [
 
 export function BriefForm() {
   const [form, setForm] = useState<BriefInput>(empty);
-  const [users, setUsers] = useState<User[]>([]);
+  const [stakeholders, setStakeholders] = useState<Person[]>([]);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [key, setKey] = useState<string | null>(null);
@@ -34,7 +35,6 @@ export function BriefForm() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    repo.listUsers().then(setUsers);
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -114,14 +114,14 @@ export function BriefForm() {
         </fieldset>
       </div>
 
-      <fieldset className="mb-6 text-sm">
-        <legend className="font-medium">Stakeholders <span className="font-normal text-muted">(added as Jira watchers)</span></legend>
-        <div className="mt-1 flex flex-wrap gap-3">
-          {users.map((u) => (
-            <label key={u.id} className="flex items-center gap-1"><input type="checkbox" checked={form.stakeholderIds.includes(u.id)} onChange={() => set("stakeholderIds", toggle(form.stakeholderIds, u.id))} /> {u.name}</label>
-          ))}
-        </div>
-      </fieldset>
+      <div className="mb-6">
+        <PeoplePicker
+          label="Stakeholders (added as Jira watchers)"
+          value={stakeholders}
+          onChange={(p) => { setStakeholders(p); set("stakeholderIds", p.map((x) => x.id)); }}
+          placeholder="Search by name"
+        />
+      </div>
 
       <button onClick={submit} disabled={!valid || submitting} className="rounded bg-brand px-5 py-2 font-medium text-white enabled:hover:bg-brand-dark disabled:opacity-40">
         {submitting ? "Submitting…" : "Submit brief"}

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { StageTag } from "@/components/ui/Tag";
 import { formatDue } from "@/lib/time";
-import { mockControls, projectsRepo, repo } from "@/lib/data";
-import type { Anchor, Asset, AssetVersion, Stage, Thread, User } from "@/lib/types";
+import { isJira, mockControls, projectsRepo, repo } from "@/lib/data";
+import type { Anchor, Asset, AssetVersion, Person, Stage, Thread, User } from "@/lib/types";
 import { AnnotationLayer, type Pin } from "./AnnotationLayer";
 import { CommentList, Composer, type Draft, type Tab } from "./CommentPanel";
 import { EmbedViewer } from "./EmbedViewer";
@@ -15,6 +15,10 @@ import { PdfViewer } from "./PdfViewer";
 import type { Zoom } from "./Stage";
 import { ZoomControl } from "./ZoomControl";
 import { VideoViewer, type Marker, type VideoHandle } from "./VideoViewer";
+
+const initialsOf = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+const toUser = (p: Person): User => ({ id: p.id, name: p.name, initials: initialsOf(p.name), role: "requester" });
+const addUsers = (list: User[], more: User[]) => [...list, ...more.filter((m) => !list.some((u) => u.id === m.id))];
 
 /** Annotations on video show only within this window of their timestamp (or while selected). */
 const VISIBLE_WINDOW_MS = 500;
@@ -25,6 +29,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [versionId, setVersionId] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
+  const [meUser, setMeUser] = useState<User>();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [stage, setStage] = useState<Stage>("In feedback");
   const [commenting, setCommenting] = useState(true);
@@ -53,7 +58,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       setAsset(a);
       setVersions(vs);
       setVersionId(vs[vs.length - 1]?.id ?? null);
-      setUsers(await repo.listUsers());
+      // Demo users in mock mode; in real mode, just the people named on this request (plus you, below).
+      setUsers(addUsers(await repo.listUsers(), [...(a.reviewers ?? []), ...(a.approvers ?? [])].map(toUser)));
       const project = (await projectsRepo.listProjects("u-avery")).find((p) => p.jiraKey === a.projectKey);
       if (project) setStage(project.stage);
     })();
@@ -66,7 +72,20 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     return () => { live = false; };
   }, [versionId]);
 
-  const me = users.find((u) => u.id === meId);
+  // In real mode you are whoever is signed in, not a demo persona.
+  useEffect(() => {
+    if (!isJira) return;
+    fetch("/api/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => {
+        if (!m) return;
+        const u: User = { id: m.accountId, name: m.name, initials: initialsOf(m.name), role: m.role };
+        setMeUser(u);
+        setUsers((list) => addUsers(list, [u]));
+      });
+  }, []);
+
+  const me = isJira ? meUser : users.find((u) => u.id === meId);
   const version = versions.find((v) => v.id === versionId);
   const kind = asset?.kind;
   const timed = kind === "video" || kind === "audio";
@@ -98,7 +117,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const canPush = (t: Thread) => me.role === "creative" || t.authorId === me.id;
   const closed = stage === "Delivered";
   // Only people named as approvers on the feedback request see the approve button.
-  const canApprove = !!asset.approverIds?.includes(me.id);
+  const canApprove = !!asset.approvers?.some((p) => p.id === me.id);
 
   const markSeen = (id: string) => setSeen((s) => new Set(s).add(id));
 
@@ -203,11 +222,13 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           {menuOpen && (
             <div className="absolute right-0 top-full z-20 mt-1 w-72 space-y-3 rounded-xl border border-line bg-white p-3 text-xs shadow-lg">
               <p className="font-semibold uppercase tracking-wide text-muted">Demo controls (mock data)</p>
-              <label className="flex items-center justify-between gap-2">Viewing as
-                <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
-                  {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
-                </select>
-              </label>
+              {!isJira && (
+                <label className="flex items-center justify-between gap-2">Viewing as
+                  <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
+                    {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                  </select>
+                </label>
+              )}
               <label className="flex items-center gap-1.5">
                 <input type="checkbox" checked={simFail} onChange={(e) => { setSimFail(e.target.checked); mockControls.simulatePushFailure = e.target.checked; }} />
                 Make the next Jira push fail
@@ -277,8 +298,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
             {asset.dueAt ? ` by ${formatDue(asset.dueAt, asset.dueTz)}` : ""}
           </span>
           {asset.instructions && <span className="min-w-0 flex-1 truncate text-n-800" title={asset.instructions}>{asset.instructions}</span>}
-          {!!asset.approverIds?.length && (
-            <span className="text-xs text-n-800">Approver: {asset.approverIds.map((id) => users.find((u) => u.id === id)?.name).filter(Boolean).join(", ")}</span>
+          {!!asset.approvers?.length && (
+            <span className="text-xs text-n-800">Approver: {asset.approvers.map((p) => p.name).join(", ")}</span>
           )}
         </div>
       )}
@@ -323,7 +344,6 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           )}
           <div className="px-4 pb-3 pt-1">
             <Composer
-              users={users}
               me={me}
               isVideo={timed}
               draft={draft}
