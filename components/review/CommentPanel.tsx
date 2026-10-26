@@ -259,6 +259,8 @@ export function Composer({
   const [body, setBody] = useState("");
   const [withTime, setWithTime] = useState(true);
   const area = useRef<HTMLTextAreaElement>(null);
+  const [focused, setFocused] = useState(false);
+  const expanded = focused || !!body || !!draft?.hasPin;
 
   // Dropping a pin should lead straight into typing.
   const pinned = draft?.hasPin ?? false;
@@ -283,7 +285,11 @@ export function Composer({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-2xl rounded-xl border border-line bg-white p-3 shadow-md">
+    <div
+      className="relative mx-auto w-full max-w-2xl rounded-xl border border-line bg-white p-3 shadow-md"
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false); }}
+    >
       {suggestions.length > 0 && (
         <ul className="absolute bottom-full left-3 right-3 mb-1 rounded-lg border border-line bg-white shadow">
           {suggestions.map((u) => (
@@ -298,15 +304,15 @@ export function Composer({
       <textarea
         ref={area}
         value={body}
-        rows={2}
+        rows={expanded ? 3 : 1}
         onFocus={onStart}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-        placeholder="Write a comment…"
+        placeholder={isVideo ? "Write a comment… (click the video to pin a spot)" : "Write a comment… (click the design to pin a spot)"}
         aria-label="Write a comment"
         className="w-full resize-none bg-transparent px-1 text-[15px] outline-none placeholder:text-n-650"
       />
-      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+      <div className={`mt-2 flex-wrap items-center gap-3 text-xs ${expanded ? "flex" : "hidden"}`}>
         <button
           type="button"
           onClick={() => { setBody((b) => `${b}@`); area.current?.focus(); }}

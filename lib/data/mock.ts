@@ -110,7 +110,7 @@ export const mockRepo: ReviewRepo = {
     const number = asset ? asset.versionIds.length + 1 : 1;
     const versionId = nid("v-");
     versions.push({
-      id: versionId, assetId: asset?.id ?? "", number, src: input.src, aspect: input.aspect, embedUrl: input.embedUrl,
+      id: versionId, assetId: asset?.id ?? "", number, src: input.src, aspect: input.aspect, embedUrl: input.embedUrl, baseWidth: input.baseWidth,
     });
     if (asset) {
       asset.versionIds.push(versionId);

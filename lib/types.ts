@@ -44,6 +44,8 @@ export type AssetVersion = {
   aspect: number;
   /** iframe src for link-based assets (Figma, Slides, Drive, staging) */
   embedUrl?: string;
+  /** natural width in px that zoom percentages are relative to (link-based assets) */
+  baseWidth?: number;
 };
 
 export type SubmitInput = {
@@ -52,6 +54,7 @@ export type SubmitInput = {
   src: string;
   embedUrl?: string;
   aspect: number;
+  baseWidth?: number;
   title: string;
   projectKey: string;
   /** add a new version to this asset instead of creating one */

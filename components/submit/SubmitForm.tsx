@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { TicketPicker } from "./TicketPicker";
 import { projectsRepo, repo } from "@/lib/data";
-import { parseSource } from "@/lib/sources";
+import { parseSource, SHAPES, type Shape } from "@/lib/sources";
 import type { Asset, AssetKind, Device, Project, SourceKind, User } from "@/lib/types";
 
 const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; placeholder?: string }[] = [
@@ -30,13 +31,13 @@ export function SubmitForm() {
   const params = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [ticket, setTicket] = useState<Project | null>(null);
   const [source, setSource] = useState<SourceKind>("figma");
   const [url, setUrl] = useState("");
   const [device, setDevice] = useState<Device>("desktop");
+  const [shape, setShape] = useState<Shape>("16:10");
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState(params.get("title") ?? "");
-  const [projectKey, setProjectKey] = useState("");
   const [target, setTarget] = useState(""); // "" = new asset, else existing asset id
   const [reviewerIds, setReviewerIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
@@ -46,20 +47,18 @@ export function SubmitForm() {
   useEffect(() => {
     repo.listUsers().then(setUsers);
     repo.listAssets().then(setAssets);
-    projectsRepo.listProjects("u-avery").then((p) => {
-      setProjects(p);
-      const ticket = params.get("ticket");
-      setProjectKey((k) => k || (ticket && p.some((x) => x.jiraKey === ticket) ? ticket : p[0]?.jiraKey || ""));
-    });
+    const want = params.get("ticket");
+    if (want) projectsRepo.getProject(want, "u-avery").then((p) => p && setTicket((t) => t ?? p));
   }, [params]);
 
   const parsed = useMemo(
-    () => (source === "upload" ? null : parseSource(source, url, device)),
-    [source, url, device],
+    () => (source === "upload" ? null : parseSource(source, url, device, shape)),
+    [source, url, device, shape],
   );
   const fileKind = file ? kindFromFile(file) : null;
 
   const sourceOk = source === "upload" ? !!file && !!fileKind : !!parsed && parsed.ok;
+  const projectKey = ticket?.jiraKey ?? "";
   const versionTargets = assets.filter((a) => a.projectKey === projectKey);
   const finalTitle = title.trim() || (parsed?.ok ? parsed.suggestedTitle : file?.name ?? "");
   const valid = sourceOk && !!finalTitle && !!projectKey && reviewerIds.length > 0 && !!dueDate;
@@ -78,7 +77,7 @@ export function SubmitForm() {
       });
     } else if (parsed?.ok && source !== "upload") {
       res = await repo.submitForReview({
-        ...common, assetKind: "embed", src: "", embedUrl: parsed.embedUrl, aspect: parsed.aspect,
+        ...common, assetKind: "embed", src: "", embedUrl: parsed.embedUrl, aspect: parsed.aspect, baseWidth: parsed.baseWidth,
         source: { kind: source, url: url.trim(), label: parsed.summary },
       });
     } else {
@@ -140,6 +139,14 @@ export function SubmitForm() {
             {parsed && !parsed.ok && parsed.error && (
               <p role="alert" className="mt-2 flex items-start gap-1.5 text-sm text-bad-fg"><Icon name="close" size={16} /> {parsed.error}</p>
             )}
+            {(source === "figma" || source === "drive") && (
+              <label className="mt-2 flex items-center gap-2 text-sm">Frame shape
+                <select value={shape} onChange={(e) => setShape(e.target.value as Shape)} className="rounded border border-control px-2 py-1">
+                  {SHAPES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+                <span className="text-xs text-muted">Match your frame so pins stay put.</span>
+              </label>
+            )}
             {parsed?.ok && (
               <div className="mt-2 space-y-1.5 rounded-xl border border-ok-line bg-ok-bg p-3 text-sm text-ok-fg">
                 <p className="flex items-center gap-1.5 font-medium"><Icon name="check" size={16} /> {parsed.summary}</p>
@@ -156,11 +163,10 @@ export function SubmitForm() {
         <label className="block text-sm font-semibold sm:col-span-2">Title
           <input className={`${field} mt-1 font-normal`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={parsed?.ok ? parsed.suggestedTitle : file?.name ?? "Name this design"} />
         </label>
-        <label className="block text-sm font-semibold">Jira ticket
-          <select className={`${field} mt-1 font-normal`} value={projectKey} onChange={(e) => { setProjectKey(e.target.value); setTarget(""); }}>
-            {projects.map((p) => <option key={p.id} value={p.jiraKey}>{p.jiraKey} · {p.title}</option>)}
-          </select>
-        </label>
+        <div className="block text-sm font-semibold">
+          <label htmlFor="ticket-search">Jira ticket</label>
+          <TicketPicker value={ticket} onChange={(p) => { setTicket(p); setTarget(""); }} viewerId="u-avery" />
+        </div>
         <label className="block text-sm font-semibold">Add as
           <select className={`${field} mt-1 font-normal`} value={target} onChange={(e) => setTarget(e.target.value)}>
             <option value="">A new design</option>

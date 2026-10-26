@@ -11,6 +11,8 @@ import { CommentList, Composer, type Draft, type Tab } from "./CommentPanel";
 import { EmbedViewer } from "./EmbedViewer";
 import { ImageViewer } from "./ImageViewer";
 import { PdfViewer } from "./PdfViewer";
+import type { Zoom } from "./Stage";
+import { ZoomControl } from "./ZoomControl";
 import { VideoViewer, type Marker, type VideoHandle } from "./VideoViewer";
 
 /** Annotations on video show only within this window of their timestamp (or while selected). */
@@ -25,6 +27,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [stage, setStage] = useState<Stage>("In feedback");
   const [commenting, setCommenting] = useState(true);
+  const [zoom, setZoom] = useState<Zoom>("fit");
   const [showPins, setShowPins] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [seen, setSeen] = useState<Set<string>>(new Set());
@@ -223,13 +226,14 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           <span className="sr-only">Version</span>
           <select
             value={version.id}
-            onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); }}
+            onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); setZoom("fit"); }}
             className="appearance-none rounded-full border border-control bg-white py-1.5 pl-4 pr-9 text-sm"
           >
             {versions.map((v) => <option key={v.id} value={v.id}>Version {v.number}</option>)}
           </select>
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevronDown" size={14} /></span>
         </label>
+        {kind !== "audio" && <ZoomControl zoom={zoom} onChange={setZoom} />}
         <button
           onClick={() => setCommenting((c) => !c)}
           aria-pressed={commenting}
@@ -273,19 +277,21 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
 
       <div className="flex min-h-0 flex-1">
         <section className="flex min-w-0 flex-1 flex-col">
-          {kind === "image" && <ImageViewer src={src} aspect={version.aspect} overlay={overlay} />}
+          {kind === "image" && <ImageViewer src={src} aspect={version.aspect} zoom={zoom} overlay={overlay} />}
           {kind === "embed" && version.embedUrl && (
             <EmbedViewer
               embedUrl={version.embedUrl}
               openUrl={asset.source?.url ?? version.embedUrl}
               aspect={version.aspect}
+              baseWidth={version.baseWidth ?? 1280}
+              zoom={zoom}
               commenting={commenting && showPins}
               overlay={overlay}
             />
           )}
           {kind === "pdf" && (
             <>
-              <PdfViewer src={src} page={page} onPageCount={setPageCount} overlay={overlay} />
+              <PdfViewer src={src} page={page} zoom={zoom} onPageCount={setPageCount} overlay={overlay} />
               <div className="flex items-center justify-center gap-3 pb-1 text-sm">
                 <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page" className="rounded-full border border-control px-3 py-0.5 disabled:opacity-40">‹</button>
                 <span>Page {page} of {pageCount}</span>
@@ -296,6 +302,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           {timed && (
             <VideoViewer
               audio={kind === "audio"}
+              zoom={zoom}
               src={src}
               aspect={version.aspect}
               overlay={kind === "audio" ? null : overlay}
@@ -306,7 +313,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
               handleRef={video}
             />
           )}
-          <div className="px-5 pb-5 pt-3">
+          <div className="px-4 pb-3 pt-1">
             <Composer
               users={users}
               me={me}

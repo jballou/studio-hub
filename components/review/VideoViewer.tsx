@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
-import { Stage } from "./Stage";
+import { Stage, type Zoom } from "./Stage";
 
 export type VideoHandle = {
   pause: () => void;
@@ -17,7 +17,7 @@ export function formatTime(ms: number) {
 }
 
 export function VideoViewer({
-  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, audio = false,
+  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, zoom = "fit", audio = false,
 }: {
   src: string;
   aspect: number;
@@ -29,6 +29,7 @@ export function VideoViewer({
   handleRef: Ref<VideoHandle>;
   /** Audio files play in the same element; no frames or pins, timecoded comments only. */
   audio?: boolean;
+  zoom?: Zoom;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -39,6 +40,7 @@ export function VideoViewer({
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [natural, setNatural] = useState<number | null>(null);
+  const [baseW, setBaseW] = useState(1280);
   const [failed, setFailed] = useState(false);
 
   const report = useCallback((t: number) => {
@@ -115,7 +117,7 @@ export function VideoViewer({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Stage aspect={natural ?? aspect}>
+      <Stage aspect={natural ?? aspect} zoom={zoom} baseWidth={baseW}>
         <video
           ref={videoRef}
           src={src}
@@ -133,7 +135,7 @@ export function VideoViewer({
               }, { once: true });
               v.currentTime = 1e101;
             }
-            if (v.videoWidth) setNatural(v.videoWidth / v.videoHeight);
+            if (v.videoWidth) { setNatural(v.videoWidth / v.videoHeight); setBaseW(v.videoWidth); }
             setFailed(false);
           }}
           onPlay={() => setPlaying(true)}

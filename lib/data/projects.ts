@@ -4,6 +4,8 @@ import type { BriefInput, Project } from "@/lib/types";
 export interface ProjectsRepo {
   listProjects(viewerId: string): Promise<Project[]>;
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
+  /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
+  searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
   createBrief(input: BriefInput, requesterId: string): Promise<{ jiraKey: string }>;
 }
 
@@ -23,6 +25,16 @@ export const mockProjects: ProjectsRepo = {
     const creative = ["u-avery", "u-sam"].includes(viewerId);
     return structuredClone(
       projects.filter((p) => creative || p.requesterId === viewerId || p.collaboratorIds.includes(viewerId)),
+    );
+  },
+  async searchProjects(viewerId, query, limit = 8) {
+    const creative = ["u-avery", "u-sam"].includes(viewerId);
+    const t = query.trim().toLowerCase();
+    return structuredClone(
+      projects
+        .filter((p) => creative || p.requesterId === viewerId || p.collaboratorIds.includes(viewerId))
+        .filter((p) => !t || p.jiraKey.toLowerCase().includes(t) || p.title.toLowerCase().includes(t))
+        .slice(0, limit),
     );
   },
   async getProject(jiraKey, viewerId) {

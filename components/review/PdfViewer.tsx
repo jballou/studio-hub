@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Stage } from "./Stage";
+import { Stage, type Zoom } from "./Stage";
 
 const RENDER_SCALE = 2;
 
 export function PdfViewer({
-  src, page, onPageCount, overlay,
+  src, page, zoom, onPageCount, overlay,
 }: {
   src: string;
+  zoom: Zoom;
   page: number;
   onPageCount: (n: number) => void;
   overlay: ReactNode;
@@ -59,7 +60,7 @@ export function PdfViewer({
   }, [page, ready]);
 
   return (
-    <Stage aspect={aspect}>
+    <Stage aspect={aspect} zoom={zoom} baseWidth={816}>
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       {error && <div className="absolute inset-0 flex items-center justify-center text-sm text-bad-fg">{error}</div>}
       {overlay}

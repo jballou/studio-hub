@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Icon } from "@/components/ui/Icon";
-import { Stage } from "./Stage";
+import { Stage, type Zoom } from "./Stage";
 
 /**
  * Link-based assets (Figma, Slides, Drive, staging pages) shown in an iframe with the
@@ -10,17 +10,19 @@ import { Stage } from "./Stage";
  * off (the Comment toggle) to scroll or click inside the embedded page.
  */
 export function EmbedViewer({
-  embedUrl, openUrl, aspect, commenting, overlay,
+  embedUrl, openUrl, aspect, baseWidth, zoom, commenting, overlay,
 }: {
   embedUrl: string;
   openUrl: string;
   aspect: number;
+  baseWidth: number;
+  zoom: Zoom;
   commenting: boolean;
   overlay: ReactNode;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Stage aspect={aspect}>
+      <Stage aspect={aspect} zoom={zoom} baseWidth={baseWidth}>
         <iframe
           src={embedUrl}
           title="Design preview"
