@@ -176,7 +176,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   return (
     <div className="paper flex h-screen flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-5 py-2.5 text-sm">
-        <h1 className="truncate font-semibold">{asset.projectKey} · {asset.name}</h1>
+        <h1 className="truncate font-semibold"><Link href={`/projects/${asset.projectKey}`} className="font-mono text-brand hover:underline" title="Open project">{asset.projectKey}</Link> · {asset.name}</h1>
         <StageTag stage={stage} />
         <span className="h-5 w-px bg-line" />
         <button className={btn} disabled={closed} onClick={() => setStage("In progress")}>Ask for changes</button>

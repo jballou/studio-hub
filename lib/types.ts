@@ -117,6 +117,9 @@ export type Project = {
   newComments: number;
   /** asset ids for thumbnail strip */
   assetIds: string[];
+  /** YYYY-MM-DD the brief was submitted */
+  submittedAt: string;
+  brief?: Partial<BriefInput>;
 };
 
 export type BriefInput = {

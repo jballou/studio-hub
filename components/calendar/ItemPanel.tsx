@@ -9,6 +9,8 @@ import { ITEM_TYPES, type CalendarItem } from "@/lib/calendar/types";
 import { STATUS_TONE, TYPE_SHORT, TYPE_TONE } from "./meta";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
+const primary = "rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark";
+const secondary = "rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft";
 
 type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 
@@ -22,16 +24,19 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export function ItemPanel({
-  panel, items, dayItems, onPick, onClose,
+  panel, items, dayItems, projectKeys, onPick, onClose,
 }: {
   panel: Panel;
   items: CalendarItem[];
   dayItems: CalendarItem[];
+  /** Jira keys that have a project home in the app */
+  projectKeys: Set<string>;
   onPick: (id: string) => void;
   onClose: () => void;
 }) {
   if (!panel) return null;
   const item = panel.kind === "item" ? items.find((i) => i.id === panel.id) : undefined;
+  const feedbackHref = item ? `/submit?title=${encodeURIComponent(item.title)}${item.jiraKey ? `&ticket=${item.jiraKey}` : ""}` : "/submit";
 
   return (
     <>
@@ -80,18 +85,21 @@ export function ItemPanel({
             </dl>
             {item.description && <p className="mt-3 whitespace-pre-wrap text-sm">{item.description}</p>}
             <div className="mt-5 flex flex-wrap gap-2">
+              {/* Primary action first. Items tied to a known project open its home; others start a feedback request. */}
+              {item.jiraKey && projectKeys.has(item.jiraKey) ? (
+                <>
+                  <Link href={`/projects/${item.jiraKey}`} className={primary}>Open project</Link>
+                  <Link href={feedbackHref} className={secondary}>Submit for feedback</Link>
+                </>
+              ) : (
+                <Link href={feedbackHref} className={primary}>Submit for feedback</Link>
+              )}
               {item.jiraKey && (
-                <a href={`${JIRA_BASE}/browse/${item.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-control px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Open {item.jiraKey} in Jira</a>
+                <a href={`${JIRA_BASE}/browse/${item.jiraKey}`} target="_blank" rel="noopener noreferrer" className={secondary}>Open in Jira</a>
               )}
               {item.link && (
-                <a href={item.link} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-control px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Open asset link</a>
+                <a href={item.link} target="_blank" rel="noopener noreferrer" className={secondary}>Open asset link</a>
               )}
-              <Link
-                href={`/submit?title=${encodeURIComponent(item.title)}${item.jiraKey ? `&ticket=${item.jiraKey}` : ""}`}
-                className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark"
-              >
-                Submit for feedback
-              </Link>
             </div>
           </>
         )}

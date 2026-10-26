@@ -7,6 +7,7 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { formatTime } from "@/lib/calendar/csv";
 import { addDays, dayLabel, fromIso, monthGrid, monthLabel, shiftMonth, spanDays, startOfWeek, todayIso } from "@/lib/calendar/dates";
 import { loadSource, loadSources } from "@/lib/calendar/store";
+import { projectsRepo } from "@/lib/data";
 import { ITEM_TYPES, STATUSES, type CalendarItem, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
 import { ItemPanel } from "./ItemPanel";
 import { STATUS_TONE, TYPE_BAR, TYPE_SHORT, TYPE_TONE } from "./meta";
@@ -55,6 +56,7 @@ export function CalendarView() {
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [panel, setPanel] = useState<Panel>(null);
+  const [projectKeys, setProjectKeys] = useState<Set<string>>(new Set());
   const [menu, setMenu] = useState<"tags" | "filter" | "more" | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
@@ -71,6 +73,7 @@ export function CalendarView() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    projectsRepo.listProjects("u-avery").then((ps) => setProjectKeys(new Set(ps.map((p) => p.jiraKey))));
     const srcs = loadSources();
     setSources(srcs);
     setResults(await Promise.all(srcs.map(loadSource)));
@@ -302,6 +305,7 @@ export function CalendarView() {
         panel={panel}
         items={all}
         dayItems={panel?.kind === "day" ? byDay.get(panel.day) ?? [] : []}
+        projectKeys={projectKeys}
         onPick={open}
         onClose={() => setPanel(null)}
       />

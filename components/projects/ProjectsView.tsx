@@ -14,31 +14,38 @@ const GROUPS: { id: ProjectGroup; label: string }[] = [
 const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
 const TYPES: ProjectType[] = ["Social", "Video", "Print", "Web"];
 
-function MonthCalendar({ projects }: { projects: Project[] }) {
-  const [cursor, setCursor] = useState(() => new Date("2026-10-01T00:00:00"));
+function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" | "week" }) {
+  const [cursor, setCursor] = useState(() => new Date("2026-10-26T00:00:00"));
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
-  const first = new Date(year, month, 1).getDay();
-  const days = new Date(year, month + 1, 0).getDate();
-  const cells = Array.from({ length: first + days }, (_, i) => (i < first ? null : i - first + 1));
-  const byDay = (d: number) => {
-    const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    return projects.filter((p) => p.deadline === key);
-  };
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  let days: (Date | null)[];
+  if (mode === "week") {
+    const start = new Date(year, month, cursor.getDate() - cursor.getDay());
+    days = Array.from({ length: 7 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+  } else {
+    const first = new Date(year, month, 1).getDay();
+    const count = new Date(year, month + 1, 0).getDate();
+    days = Array.from({ length: first + count }, (_, i) => (i < first ? null : new Date(year, month, i - first + 1)));
+  }
+  const step = (n: number) => setCursor(mode === "week" ? new Date(year, month, cursor.getDate() + 7 * n) : new Date(year, month + n, 1));
+  const label = mode === "week" && days[0] && days[6]
+    ? `${days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${days[6].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+    : cursor.toLocaleString("en-US", { month: "long", year: "numeric" });
   return (
     <div className="rounded-lg border border-line bg-white p-4">
       <div className="mb-3 flex items-center gap-3">
-        <button className="rounded border border-control px-2" onClick={() => setCursor(new Date(year, month - 1, 1))} aria-label="Previous month">‹</button>
-        <span className="font-semibold">{cursor.toLocaleString("en-US", { month: "long", year: "numeric" })}</span>
-        <button className="rounded border border-control px-2" onClick={() => setCursor(new Date(year, month + 1, 1))} aria-label="Next month">›</button>
+        <button className="rounded border border-control px-2" onClick={() => step(-1)} aria-label="Previous">‹</button>
+        <span className="font-semibold">{label}</span>
+        <button className="rounded border border-control px-2" onClick={() => step(1)} aria-label="Next">›</button>
       </div>
       <div className="grid grid-cols-7 gap-px bg-line text-xs">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => <div key={i} className="bg-n-150 p-1 text-center font-semibold">{d}</div>)}
-        {cells.map((d, i) => (
-          <div key={i} className="min-h-20 bg-white p-1">
-            {d && <div className="text-muted">{d}</div>}
-            {d && byDay(d).map((p) => (
-              <Link key={p.id} href={`/review/${p.assetIds[0] ?? ""}`} className="mt-1 block truncate rounded bg-brand-soft px-1 py-0.5 text-[11px] text-ink">
+        {days.map((d, i) => (
+          <div key={i} className={`bg-white p-1 ${mode === "week" ? "min-h-40" : "min-h-20"}`}>
+            {d && <div className="text-muted">{d.getDate()}</div>}
+            {d && projects.filter((p) => p.deadline === iso(d)).map((p) => (
+              <Link key={p.id} href={`/projects/${p.jiraKey}`} className="mt-1 block truncate rounded bg-brand-soft px-1 py-0.5 text-[11px] text-ink">
                 {p.title}
               </Link>
             ))}
@@ -53,7 +60,7 @@ export function ProjectsView() {
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [view, setView] = useState<"list" | "calendar">("list");
+  const [view, setView] = useState<"list" | "month" | "week">("list");
   const [action, setAction] = useState(false);
   const [newOnly, setNewOnly] = useState(false);
   const [stage, setStage] = useState<Stage | "">("");
@@ -90,7 +97,7 @@ export function ProjectsView() {
             </select>
           </label>
           <div className="flex overflow-hidden rounded border border-line">
-            {(["list", "calendar"] as const).map((v) => (
+            {(["list", "month", "week"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-3 py-1 capitalize ${view === v ? "bg-brand text-white" : "bg-white"}`}>{v}</button>
             ))}
           </div>
@@ -127,7 +134,7 @@ export function ProjectsView() {
         </div>
       )}
 
-      {view === "calendar" ? <MonthCalendar projects={filtered} /> : (
+      {view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
         GROUPS.map((g) => {
           const rows = filtered.filter((p) => p.group === g.id);
           return (
@@ -137,7 +144,7 @@ export function ProjectsView() {
                 <ul className="space-y-2">
                   {rows.map((p) => (
                     <li key={p.id}>
-                      <Link href={p.assetIds[0] ? `/review/${p.assetIds[0]}` : "/projects"} className="flex items-center gap-4 rounded-lg border border-line bg-white p-3 hover:border-brand">
+                      <Link href={`/projects/${p.jiraKey}`} className="flex items-center gap-4 rounded-lg border border-line bg-white p-3 hover:border-brand">
                         <div className="flex w-14 gap-1">
                           {p.assetIds.slice(0, 2).map((a) => <span key={a} className="h-10 w-10 rounded bg-brand-soft" aria-hidden />)}
                         </div>
