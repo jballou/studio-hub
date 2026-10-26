@@ -1,4 +1,4 @@
-import type { BriefInput, Project } from "@/lib/types";
+import type { BriefSubmission, Project } from "@/lib/types";
 
 /** Data boundary for projects/briefs; the Jira-backed adapter replaces the mock later. */
 export interface ProjectsRepo {
@@ -6,7 +6,7 @@ export interface ProjectsRepo {
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
   /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
   searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
-  createBrief(input: BriefInput, requesterId: string): Promise<{ jiraKey: string }>;
+  createBrief(input: BriefSubmission, requesterId: string): Promise<{ jiraKey: string }>;
 }
 
 const projects: Project[] = [
@@ -18,6 +18,16 @@ const projects: Project[] = [
 ];
 
 let seq = 130;
+
+const projectTypeFor = (label: string): Project["type"] => {
+  const l = label.toLowerCase();
+  if (l.includes("graphic")) return "Graphic";
+  if (l.includes("video") || l.includes("animation")) return "Video";
+  if (l.includes("web")) return "Web";
+  if (l.includes("copy")) return "Copy";
+  if (l.includes("campaign")) return "Campaign";
+  return "Other";
+};
 
 export const mockProjects: ProjectsRepo = {
   async listProjects(viewerId) {
@@ -47,9 +57,10 @@ export const mockProjects: ProjectsRepo = {
     const jiraKey = `MKTGCRTV-${++seq}`;
     projects.push({
       id: `p${seq}`, jiraKey, title: input.title, group: "open", stage: "Submitted",
-      type: input.assetTypes[0] ?? "Social", requesterId, collaboratorIds: input.stakeholderIds,
-      deadline: input.deadline, actionRequired: false, newComments: 0, assetIds: [],
-      submittedAt: new Date().toISOString().slice(0, 10), brief: input,
+      type: projectTypeFor(input.typeLabel), requesterId, collaboratorIds: input.stakeholders.map((p) => p.id),
+      collaboratorNames: input.stakeholders.map((p) => p.name),
+      deadline: input.deadline ?? "", actionRequired: false, newComments: 0, assetIds: [],
+      submittedAt: new Date().toISOString().slice(0, 10), briefSections: input.sections,
     });
     return { jiraKey };
   },

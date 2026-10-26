@@ -149,10 +149,25 @@ export type Project = {
   submittedAt: string;
   brief?: Partial<BriefInput>;
   flag?: ProjectFlag;
+  /** brief as labelled sections, from the wizard */
+  briefSections?: { label: string; value: string }[];
   /** plain-text ticket description when there is no structured brief (Jira data) */
   description?: string;
   requesterName?: string;
   collaboratorNames?: string[];
+};
+
+/** What the conversational wizard produces. Questions are data, so this carries labelled sections rather than fixed fields. */
+export type BriefSubmission = {
+  /** Jira issue type to create, from the answer to the "type" question. */
+  issueTypeId?: string;
+  typeLabel: string;
+  title: string;
+  /** YYYY-MM-DD, from the "deadline" question when asked */
+  deadline?: string;
+  stakeholders: Person[];
+  /** Everything else, in the order it was asked. Becomes the ticket description. */
+  sections: { label: string; value: string }[];
 };
 
 export type BriefInput = {

@@ -1,5 +1,5 @@
-import { BriefForm } from "@/components/projects/BriefForm";
+import { BriefWizard } from "@/components/brief/BriefWizard";
 
 export default function NewBriefPage() {
-  return <BriefForm />;
+  return <BriefWizard />;
 }

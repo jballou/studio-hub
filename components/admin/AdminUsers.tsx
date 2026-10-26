@@ -19,6 +19,7 @@ const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 const ACTION_LABEL: Record<string, string> = {
   "user.add": "added", "user.update": "changed", "user.remove": "removed", "user.first_signin": "signed in for the first time",
   "block.create": "marked as blocked", "block.reassign": "changed who is blocking", "block.resolve": "cleared the block on",
+  "flow.update": "edited", "flow.restore": "restored", "flow.reset": "reset",
 };
 
 const when = (iso?: string) =>

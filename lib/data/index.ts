@@ -16,3 +16,5 @@ export { isJira };
 export { peopleRepo, knownPeople } from "./people";
 export { blocksRepo } from "./blocks";
 export { favoritesRepo } from "./favorites";
+export { flowRepo } from "./flow";
+export type { FlowVersion } from "./flow";

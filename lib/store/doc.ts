@@ -15,7 +15,9 @@ export async function readDoc<T>(name: string, empty: () => T): Promise<Doc<T>> 
   const res = await get(path(name), { access: "private", useCache: false });
   if (!res || res.statusCode !== 200) return { data: empty(), etag: null };
   const text = await new Response(res.stream).text();
-  return { data: JSON.parse(text) as T, etag: res.blob.etag };
+  // For larger documents the store hands back a weak tag (W/"...") on reads but only accepts the strong form
+  // in conditional writes. The hash inside is the same, so drop the prefix.
+  return { data: JSON.parse(text) as T, etag: res.blob.etag.replace(/^W\//, "") };
 }
 
 /**

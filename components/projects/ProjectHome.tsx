@@ -201,8 +201,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
               {project.deadline && <p className="mt-4 text-sm text-muted">Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</p>}
             </Card>
 
-            <Card title={project.brief ? "Project brief" : "Description"}>
-              {brief.length === 0 ? (
+            <Card title={project.brief || project.briefSections ? "Project brief" : "Description"}>
+              {project.briefSections?.length ? (
+                <div className="space-y-4">
+                  {project.briefSections.map((x) => (
+                    <div key={x.label}><h3 className="text-sm font-semibold">{x.label}</h3><p className="mt-0.5 whitespace-pre-wrap text-sm">{x.value}</p></div>
+                  ))}
+                </div>
+              ) : brief.length === 0 ? (
                 project.description
                   ? <p className="whitespace-pre-wrap text-sm">{project.description}</p>
                   : <p className="text-sm text-muted">No brief on file for this project.</p>

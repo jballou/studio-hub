@@ -24,7 +24,7 @@ const ITEMS: Item[] = [
   { href: "/blocking", label: "Blocking you", icon: "block", match: (p) => p.startsWith("/blocking") },
 ];
 
-const ADMIN_ITEM: Item = { href: "/admin/users", label: "Admin", icon: "users", match: (p) => p.startsWith("/admin") };
+const ADMIN_ITEM: Item = { href: "/admin", label: "Admin", icon: "users", match: (p) => p.startsWith("/admin") };
 
 /**
  * Persistent app nav with an expanded and a collapsed (icon rail) mode. The toggle is always visible.
@@ -191,7 +191,7 @@ export function Sidebar() {
 
         {/* Bottom: Admin, then you */}
         <div className="border-t border-line pt-2">
-          {me?.isAdmin && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
+          {(me?.isAdmin || me?.role === "creative") && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
           <div className={`flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
             <Avatar user={user} size={32} />
             {!collapsed && (
