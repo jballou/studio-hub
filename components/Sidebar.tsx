@@ -18,6 +18,8 @@ const ITEMS: { href: string; label: string; icon: IconName; match: (p: string) =
   { href: "/submit", label: "Submit for feedback", icon: "upload", match: (p) => p === "/submit" },
 ];
 
+const ADMIN_ITEM: (typeof ITEMS)[number] = { href: "/admin/users", label: "Team & access", icon: "users", match: (p) => p.startsWith("/admin") };
+
 /**
  * Persistent app nav with an expanded and a collapsed (icon rail) mode. The toggle is
  * always visible. Without a saved choice it starts collapsed inside the review
@@ -28,6 +30,7 @@ export function Sidebar() {
   const [pref, setPref] = useState<"expanded" | "collapsed" | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [me, setMe] = useState<User>();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [alerts, setAlerts] = useState(0);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export function Sidebar() {
     if (isJira) {
       fetch("/api/me", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
-        .then((m) => m && setMe({ id: m.accountId, name: m.name, role: m.role, initials: String(m.name).split(/\s+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() }));
+        .then((m) => m && (setIsAdmin(!!m.isAdmin), setMe({ id: m.accountId, name: m.name, role: m.role, initials: String(m.name).split(/\s+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() })));
       return;
     }
     repo.listUsers().then((u) => setMe(u.find((x) => x.id === "u-avery")));
@@ -115,7 +118,7 @@ export function Sidebar() {
         </Link>
 
         <div className="flex flex-col gap-1">
-          {ITEMS.map((i) => {
+          {[...ITEMS, ...(isAdmin ? [ADMIN_ITEM] : [])].map((i) => {
             const active = i.match(pathname);
             return (
               <Link key={i.href} href={i.href} title={i.label} aria-label={i.label} aria-current={active ? "page" : undefined} className={row(active)}>

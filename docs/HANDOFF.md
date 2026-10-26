@@ -1,0 +1,46 @@
+# Brand Creative Hub: ownership and handoff
+
+Goal: someone else on the Brand Creative team can run this without the original builder.
+Items marked **(verify)** are from memory of how the vendor consoles work; confirm them when you do the transfer.
+
+## 1. Who can manage people in the app
+- Admins manage access at **Team & access** (sidebar, admins only): add people, set Requester / Creative / Admin, disable or remove, and see recent changes.
+- **Locked admins** come from the `ADMIN_EMAILS` environment variable. They can't be changed in the app, so the app can never be left without an owner.
+  - Keep at least two people in `ADMIN_EMAILS`.
+  - To add or swap an owner: `vercel env add ADMIN_EMAILS --environment production --type config --force --value "a@surveymonkey.com,b@surveymonkey.com"`, then redeploy.
+- Anyone with a `@surveymonkey.com` Atlassian account can sign in as a **Requester**. **Disable** blocks sign-in and API access immediately.
+
+## 2. Accounts and systems to transfer
+| System | Today | To do before the original owner leaves |
+|---|---|---|
+| **GitHub** repo `jballou/studio-hub` | Personal account | Transfer to a company org, or add a team member as admin collaborator (Settings → Collaborators; transfer under Settings → Danger zone). Re-connect Vercel to the new repo location |
+| **Vercel** project `studio-hub` | Personal Hobby team `jarrodballou-7311` | Hobby teams cannot have members. Move the project to a company team (Project → Settings → Transfer) on a plan that allows members. Re-check env vars, the Blob store and Git connection after the move **(verify)** |
+| **Atlassian OAuth app** "Brand Creative Hub" | Owned by one person in developer.atlassian.com | Add a second owner or collaborator in the app's Settings, or recreate it under a shared/service owner and update the client ID and secret **(verify)**. Distribution is "Sharing" |
+| **Vercel Blob** store `studio-hub-data` (private) | Linked to the project | Moves with the project; confirm after transfer. Holds the user list and audit log |
+| **Jira** | Users sign in with their own accounts | Nothing to transfer. Access follows each person's Jira permissions |
+| **Figma / Google tokens** | Not set up yet | When added, record the owner here and prefer a shared service account |
+
+## 3. Environment variables (Vercel → Project → Settings → Environment Variables)
+| Name | Purpose |
+|---|---|
+| `AUTH_SECRET` | signs session cookies. Rotating it signs everyone out |
+| `AUTH_ATLASSIAN_ID`, `AUTH_ATLASSIAN_SECRET` | the Atlassian OAuth app credentials |
+| `JIRA_SITE_URL` | `https://surveymonkey.atlassian.net` |
+| `ADMIN_EMAILS` | locked owners (see above) |
+| `CREATIVE_EMAILS` | starting list of creatives, used once to seed the user list |
+| `NEXT_PUBLIC_DATA_SOURCE` | `jira` turns on sign-in and real data. Remove it to return to the demo |
+| `BLOB_READ_WRITE_TOKEN` | created by `vercel blob create-store`; access to the data store |
+
+## 4. Where data lives
+- **Jira**: tickets, statuses, people (read with each user's own token).
+- **Vercel Blob** (private): `production/users.json` (people and roles) and `production/audit.json` (last 500 changes). Writes are conditional, so simultaneous edits don't overwrite each other.
+- Review assets, comments and feedback requests are still **demo data**; they move to Blob (or Postgres) next.
+
+## 5. If someone is locked out
+1. Another admin changes their role in Team & access, or
+2. Anyone with Vercel access updates `ADMIN_EMAILS` (see section 1) and redeploys.
+
+## 6. Day-to-day
+- Deploys: every push to `main` deploys to production automatically.
+- Roll back to demo mode: `vercel env rm NEXT_PUBLIC_DATA_SOURCE production --yes`, then redeploy.
+- Atlassian setup steps: `docs/atlassian-oauth-setup.md`.

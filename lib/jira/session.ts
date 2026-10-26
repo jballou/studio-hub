@@ -1,10 +1,20 @@
 import { getToken } from "next-auth/jwt";
+import { AdminError, resolveAccess, visibilityRole } from "@/lib/store/users";
 import { findCloudId, JiraError, type JiraAuth } from "./client";
 
-export type JiraSession = { auth: JiraAuth; role: "creative" | "requester"; email: string; name: string; accountId: string };
+export type JiraSession = {
+  auth: JiraAuth;
+  /** What the person can see: "creative" (also admins) sees every ticket, "requester" only their own. */
+  role: "creative" | "requester";
+  isAdmin: boolean;
+  email: string;
+  name: string;
+  accountId: string;
+};
 
 /**
- * Reads the signed-in user's Atlassian token from the encrypted session cookie.
+ * Reads the signed-in user's Atlassian token from the encrypted session cookie, then looks up their
+ * current role and status. Disabled people are refused here, so removing access takes effect on the next request.
  * Tokens never go to the browser; only server routes call this.
  */
 export async function jiraSession(req: Request): Promise<JiraSession> {
@@ -17,15 +27,26 @@ export async function jiraSession(req: Request): Promise<JiraSession> {
   });
   if (!token?.accessToken) throw new JiraError(401, "Not signed in.");
   if (token.error) throw new JiraError(401, "Your Atlassian session expired. Sign in again.");
+  const email = String(token.email ?? "");
+  const access = await resolveAccess(email);
+  if (!access.active) throw new JiraError(403, "Your access has been removed. Ask a Brand Creative admin.");
   const cloudId = token.cloudId ?? (await findCloudId(token.accessToken));
   if (!cloudId) throw new JiraError(403, "Your Atlassian account can't reach the configured Jira site.");
   return {
     auth: { accessToken: token.accessToken, cloudId },
-    role: token.role ?? "requester",
-    email: String(token.email ?? ""),
+    role: visibilityRole(access.role),
+    isAdmin: access.role === "admin",
+    email,
     name: String(token.name ?? ""),
     accountId: token.accountId ?? "",
   };
+}
+
+/** For admin-only routes. */
+export async function adminSession(req: Request): Promise<JiraSession> {
+  const s = await jiraSession(req);
+  if (!s.isAdmin) throw new AdminError(403, "Admins only.");
+  return s;
 }
 
 /** JQL fragment limiting requesters to tickets they are on. Creatives see the whole project. */
@@ -37,6 +58,7 @@ export function visibilityClause(role: "creative" | "requester", withCc: boolean
 }
 
 export function errorResponse(e: unknown): Response {
+  if (e instanceof AdminError) return Response.json({ error: e.message }, { status: e.status });
   if (e instanceof JiraError) {
     const status = e.status === 401 || e.status === 403 || e.status === 404 || e.status === 400 ? e.status : 502;
     return Response.json({ error: e.message }, { status });

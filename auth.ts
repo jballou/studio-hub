@@ -1,12 +1,10 @@
 import NextAuth from "next-auth";
 import Atlassian from "next-auth/providers/atlassian";
-import { findCloudId, isInJiraGroup } from "@/lib/jira/client";
+import { findCloudId } from "@/lib/jira/client";
+import { recordSignIn } from "@/lib/store/users";
 
 const ALLOWED_DOMAIN = "@surveymonkey.com";
 const TOKEN_URL = "https://auth.atlassian.com/oauth/token";
-
-const creativeEmails = () =>
-  (process.env.CREATIVE_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 
 /** Swaps the refresh token for a new access token. Atlassian rotates refresh tokens, so the new one must be kept. */
 async function refresh(token: import("next-auth/jwt").JWT): Promise<import("next-auth/jwt").JWT> {
@@ -51,34 +49,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    // Only @surveymonkey.com Atlassian accounts with a verified email may sign in.
-    signIn({ profile }) {
+    // Only @surveymonkey.com Atlassian accounts with a verified email may sign in, and only while not disabled by an admin.
+    async signIn({ profile }) {
       const email = String(profile?.email ?? "").toLowerCase();
-      return email.endsWith(ALLOWED_DOMAIN) && profile?.email_verified !== false;
+      if (!email.endsWith(ALLOWED_DOMAIN) || profile?.email_verified === false) return false;
+      try {
+        const { active } = await recordSignIn({ email, name: profile?.name ?? undefined, accountId: String(profile?.account_id ?? "") });
+        return active;
+      } catch {
+        // If the user store is briefly unreachable, don't lock everyone out. Every API call re-checks access anyway.
+        return true;
+      }
     },
     async jwt({ token, account, profile }) {
       if (account) {
-        const email = String(profile?.email ?? token.email ?? "").toLowerCase();
-        const cloudId = account.access_token ? await findCloudId(account.access_token) : undefined;
-        const accountId = String(profile?.account_id ?? token.sub ?? "");
-        // Creative if listed by email, or in a Jira group named in CREATIVE_GROUP. Checked at sign-in,
-        // so a group change applies the next time that person signs in.
-        let creative = creativeEmails().includes(email);
-        if (!creative && cloudId && account.access_token && process.env.CREATIVE_GROUP) {
-          creative = await isInJiraGroup(
-            { accessToken: account.access_token, cloudId },
-            accountId,
-            process.env.CREATIVE_GROUP.split(","),
-          );
-        }
         return {
           ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           expiresAt: account.expires_at,
-          cloudId,
-          accountId,
-          role: creative ? ("creative" as const) : ("requester" as const),
+          cloudId: account.access_token ? await findCloudId(account.access_token) : undefined,
+          accountId: String(profile?.account_id ?? token.sub ?? ""),
           error: undefined,
         };
       }
@@ -88,8 +79,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return refresh(token);
     },
     // Tokens stay in the encrypted cookie; the browser-visible session only gets non-secret fields.
+    // Roles are not stored in the cookie: they are looked up live so an admin's change applies immediately.
     session({ session, token }) {
-      session.role = token.role ?? "requester";
       session.error = token.error;
       return session;
     },

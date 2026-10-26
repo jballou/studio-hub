@@ -49,8 +49,8 @@ Local: add to `.env.local` (git-ignored). Production: use `vercel env add NAME p
 | `AUTH_ATLASSIAN_ID` | Client ID |
 | `AUTH_ATLASSIAN_SECRET` | Secret |
 | `JIRA_SITE_URL` | `https://surveymonkey.atlassian.net` |
-| `CREATIVE_GROUP` | exact name of the Jira group for the creative team (changes apply at next sign-in) |
-| `CREATIVE_EMAILS` | optional extra emails treated as creative |
+| `ADMIN_EMAILS` | comma-separated owners who can always manage people (keep at least two) |
+| `CREATIVE_EMAILS` | starting list of creatives, used once when the user list is first created |
 | `NEXT_PUBLIC_DATA_SOURCE` | `jira` (omit or `mock` to keep demo data) |
 
 Redeploy after setting production variables.
