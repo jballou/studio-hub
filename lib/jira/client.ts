@@ -304,3 +304,13 @@ export async function searchWithChangelog(a: JiraAuth, jql: string, maxResults: 
   const data = await request<{ issues: { key: string; fields: { summary: string; updated: string }; changelog?: { histories?: ChangeHistory[] } }[] }>(a, `/search/jql?${qs}`);
   return data.issues;
 }
+
+/** Adds a plain-text comment (one paragraph per line) as the signed-in person. Returns Jira's comment id. */
+export async function addIssueComment(a: JiraAuth, key: string, lines: string[]): Promise<string> {
+  const body = {
+    type: "doc", version: 1,
+    content: lines.map((l) => ({ type: "paragraph", content: l ? [{ type: "text", text: l.slice(0, 3000) }] : [] })),
+  };
+  const res = await request<{ id: string }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment`, { method: "POST", body: { body } });
+  return res.id;
+}

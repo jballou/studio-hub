@@ -88,7 +88,7 @@ export function ReviewIndex() {
   const [filter, setFilter] = useState<ReviewState | "all">("all");
 
   useEffect(() => {
-    repo.listAssets().then(setAssets);
+    repo.listAssets().then(setAssets).catch(() => setAssets([]));
     repo.listUsers().then(setUsers);
   }, []);
 

@@ -1,8 +1,10 @@
 import { mockRepo } from "./mock";
+import { apiRepo } from "./reviewApi";
+import { isJira as realMode } from "./mode";
 import type { ReviewRepo } from "./repo";
 
 // Swap for the Drizzle/Jira adapter once auth and DB land (Days 3-6).
-export const repo: ReviewRepo = mockRepo;
+export const repo: ReviewRepo = realMode ? apiRepo : mockRepo;
 export { mockControls } from "./mock";
 import { isJira } from "./mode";
 import { jiraProjects } from "./jira";

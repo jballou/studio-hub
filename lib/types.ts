@@ -85,6 +85,9 @@ export type SubmitInput = {
 export type Comment = {
   id: string;
   authorId: string;
+  /** real mode: who wrote it, so people who aren't named on the request still show a name */
+  authorName?: string;
+  authorRole?: "creative" | "requester";
   body: string;
   createdAt: string;
 };

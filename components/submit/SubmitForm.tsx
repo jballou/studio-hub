@@ -9,8 +9,9 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { TicketPicker } from "./TicketPicker";
 import { FramePicker } from "./FramePicker";
 import { UploadZone, type Upload } from "./UploadZone";
+import { upload } from "@vercel/blob/client";
 import { useMe } from "@/hooks/useMe";
-import { peopleRepo, projectsRepo, repo } from "@/lib/data";
+import { isJira, peopleRepo, projectsRepo, repo } from "@/lib/data";
 import { addedFrameIds, defaultBatchTitle, figmaFrameItem, itemKey, toSubmitInput, type BatchInfo, type BatchItem } from "@/lib/batch";
 import { parseFigmaLink } from "@/lib/figma";
 import { parseSource, SHAPES, type DriveType, type Shape } from "@/lib/sources";
@@ -130,31 +131,46 @@ export function SubmitForm() {
     const id = itemKey();
     const start = performance.now();
     let cancelled = false;
-    cancels.current.set(id, () => { cancelled = true; });
+    const abort = new AbortController();
+    cancels.current.set(id, () => { cancelled = true; abort.abort(); });
     setUploads((u) => [...u, { id, name: f.name, size: f.size, progress: 0, secondsLeft: null }]);
     const tick = (p: number) => setUploads((u) => u.map((x) => (x.id === id ? { ...x, progress: p, secondsLeft: p > 0.02 ? Math.ceil(((performance.now() - start) / p) * (1 - p) / 1000) : null } : x)));
     try {
-      const reader = f.stream().getReader();
-      let read = 0;
-      let last = 0;
-      for (;;) {
-        if (cancelled) { await reader.cancel(); return; }
-        const { done, value } = await reader.read();
-        if (done) break;
-        read += value.length;
-        if (performance.now() - last > 60) { last = performance.now(); tick(f.size ? read / f.size : 1); }
+      let src: string;
+      if (isJira) {
+        // Real mode: the file goes straight to the private store (big videos can't pass through a function), so it outlives this tab.
+        const safe = f.name.replace(/[^A-Za-z0-9._ ()+-]/g, "_").slice(-120) || "file";
+        const folder = crypto.randomUUID();
+        await upload(`review-files/${folder}/${safe}`, f, {
+          access: "private", handleUploadUrl: "/api/review/upload", contentType: mimeOf(f) || undefined, multipart: f.size > 20e6, abortSignal: abort.signal,
+          onUploadProgress: (e) => tick(e.percentage / 100),
+        });
+        src = `/api/review/file/${folder}/${encodeURIComponent(safe)}`;
+      } else {
+        // Demo: files stay in this tab; reading them gives real progress for big videos.
+        const reader = f.stream().getReader();
+        let read = 0;
+        let last = 0;
+        for (;;) {
+          if (cancelled) { await reader.cancel(); return; }
+          const { done, value } = await reader.read();
+          if (done) break;
+          read += value.length;
+          if (performance.now() - last > 60) { last = performance.now(); tick(f.size ? read / f.size : 1); }
+        }
+        src = URL.createObjectURL(f);
       }
       tick(1);
       await new Promise((r) => setTimeout(r, 350)); // let the full bar show before the card moves into the list
       if (cancelled) return;
       const item: BatchItem = {
-        key: id, title: f.name.replace(/\.[^.]+$/, ""), assetKind: kind, src: URL.createObjectURL(f),
+        key: id, title: f.name.replace(/\.[^.]+$/, ""), assetKind: kind, src,
         aspect: kind === "pdf" ? 8.5 / 11 : 16 / 9, source: { kind: "upload", url: "", label: f.name },
-        thumb: kind === "image" ? URL.createObjectURL(f) : undefined,
+        thumb: kind === "image" ? src : undefined,
       };
       setItems((cur) => [...cur, item]);
-    } catch {
-      setUploadNote((n) => ({ bad: [...(n?.bad ?? []), f.name], cantPlay: n?.cantPlay ?? [] }));
+    } catch (e) {
+      if (!cancelled) setUploadNote((n) => ({ bad: [...(n?.bad ?? []), `${f.name}${e instanceof Error && e.message ? ` (${e.message})` : ""}`], cantPlay: n?.cantPlay ?? [] }));
     } finally {
       cancels.current.delete(id);
       setUploads((u) => u.filter((x) => x.id !== id));

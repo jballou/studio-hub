@@ -75,7 +75,13 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   useEffect(() => {
     if (!versionId) return;
     let live = true;
-    repo.listThreads(versionId).then((t) => { if (live) setThreads(t); });
+    repo.listThreads(versionId).then((t) => {
+      if (!live) return;
+      setThreads(t);
+      // Real mode has no people list: learn who wrote what from the comments themselves.
+      const authors: User[] = t.flatMap((x) => x.comments).filter((c) => c.authorName).map((c) => ({ id: c.authorId, name: c.authorName!, initials: initialsOf(c.authorName!), role: c.authorRole ?? "requester" }));
+      if (authors.length) setUsers((list) => addUsers(list, authors));
+    });
     return () => { live = false; };
   }, [versionId]);
 
