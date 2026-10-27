@@ -124,3 +124,68 @@ export function headline(events: DayEvent[], focus: FocusItem[], today: string, 
   const tail = big ? ` Your longest open stretch is ${hm(minutes(big.end - big.start))}.` : timed.length ? " There's no open stretch left today." : "";
   return `${parts.join(", ")}.${tail}`;
 }
+
+// ---- Dashboard numbers ----
+
+export type StatusKey = "review" | "risk" | "progress" | "tasks" | "notstarted";
+
+/** Order and colors are fixed so a slice keeps its color however many slices are showing. Hexes are the brand's chart steps. */
+export const STATUS_META: { key: StatusKey; label: string; color: string }[] = [
+  { key: "review", label: "In review or feedback", color: "#5568bf" },
+  { key: "risk", label: "Blocked or at risk", color: "#a95c18" },
+  { key: "progress", label: "In progress", color: "#348289" },
+  { key: "tasks", label: "My open tasks", color: "#a18102" },
+  { key: "notstarted", label: "Not started", color: "#686764" },
+];
+
+function statusOf(p: Project): StatusKey {
+  if (p.flag === "blocked" || p.flag === "at-risk" || p.flag === "needs-info" || p.flag === "on-hold") return "risk";
+  if (p.stage === "In review" || p.stage === "In feedback") return "review";
+  if (p.stage === "In progress") return "progress";
+  return "notstarted";
+}
+
+/** How many open tickets and tasks sit in each status. Zero-count statuses are kept so the legend stays stable. */
+export function statusBreakdown(projects: Project[], tasks: PersonalTask[]): { key: StatusKey; label: string; color: string; count: number }[] {
+  const counts = new Map<StatusKey, number>();
+  for (const p of projects) if (p.group !== "closed") counts.set(statusOf(p), (counts.get(statusOf(p)) ?? 0) + 1);
+  counts.set("tasks", tasks.filter((t) => !t.done).length);
+  return STATUS_META.map((m) => ({ ...m, count: counts.get(m.key) ?? 0 }));
+}
+
+export type OnTime = { score: number | null; onTime: number; late: number };
+
+/**
+ * Share of dated work that is not late. An open item is late once its deadline has passed; a finished task is
+ * late if it was ticked off after its date. Tickets only count while open (closed history isn't loaded here).
+ */
+export function onTimeScore(projects: Project[], tasks: PersonalTask[], today: string): OnTime {
+  let onTime = 0, late = 0;
+  for (const p of projects) {
+    if (p.group === "closed" || !p.deadline) continue;
+    if (p.deadline < today) late++; else onTime++;
+  }
+  for (const t of tasks) {
+    if (!t.date) continue;
+    if (t.done) { if (t.doneAt && localDay(new Date(t.doneAt)) > t.date) late++; else onTime++; }
+    else if (t.date < today) late++;
+    else onTime++;
+  }
+  const total = onTime + late;
+  return { score: total ? Math.round((onTime / total) * 100) : null, onTime, late };
+}
+
+export type Timeline = { pct: number; daysLeft: number | null; state: "ok" | "watch" | "late" | "none"; from: string; to: string };
+
+/** Where a ticket is between the day it was submitted and its deadline. */
+export function timeline(p: Project, today: string): Timeline {
+  if (!p.deadline) return { pct: 0, daysLeft: null, state: "none", from: p.submittedAt, to: "" };
+  const total = daysBetween(p.submittedAt, p.deadline);
+  const used = daysBetween(p.submittedAt, today);
+  const daysLeft = daysBetween(today, p.deadline);
+  const pct = daysLeft < 0 ? 100 : total <= 0 ? 100 : Math.max(0, Math.min(100, Math.round((used / total) * 100)));
+  const state = daysLeft < 0 ? "late" : pct >= 80 && p.stage !== "In feedback" && p.stage !== "In review" ? "watch" : "ok";
+  return { pct, daysLeft, state, from: p.submittedAt, to: p.deadline };
+}
+
+export const STAGES_ORDER = ["Submitted", "In review", "In progress", "In feedback", "Delivered"] as const;
