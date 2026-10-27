@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* National 2, served from SurveyMonkey's asset host (CORS is open). 600 uses the bold file; there is no semibold. */
+@font-face { font-family: "National 2"; font-weight: 400; font-style: normal; font-display: swap; src: url("https://prod.smassets.net/assets/static/fonts/national2/regular.woff2") format("woff2"); }
+@font-face { font-family: "National 2"; font-weight: 500; font-style: normal; font-display: swap; src: url("https://prod.smassets.net/assets/static/fonts/national2/medium.woff2") format("woff2"); }
+@font-face { font-family: "National 2"; font-weight: 600 800; font-style: normal; font-display: swap; src: url("https://prod.smassets.net/assets/static/fonts/national2/bold.woff2") format("woff2"); }
+
 /* SurveyMonkey brand palette (brand-visuals/colors.md). No hexes outside this file. */
 @theme inline {
   /* Core */
@@ -36,13 +41,13 @@
   --color-gold-bg: #f9f2d2; --color-gold-line: #f2e2a6; --color-gold-fg: #7c6403; /* Yellow 100/200/700 */
   --color-focus: #5568bf; /* Periwinkle 600 [CONFIRM] */
 
-  --font-sans: var(--font-work-sans), system-ui, sans-serif;
+  --font-sans: "National 2", system-ui, sans-serif;
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: var(--font-work-sans), system-ui, sans-serif;
+  font-family: "National 2", system-ui, sans-serif;
 }
 
 /* Paper: dot grid on Neutral 100. Background only; never inside cards or controls. */

@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 import { Sidebar } from "@/components/Sidebar";
-
-const workSans = Work_Sans({
-  variable: "--font-work-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Brand Creative Hub",
@@ -16,7 +10,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${workSans.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
+      <head>
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://prod.smassets.net/assets/static/fonts/national2/regular.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://prod.smassets.net/assets/static/fonts/national2/bold.woff2" />
+      </head>
       <body className="paper flex min-h-full flex-row">
         <Suspense fallback={<div className="w-16 shrink-0 border-r border-line bg-white" />}>
           <Sidebar />
