@@ -33,7 +33,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/jira/projects/[
       if (r === "no-transition") return Response.json({ ok: false, reason: `Jira's workflow doesn't allow moving this ticket to ${status} from ${issue.fields.status.name}.` }, { status: 409 });
       return Response.json({ ok: true, status });
     } catch (e) {
-      return Response.json(jiraSyncFailure(e), { status: 409 });
+      return Response.json(await jiraSyncFailure(e, s.auth), { status: 409 });
     }
   } catch (e) {
     return errorResponse(e);

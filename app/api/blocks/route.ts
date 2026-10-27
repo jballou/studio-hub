@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       const r = await transitionToStatus(s.auth, key, "Blocked");
       jira = r === "no-transition" ? { ok: false, reason: "Jira's workflow doesn't allow moving this ticket to Blocked from its current status." } : { ok: true, changed: r === "moved", status: "Blocked" };
     } catch (e) {
-      jira = jiraSyncFailure(e);
+      jira = await jiraSyncFailure(e, s.auth);
     }
     return Response.json({ block, jira }, { status: 201 });
   } catch (e) {

@@ -34,7 +34,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/blocks/[key]/re
       const r = await transitionToStatus(s.auth, key, to);
       jira = r === "no-transition" ? { ok: false, reason: `Jira's workflow doesn't allow moving this ticket to ${to}.` } : { ok: true, changed: r === "moved", status: to };
     } catch (e) {
-      jira = jiraSyncFailure(e);
+      jira = await jiraSyncFailure(e, s.auth);
     }
     return Response.json({ block, jira });
   } catch (e) {

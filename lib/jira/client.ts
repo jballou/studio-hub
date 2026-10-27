@@ -181,3 +181,18 @@ export async function getIssueFields(a: JiraAuth, key: string, fields: string[])
   if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
   return request<JiraIssue>(a, `/issue/${key}?fields=${fields.join(",")}`);
 }
+
+/** The permissions this sign-in token actually holds on the Jira site (Atlassian reports them per site). Null if it can't be read. */
+export async function tokenScopes(a: JiraAuth): Promise<string[] | null> {
+  try {
+    const res = await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+      headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const sites: { id: string; scopes?: string[] }[] = await res.json();
+    return sites.find((x) => x.id === a.cloudId)?.scopes ?? null;
+  } catch {
+    return null;
+  }
+}

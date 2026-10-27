@@ -2,7 +2,7 @@ import { readDoc } from "@/lib/store/doc";
 import { activeBlocks } from "@/lib/store/blocks";
 import { listUsers } from "@/lib/store/users";
 import { adminSession, errorResponse } from "@/lib/jira/session";
-import { startDateField } from "@/lib/jira/client";
+import { startDateField, tokenScopes } from "@/lib/jira/client";
 
 type Check = { id: string; label: string; ok: boolean; detail: string };
 
@@ -39,6 +39,10 @@ export async function GET(req: Request) {
       id: "env", label: "Settings (environment variables)", ok: missing.length === 0,
       detail: missing.length ? `Missing: ${missing.join(", ")}` : `All ${REQUIRED_ENV.length} present`,
     });
+
+    const scopes = await tokenScopes(s.auth);
+    const canWrite = !!scopes?.includes("write:jira-work");
+    checks.push({ id: "jirawrite", label: "Jira write permission (your sign-in)", ok: canWrite, detail: scopes ? (canWrite ? "This sign-in can change tickets (status, start date)." : "This sign-in is read-only. Sign out and back in to allow status and start-date changes. If it still fails, the Atlassian app needs the write:jira-work scope enabled.") : "Couldn't read this sign-in's permissions." });
 
     try {
       const sf = await startDateField(s.auth);
