@@ -20,12 +20,12 @@ const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
 type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean };
 
 const ITEMS: Item[] = [
-  { href: "/my-day", label: "My Day", icon: "check", match: (p) => p.startsWith("/my-day") },
+  { href: "/my-day", label: "My Day", icon: "dashboardAdd", match: (p) => p.startsWith("/my-day") },
   { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
-  { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
-  { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
-  { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },
-  { href: "/blocking", label: "Waiting on you", icon: "block", match: (p) => p.startsWith("/blocking") },
+  { href: "/projects", label: "Projects", icon: "folderFilled", match: (p) => p === "/projects" || p === "/projects/new" },
+  { href: "/calendar", label: "Calendar", icon: "calendarEdit", match: (p) => p.startsWith("/calendar") },
+  { href: "/review", label: "Review", icon: "chat", match: (p) => p.startsWith("/review") },
+  { href: "/blocking", label: "Waiting on you", icon: "danger", match: (p) => p.startsWith("/blocking") },
 ];
 
 const ADMIN_ITEM: Item = { href: "/admin", label: "Preferences", icon: "sliders", match: (p) => p.startsWith("/admin") };
@@ -152,6 +152,15 @@ export function Sidebar() {
         >
           <Icon name="plus" size={16} />
           {!collapsed && "New brief"}
+        </Link>
+        <Link
+          href="/my-day?new=task"
+          title="New task"
+          aria-label="New task"
+          className={`mb-3 flex items-center justify-center gap-2 rounded-lg border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-3"}`}
+        >
+          <Icon name="listChecks" size={16} />
+          {!collapsed && "New task"}
         </Link>
         <Link
           href="/submit"

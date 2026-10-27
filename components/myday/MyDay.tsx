@@ -49,7 +49,9 @@ const WINDOWS = [{ id: "3", label: "3 days", days: 3 }, { id: "7", label: "Week"
 
 export function MyDay() {
   const me = useMe();
-  const flashKey = useSearchParams().get("google");
+  const params = useSearchParams();
+  const flashKey = params.get("google");
+  const wantsNewTask = params.get("new") === "task";
   const [today, setToday] = useState<string | null>(null);
   const [now, setNow] = useState(0);
   const [tz] = useState(localTimezone);
@@ -61,7 +63,7 @@ export function MyDay() {
   const [google, setGoogle] = useState<GoogleStatus | null>(null);
   const [taskErr, setTaskErr] = useState<string | null>(null);
   const [syncErr, setSyncErr] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(wantsNewTask);
   const [tab, setTab] = useState<"priority" | "tasks">("priority");
   const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("3");
   const [shift, setShift] = useState(0);
@@ -73,6 +75,13 @@ export function MyDay() {
   const [tileOpen, setTileOpen] = useState<TileKind | null>(null);
   const [jiraErr, setJiraErr] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    if (!wantsNewTask) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAdding(true);
+    window.history.replaceState(null, "", "/my-day");
+  }, [wantsNewTask]);
 
   useEffect(() => {
     // The date is read in the browser so "today" is the person's own day, not the server's.
