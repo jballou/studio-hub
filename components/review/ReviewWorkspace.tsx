@@ -25,6 +25,7 @@ const VISIBLE_WINDOW_MS = 500;
 
 export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [asset, setAsset] = useState<Asset | null>(null);
+  const [siblings, setSiblings] = useState<Asset[]>([]);
   const [versions, setVersions] = useState<AssetVersion[]>([]);
   const [versionId, setVersionId] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -56,6 +57,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       if (!a) return;
       const vs = (await Promise.all(a.versionIds.map((id) => repo.getVersion(id)))).filter((v): v is AssetVersion => !!v);
       setAsset(a);
+      // Other items sent in the same batch, in the order they were added.
+      if (a.batch) repo.listAssets().then((all) => setSiblings(all.filter((x) => x.batch?.id === a.batch!.id).sort((x, y) => x.batch!.index - y.batch!.index)));
+      else setSiblings([]);
       setVersions(vs);
       setVersionId(vs[vs.length - 1]?.id ?? null);
       // Demo users in mock mode; in real mode, just the people named on this request (plus you, below).
@@ -247,6 +251,27 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           )}
         </div>
       </header>
+
+      {asset.batch && siblings.length > 1 && (() => {
+        const i = siblings.findIndex((s) => s.id === asset.id);
+        const prev = siblings[i - 1], next = siblings[i + 1];
+        const link = "rounded-full border border-control px-3 py-1 text-sm font-medium hover:bg-brand-soft";
+        return (
+          <nav aria-label="Items in this batch" className="flex items-center gap-3 border-b border-line bg-n-100 px-5 py-2 text-sm">
+            <span className="font-semibold">{asset.batch.title}</span>
+            <span className="text-muted">Item {i + 1} of {siblings.length}</span>
+            <ol className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
+              {siblings.map((s, n) => (
+                <li key={s.id}>
+                  <Link href={`/review/${s.id}`} title={s.name} aria-current={s.id === asset.id ? "page" : undefined} className={`flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold ${s.id === asset.id ? "bg-brand text-n-50" : "border border-control bg-white hover:bg-brand-soft"}`}>{n + 1}</Link>
+                </li>
+              ))}
+            </ol>
+            {prev ? <Link href={`/review/${prev.id}`} className={link}>‹ Previous</Link> : <span className={`${link} opacity-40`}>‹ Previous</span>}
+            {next ? <Link href={`/review/${next.id}`} className={link}>Next ›</Link> : <span className={`${link} opacity-40`}>Next ›</span>}
+          </nav>
+        );
+      })()}
 
       <div className="flex items-center gap-3 border-b border-line bg-white px-5 py-2">
         <label className="relative">

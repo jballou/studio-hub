@@ -24,3 +24,5 @@ export { googleRepo, GoogleUnavailable } from "./google";
 export type { GoogleStatus } from "./google";
 export { activityRepo } from "./activity";
 export type { ActivityItem } from "./activity";
+export { figmaRepo } from "./figma";
+export type { FramesResult } from "./figma";

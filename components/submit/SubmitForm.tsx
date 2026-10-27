@@ -4,21 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { PeoplePicker } from "@/components/ui/PeoplePicker";
+import { Callout, Tag } from "@/components/ui/Tag";
 import { TicketPicker } from "./TicketPicker";
+import { FramePicker } from "./FramePicker";
 import { peopleRepo, projectsRepo, repo } from "@/lib/data";
+import { addedFrameIds, defaultBatchTitle, figmaFrameItem, itemKey, toSubmitInput, type BatchInfo, type BatchItem } from "@/lib/batch";
+import { parseFigmaLink } from "@/lib/figma";
 import { parseSource, SHAPES, type DriveType, type Shape } from "@/lib/sources";
 import { ACCEPT, AUDIO_EXTENSIONS, kindFromFile, mimeOf } from "@/lib/media";
 import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
-import type { Asset, Device, Person, Project, SourceKind } from "@/lib/types";
+import type { Asset, AssetKind, Device, Person, Project, SourceKind } from "@/lib/types";
 
 const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; placeholder?: string }[] = [
-  { id: "figma", label: "Figma frame", hint: "Link to one frame", icon: "link", placeholder: "https://www.figma.com/design/…?node-id=12-34" },
+  { id: "figma", label: "Figma frame", hint: "One frame, or pick several", icon: "link", placeholder: "https://www.figma.com/design/…?node-id=12-34" },
   { id: "staging", label: "Landing page", hint: "Staging link", icon: "link", placeholder: "https://staging.example.com/landing" },
   { id: "drive", label: "Google Drive", hint: "Video, audio (MP3, M4A, WAV…), image or PDF", icon: "link", placeholder: "https://drive.google.com/file/d/…/view" },
   { id: "slides", label: "Google Slides", hint: "Deck link", icon: "link", placeholder: "https://docs.google.com/presentation/d/…/edit" },
-  { id: "upload", label: "Upload a file", hint: "Image, video, audio (MP3, M4A, WAV…), PDF", icon: "upload" },
+  { id: "upload", label: "Upload files", hint: "Image, video, audio (MP3, M4A, WAV…), PDF. Pick several.", icon: "upload" },
 ];
 
+const KIND_LABEL: Record<AssetKind, string> = { image: "Image", video: "Video", audio: "Audio", pdf: "PDF", embed: "Link" };
 const field = "w-full rounded-lg border border-control bg-white px-3 py-2 text-sm";
 
 export function SubmitForm() {
@@ -31,7 +36,12 @@ export function SubmitForm() {
   const [device, setDevice] = useState<Device>("desktop");
   const [shape, setShape] = useState<Shape>("16:10");
   const [driveType, setDriveType] = useState<DriveType>("other");
-  const [file, setFile] = useState<File | null>(null);
+  const [items, setItems] = useState<BatchItem[]>([]);
+  const [uploadNote, setUploadNote] = useState<{ bad: string[]; cantPlay: string[] } | null>(null);
+  const [picker, setPicker] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulk, setBulk] = useState("");
+  const [bulkErrors, setBulkErrors] = useState<string[]>([]);
   const [title, setTitle] = useState(params.get("title") ?? "");
   const [target, setTarget] = useState(""); // "" = new asset, else existing asset id
   const [reviewers, setReviewers] = useState<Person[]>([]);
@@ -67,57 +77,106 @@ export function SubmitForm() {
     () => (source === "upload" ? null : parseSource(source, url, device, shape, driveType)),
     [source, url, device, shape, driveType],
   );
-  const fileKind = file ? kindFromFile(file) : null;
-  // Warn (don't block) when this browser can't play the file, e.g. AIFF outside Safari. Reviewers may be on other browsers too.
-  const [cantPlay, setCantPlay] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!file || fileKind !== "audio") { setCantPlay(false); return; }
-    const mime = mimeOf(file);
-    setCantPlay(!!mime && document.createElement("audio").canPlayType(mime) === "");
-  }, [file, fileKind]);
+  const figmaLink = source === "figma" && parsed?.ok ? parseFigmaLink(url) : null;
 
-  const sourceOk = source === "upload" ? !!file && !!fileKind : !!parsed && parsed.ok;
+  // The link in the box counts as the next item without needing a click, so one link and one Send still works.
+  const pending: BatchItem | null = useMemo(() => {
+    if (source === "upload" || !parsed?.ok) return null;
+    const media = parsed.media;
+    return {
+      key: `pending-${source}-${url.trim()}`,
+      title: parsed.suggestedTitle,
+      source: { kind: source, url: url.trim(), label: parsed.summary },
+      assetKind: media?.kind ?? "embed",
+      src: media?.streamUrl ?? "",
+      embedUrl: parsed.embedUrl,
+      aspect: parsed.aspect,
+      baseWidth: parsed.baseWidth,
+    };
+  }, [source, parsed, url]);
+
+  const all = useMemo(() => [...items, ...(pending && !items.some((i) => i.source.url && i.source.url === pending.source.url) ? [pending] : [])], [items, pending]);
+  const isBatch = all.length > 1;
   const projectKey = ticket?.jiraKey ?? "";
   const versionTargets = assets.filter((a) => a.projectKey === projectKey);
-  const finalTitle = title.trim() || (parsed?.ok ? parsed.suggestedTitle : file?.name ?? "");
-  const valid = sourceOk && !!finalTitle && !!projectKey && reviewers.length > 0 && approvers.length > 0 && !!dueDate && !!dueTime;
+  const itemTitle = (it: BatchItem) => (!isBatch && title.trim() ? title.trim() : it.title.trim());
+  const batchTitle = title.trim() || defaultBatchTitle(all);
+  const valid = all.length > 0 && all.every((i) => !!itemTitle(i)) && !!projectKey && reviewers.length > 0 && approvers.length > 0 && !!dueDate && !!dueTime;
 
+  const addFiles = (list: FileList | null) => {
+    if (!list?.length) return;
+    const bad: string[] = [];
+    const cantPlay: string[] = [];
+    const next: BatchItem[] = [];
+    for (const f of Array.from(list)) {
+      const kind = kindFromFile(f);
+      if (!kind) { bad.push(f.name); continue; }
+      // Warn (don't block) when this browser can't play it, e.g. AIFF outside Safari. Reviewers may be on other browsers too.
+      const mime = mimeOf(f);
+      if (kind === "audio" && mime && document.createElement("audio").canPlayType(mime) === "") cantPlay.push(f.name);
+      next.push({
+        key: itemKey(), title: f.name.replace(/\.[^.]+$/, ""), assetKind: kind, src: URL.createObjectURL(f),
+        aspect: kind === "pdf" ? 8.5 / 11 : 16 / 9, source: { kind: "upload", url: "", label: f.name },
+        thumb: kind === "image" ? URL.createObjectURL(f) : undefined,
+      });
+    }
+    setItems((cur) => [...cur, ...next]);
+    setUploadNote(bad.length || cantPlay.length ? { bad, cantPlay } : null);
+  };
+
+  const addPending = () => {
+    if (!pending) return;
+    setItems((cur) => [...cur, { ...pending, key: itemKey(), title: title.trim() || pending.title }]);
+    setUrl("");
+    setTitle("");
+  };
+
+  const addBulk = () => {
+    const errs: string[] = [];
+    const next: BatchItem[] = [];
+    for (const line of bulk.split(/\s+/).map((l) => l.trim()).filter(Boolean)) {
+      const p = parseSource("figma", line, device, shape);
+      if (!p.ok) { errs.push(line); continue; }
+      const link = parseFigmaLink(line);
+      next.push({
+        key: itemKey(), title: link?.nodeId ? `Frame ${link.nodeId}` : p.suggestedTitle, source: { kind: "figma", url: line, label: p.summary },
+        assetKind: "embed", src: "", embedUrl: p.embedUrl, aspect: p.aspect, baseWidth: p.baseWidth,
+      });
+    }
+    setItems((cur) => [...cur, ...next]);
+    setBulkErrors(errs);
+    if (!errs.length) { setBulk(""); setBulkOpen(false); }
+    else setBulk(errs.join("\n"));
+  };
+
+  const removeItem = (key: string) => setItems((cur) => cur.filter((i) => i.key !== key));
+  const rename = (key: string, t: string) => setItems((cur) => cur.map((i) => (i.key === key ? { ...i, title: t } : i)));
 
   const submit = async () => {
     setBusy(true);
-    const common = { title: finalTitle, projectKey, existingAssetId: target || null, reviewers: [...new Map([...reviewers, ...approvers].map((p) => [p.id, p])).values()], approvers, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: "u-avery" };
-    let res;
-    if (source === "upload" && file && fileKind) {
-      res = await repo.submitForReview({
-        ...common, assetKind: fileKind, src: URL.createObjectURL(file),
-        aspect: fileKind === "pdf" ? 8.5 / 11 : 16 / 9,
-        source: { kind: "upload", url: "", label: file.name },
-      });
-    } else if (parsed?.ok && source !== "upload") {
-      res = await repo.submitForReview({
-        // Drive media gets a real player on the direct stream; the Drive preview stays as the fallback.
-        ...common, assetKind: parsed.media?.kind ?? "embed", src: parsed.media?.streamUrl ?? "", embedUrl: parsed.embedUrl, aspect: parsed.aspect, baseWidth: parsed.baseWidth,
-        source: { kind: source, url: url.trim(), label: parsed.summary },
-      });
-    } else {
-      setBusy(false);
-      return;
+    const common = { projectKey, existingAssetId: !isBatch ? target || null : null, reviewers: [...new Map([...reviewers, ...approvers].map((p) => [p.id, p])).values()], approvers, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: "u-avery" };
+    const batchId = isBatch ? crypto.randomUUID() : null;
+    let first: string | null = null;
+    for (const [index, it] of all.entries()) {
+      const batch: BatchInfo | undefined = batchId ? { id: batchId, title: batchTitle, index, total: all.length } : undefined;
+      const res = await repo.submitForReview(toSubmitInput({ ...it, title: itemTitle(it) }, common, batch));
+      first ??= res.assetId;
     }
-    router.push(`/review/${res.assetId}`);
+    if (first) router.push(`/review/${first}`);
+    else setBusy(false);
   };
 
   return (
     <main className="mx-auto w-full max-w-2xl p-8">
       <h1 className="text-2xl font-bold">Submit for feedback</h1>
-      <p className="mb-6 mt-1 text-sm text-muted">Share what you want reviewed. Reviewers get a link and can comment right on it.</p>
+      <p className="mb-6 mt-1 text-sm text-muted">Share what you want reviewed. Reviewers get a link and can comment right on it. Add several items to send them as one batch.</p>
 
       <fieldset className="mb-6">
         <legend className="mb-2 text-sm font-semibold">What are you sharing?</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {SOURCES.map((s) => (
             <label key={s.id} className={`cursor-pointer rounded-xl border bg-white p-3 text-sm ${source === s.id ? "border-brand ring-2 ring-brand-soft" : "border-line hover:border-control"}`}>
-              <input type="radio" name="source" className="sr-only" checked={source === s.id} onChange={() => { setSource(s.id); setUrl(""); setFile(null); setDriveType("other"); }} />
+              <input type="radio" name="source" className="sr-only" checked={source === s.id} onChange={() => { setSource(s.id); setUrl(""); setDriveType("other"); setBulkOpen(false); }} />
               <span className="flex items-center gap-2 font-medium"><Icon name={s.icon} size={16} /> {s.label}</span>
               <span className="mt-0.5 block text-xs text-muted">{s.hint}</span>
             </label>
@@ -125,18 +184,13 @@ export function SubmitForm() {
         </div>
       </fieldset>
 
-      <section className="mb-6">
+      <section className="mb-4">
         {source === "upload" ? (
-          <label className="block text-sm font-semibold">File
-            <input
-              type="file"
-              accept={ACCEPT}
-              className={`${field} mt-1 font-normal`}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-            {file && !fileKind && <span role="alert" className="mt-1 block text-xs font-normal text-bad-fg">That file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span>}
-            {fileKind === "audio" && !cantPlay && <span className="mt-1 block text-xs font-normal text-muted">Audio. Reviewers play it in the browser and each comment is stamped with the time.</span>}
-            {fileKind === "audio" && cantPlay && <span role="alert" className="mt-1 block text-xs font-normal text-warn-fg">This browser can&apos;t play that audio format, so some reviewers may not either. MP3, M4A and WAV work everywhere.</span>}
+          <label className="block text-sm font-semibold">Files
+            <input type="file" multiple accept={ACCEPT} className={`${field} mt-1 font-normal`} value="" onChange={(e) => addFiles(e.target.files)} />
+            {uploadNote?.bad.length ? <span role="alert" className="mt-1 block text-xs font-normal text-bad-fg">Skipped {uploadNote.bad.join(", ")}: that file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span> : null}
+            {uploadNote?.cantPlay.length ? <span role="alert" className="mt-1 block text-xs font-normal text-warn-fg">This browser can&apos;t play {uploadNote.cantPlay.join(", ")}, so some reviewers may not either. MP3, M4A and WAV work everywhere.</span> : null}
+            <span className="mt-1 block text-xs font-normal text-muted">Audio files are played in the browser and each comment is stamped with the time.</span>
           </label>
         ) : (
           <>
@@ -190,24 +244,79 @@ export function SubmitForm() {
                 ))}
               </div>
             )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {figmaLink && (
+                <button type="button" onClick={() => setPicker(true)} className={figmaLink.nodeId ? "rounded-lg border border-brand px-3 py-1.5 text-sm font-medium text-brand hover:bg-brand-soft" : "rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark"}>
+                  {figmaLink.nodeId ? "Add more frames from this file…" : "Choose frames from this file…"}
+                </button>
+              )}
+              {pending && (
+                <button type="button" onClick={addPending} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">+ Add to batch</button>
+              )}
+              {source === "figma" && (
+                <button type="button" onClick={() => setBulkOpen(!bulkOpen)} aria-expanded={bulkOpen} className="text-sm font-medium text-brand hover:underline">Add several links</button>
+              )}
+            </div>
+            {bulkOpen && source === "figma" && (
+              <div className="mt-2 rounded-xl border border-line bg-white p-3">
+                <label className="block text-sm font-semibold">Frame links, one per line
+                  <textarea rows={4} value={bulk} onChange={(e) => setBulk(e.target.value)} placeholder={"https://www.figma.com/design/…?node-id=12-34\nhttps://www.figma.com/design/…?node-id=12-35"} className={`${field} mt-1 font-mono text-xs font-normal`} />
+                </label>
+                {bulkErrors.length > 0 && <p role="alert" className="mt-1 text-xs text-bad-fg">These didn&apos;t look like Figma design links and were left in the box: {bulkErrors.length}.</p>}
+                <button type="button" onClick={addBulk} disabled={!bulk.trim()} className="mt-2 rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Add links</button>
+              </div>
+            )}
           </>
         )}
       </section>
 
+      {all.length > 0 && (
+        <section className="mb-6" aria-label="In this submission">
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            {isBatch ? `Batch of ${all.length}` : "1 item"}
+            {isBatch && <Tag tone="info">Reviewers see these together</Tag>}
+          </h2>
+          <ul className="space-y-2">
+            {all.map((it) => {
+              const staged = items.some((i) => i.key === it.key);
+              return (
+                <li key={it.key} className="flex items-center gap-3 rounded-xl border border-line bg-white p-2.5">
+                  <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-n-150 text-muted">
+                    {it.thumb
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={it.thumb} alt="" className="h-full w-full object-cover" />
+                      : <Icon name={it.assetKind === "audio" || it.assetKind === "video" ? "progress" : "link"} size={18} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    {staged && isBatch
+                      ? <input value={it.title} onChange={(e) => rename(it.key, e.target.value)} aria-label="Item name" className="w-full rounded border border-transparent px-1 py-0.5 text-sm font-medium hover:border-control focus:border-brand" />
+                      : <span className="block truncate px-1 text-sm font-medium">{itemTitle(it) || "Untitled"}</span>}
+                    <span className="block truncate px-1 text-xs text-muted">{KIND_LABEL[it.assetKind]} · {it.source.label}{staged ? "" : " · in the link box"}</span>
+                  </span>
+                  {staged && <button type="button" onClick={() => removeItem(it.key)} aria-label={`Remove ${it.title}`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-n-150"><Icon name="x" size={14} /></button>}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <section className="mb-6 grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-semibold sm:col-span-2">Title
-          <input className={`${field} mt-1 font-normal`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={parsed?.ok ? parsed.suggestedTitle : file?.name ?? "Name this design"} />
+        <label className="block text-sm font-semibold sm:col-span-2">{isBatch ? "Batch name" : "Title"}
+          <input className={`${field} mt-1 font-normal`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={isBatch ? defaultBatchTitle(all) : all[0]?.title ?? "Name this design"} />
         </label>
         <div className="block text-sm font-semibold">
           <label htmlFor="ticket-search">Jira ticket</label>
           <TicketPicker value={ticket} onChange={(p) => { setTicket(p); setTarget(""); }} viewerId="u-avery" />
         </div>
-        <label className="block text-sm font-semibold">Add as
-          <select className={`${field} mt-1 font-normal`} value={target} onChange={(e) => setTarget(e.target.value)}>
-            <option value="">A new design</option>
-            {versionTargets.map((a) => <option key={a.id} value={a.id}>New version of “{a.name}”</option>)}
-          </select>
-        </label>
+        {!isBatch && (
+          <label className="block text-sm font-semibold">Add as
+            <select className={`${field} mt-1 font-normal`} value={target} onChange={(e) => setTarget(e.target.value)}>
+              <option value="">A new design</option>
+              {versionTargets.map((a) => <option key={a.id} value={a.id}>New version of “{a.name}”</option>)}
+            </select>
+          </label>
+        )}
       </section>
 
       <section className="mb-6 space-y-4">
@@ -235,9 +344,25 @@ export function SubmitForm() {
       </section>
 
       <button onClick={submit} disabled={!valid || busy} className="rounded-lg bg-brand px-6 py-2.5 font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">
-        {busy ? "Sending…" : "Send for feedback"}
+        {busy ? "Sending…" : isBatch ? `Send ${all.length} items for feedback` : "Send for feedback"}
       </button>
       {!valid && <p className="mt-2 text-xs text-muted">Add a valid link or file, at least one reviewer, one approver, and a due date and time.</p>}
+
+      {picker && (
+        <FramePicker
+          url={url}
+          alreadyAdded={figmaLink ? addedFrameIds(items, figmaLink.key) : new Set()}
+          onBack={() => setPicker(false)}
+          onCancel={() => setPicker(false)}
+          onImport={(file, chosen) => {
+            const next = chosen.map((c) => figmaFrameItem({ key: file.key, name: file.name, pages: [] }, c.frame, c.thumb)).filter((x): x is BatchItem => !!x);
+            setItems((cur) => [...cur, ...next.filter((n) => !cur.some((c) => c.key === n.key))]);
+            setUrl("");
+            setPicker(false);
+          }}
+        />
+      )}
+      {isBatch && <p className="mt-3"><Callout tone="info" icon="check">Each item gets its own comments. Reviewers move between them with Previous and Next.</Callout></p>}
     </main>
   );
 }

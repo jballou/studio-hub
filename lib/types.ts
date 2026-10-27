@@ -40,6 +40,8 @@ export type Asset = {
   /** what the creative wants feedback on */
   instructions?: string;
   submittedBy?: string;
+  /** set when this was sent together with other items; items of one batch share an id */
+  batch?: { id: string; title: string; index: number; total: number };
 };
 
 export type AssetVersion = {
@@ -72,6 +74,7 @@ export type SubmitInput = {
   approvers: Person[];
   instructions: string;
   submittedBy: string;
+  batch?: { id: string; title: string; index: number; total: number };
 };
 
 export type Comment = {

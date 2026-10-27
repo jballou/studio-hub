@@ -128,7 +128,7 @@ export const mockRepo: ReviewRepo = {
       asset = {
         id: nid("a-"), projectKey: input.projectKey, name: input.title, kind: input.assetKind, versionIds: [versionId],
         source: input.source, reviewers: input.reviewers, dueAt: input.dueAt, dueTz: input.dueTz, approvers: input.approvers,
-        instructions: input.instructions, submittedBy: input.submittedBy,
+        instructions: input.instructions, submittedBy: input.submittedBy, batch: input.batch,
       };
       assets.push(asset);
     }

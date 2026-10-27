@@ -58,3 +58,8 @@ Items marked **(verify)** are from memory of how the vendor consoles work; confi
 - **Google** is a per-person connection (not the sign-in). Tokens are encrypted with a key derived from `AUTH_SECRET` and stored in Blob (`google/<hash>`). Rotating `AUTH_SECRET` means everyone reconnects Google. Setup and ownership of the Google Cloud project: `docs/google-setup.md`.
 - **Backup is one-way** (app to Google Tasks list "Brand Creative Hub"). Edits made in Google Tasks are not pulled back.
 - **Jira status write-back:** marking a ticket Blocked moves it to Jira status "Blocked"; clearing the block moves it back to the status it had. This needs the `write:jira-work` scope; people who signed in before it was added must sign out and back in once.
+
+## 8. Feedback batches and Figma
+
+- Sending several items together (several Figma frames, several files, or a mix) creates a **batch**: each item is its own review with its own comments, grouped by a shared batch id. Reviewers move between items with Previous and Next.
+- **Choose frames** (Figma file link) lists a file's frames with thumbnails using one shared token, `FIGMA_ACCESS_TOKEN` (see `docs/figma-setup.md`). The token's owner must expire-track it; when it lapses the picker shows a message and people paste frame links instead.
