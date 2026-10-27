@@ -9,11 +9,14 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const q = (url.searchParams.get("q") ?? "").trim().slice(0, 100);
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 50, 1), 100);
+    // scope=mine: creatives see what's assigned to them. Requesters aren't assigned work, so for them "mine" is everything they're on.
+    const mineOnly = url.searchParams.get("scope") === "mine" && s.role === "creative";
 
     const build = (withCc: boolean) => {
       const parts = [`project = ${PROJECT_KEY}`];
       const vis = visibilityClause(s.role, withCc);
       if (vis) parts.push(vis);
+      if (mineOnly) parts.push("assignee = currentUser()");
       if (q) {
         const key = /^mktgcrtv-\d+$/i.test(q) ? q.toUpperCase() : /^\d+$/.test(q) ? `${PROJECT_KEY}-${q}` : null;
         parts.push(`(${[key && `key = ${key}`, `summary ~ ${jqlString(`${q}*`)}`].filter(Boolean).join(" OR ")})`);

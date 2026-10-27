@@ -39,7 +39,7 @@ Items marked **(verify)** are from memory of how the vendor consoles work; confi
 - Review assets, comments and feedback requests are still **demo data**; they move to Blob (or Postgres) next.
 
 ## 4b. Blocked work
-- Jira's workflow has a **Blocked** status (also At Risk, On Hold, Need More Info) but no field for *who* a ticket is waiting on, so the app records that. Creatives and admins mark a project blocked and name the person; that person sees it under **Blocking you** and in the sidebar bell, and can clear it.
+- Jira's workflow has a **Blocked** status (also At Risk, On Hold, Need More Info) but no field for *who* a ticket is waiting on, so the app records that. Creatives and admins mark a project blocked and name the person; that person sees it under **Waiting on you** and in the sidebar bell, and can clear it.
 - The app does **not** yet change the Jira status when you mark something blocked (that needs the `write:jira-work` scope to be requested at sign-in). Until then, move the ticket to Blocked in Jira as well.
 
 ## 5. If someone is locked out

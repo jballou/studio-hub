@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
-import { googleRepo, GoogleUnavailable, isJira, projectsRepo, tasksRepo, type GoogleStatus } from "@/lib/data";
+import { activityRepo, googleRepo, GoogleUnavailable, isJira, projectsRepo, tasksRepo, type ActivityItem, type GoogleStatus } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
-import { focusList, headline, hm, localDay, minutes, onTimeScore, openSlots, statusBreakdown, suggest, taskInstant, timeline, STAGES_ORDER, type DayEvent, type FocusItem } from "@/lib/myday/plan";
-import { Donut, ScoreMeter, TimelineMeter } from "./Charts";
+import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
+import { Gantt, Gauge, ScoreMeter, TimelineMeter } from "./Charts";
 import { localTimezone, timezoneOptions, zoneAbbr } from "@/lib/time";
 import type { PersonalTask, Project } from "@/lib/types";
 
@@ -39,6 +39,8 @@ function dueText(t: PersonalTask, tz: string): string {
   return `${d}, ${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"} ${zoneAbbr(zone)}`;
 }
 
+const WINDOWS = [{ id: "3", label: "3 days", days: 3 }, { id: "7", label: "Week", days: 7 }, { id: "30", label: "Month", days: 30 }] as const;
+
 export function MyDay() {
   const me = useMe();
   const flashKey = useSearchParams().get("google");
@@ -48,23 +50,26 @@ export function MyDay() {
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [tasks, setTasks] = useState<PersonalTask[] | null>(null);
   const [events, setEvents] = useState<DayEvent[] | null>(null);
+  const [activity, setActivity] = useState<ActivityItem[] | null>(null);
   const [eventsErr, setEventsErr] = useState<{ message: string; code?: string } | null>(null);
   const [google, setGoogle] = useState<GoogleStatus | null>(null);
   const [taskErr, setTaskErr] = useState<string | null>(null);
   const [syncErr, setSyncErr] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ title: "", date: "", time: "", tz: "" });
-  const [busy, setBusy] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [tab, setTab] = useState<"priority" | "tasks">("priority");
+  const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("3");
+  const [shift, setShift] = useState(0);
   const [showDone, setShowDone] = useState(false);
   const [showAllFocus, setShowAllFocus] = useState(false);
   const [showAllSchedule, setShowAllSchedule] = useState(false);
   const [showAllTasks, setShowAllTasks] = useState(false);
+  const [showAllBars, setShowAllBars] = useState(false);
 
   useEffect(() => {
     // The date is read in the browser so "today" is the person's own day, not the server's.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(localDay());
     setNow(Date.now());
-    setDraft((d) => ({ ...d, tz: localTimezone() }));
   }, []);
 
   const applyTasks = useCallback((s: { tasks: PersonalTask[]; syncError?: string }) => { setTasks(s.tasks); setSyncErr(s.syncError ?? null); }, []);
@@ -75,6 +80,7 @@ export function MyDay() {
     projectsRepo.myWork(me.id).then((p) => live && setProjects(p)).catch(() => live && setProjects([]));
     tasksRepo.list().then((s) => live && applyTasks(s)).catch((e) => { if (live) { setTasks([]); setTaskErr(e.message); } });
     googleRepo.status().then((s) => live && setGoogle(s)).catch(() => live && setGoogle({ configured: false, connected: false }));
+    activityRepo.recent().then((a) => live && setActivity(a)).catch(() => live && setActivity([]));
     const start = new Date(`${today}T00:00:00`), end = new Date(`${today}T23:59:59`);
     googleRepo.events(start.toISOString(), end.toISOString())
       .then((e) => { if (live) { setEvents(e); setEventsErr(null); } })
@@ -104,180 +110,242 @@ export function MyDay() {
     try { applyTasks(await fn()); } catch (e) { setTaskErr(e instanceof Error ? e.message : "Couldn't save that."); }
   };
 
-  const add = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!draft.title.trim()) return;
-    setBusy(true);
-    await act(() => tasksRepo.add({ title: draft.title, date: draft.date || undefined, time: draft.date && draft.time ? draft.time : undefined, tz: draft.date && draft.time ? draft.tz : undefined }));
-    setDraft((d) => ({ ...d, title: "", date: "", time: "" }));
-    setBusy(false);
-  };
-
+  const loading = !today || projects === null || tasks === null || events === null;
   const flash = flashKey ? FLASH[flashKey] : null;
   const open = (tasks ?? []).filter((t) => !t.done).sort((a, b) => (a.date ?? "9999").localeCompare(b.date ?? "9999") || (a.time ?? "").localeCompare(b.time ?? ""));
   const done = (tasks ?? []).filter((t) => t.done);
-  const loading = !today || projects === null || tasks === null || events === null;
   const dateLabel = today ? new Date(`${today}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "";
 
   const score = useMemo(() => (today && projects ? onTimeScore(projects, tasks ?? [], today) : null), [projects, tasks, today]);
-  const slices = useMemo(() => statusBreakdown(projects ?? [], tasks ?? []), [projects, tasks]);
-  const overdue = focus.filter((f) => f.reason.startsWith("Overdue")).length;
-  const dueToday = focus.filter((f) => f.reason.startsWith("Due today")).length;
-  const meetingMs = (events ?? []).filter((e) => !e.allDay).reduce((n, e) => n + (+new Date(e.end) - +new Date(e.start)), 0);
+  const comp = useMemo(() => completion(projects ?? [], tasks ?? []), [projects, tasks]);
+  const openTickets = (projects ?? []).filter((p) => p.group !== "closed");
+  const overdue = today ? [...openTickets.filter((p) => p.deadline && p.deadline < today), ...open.filter((t) => t.date && t.date < today)].length : 0;
+  const dueToday = today ? [...openTickets.filter((p) => p.deadline === today), ...open.filter((t) => t.date === today)].length : 0;
+  const inProgress = openTickets.filter((p) => p.stage === "In progress" || p.stage === "In review" || p.stage === "In feedback").length;
+
+  // Timeline window. The 3-day view starts today; arrows move it by its own length.
+  const winDef = WINDOWS.find((w) => w.id === win)!;
+  const winStart = today ? addDay(today, shift * winDef.days) : "";
+  const days = today ? Array.from({ length: winDef.days }, (_, i) => addDay(winStart, i)) : [];
+  const { bars, undated } = useMemo(() => (today && projects ? ganttBars(projects, winStart, winDef.days, today) : { bars: [], undated: 0 }), [projects, today, winStart, winDef.days]);
+  const shownBars = showAllBars ? bars : bars.slice(0, 6);
+
+  const upcoming = schedule.filter((r) => r.allDay || (r.end ?? r.at) >= now);
+  const next = schedule.find((r) => !r.allDay && r.kind === "meeting" && (r.end ?? r.at) >= now);
+  const shownSchedule = showAllSchedule ? schedule : upcoming.filter((r) => r !== next).slice(0, 3);
+  const shownFocus = showAllFocus ? focus : focus.slice(0, 4);
+  const shownTasks = showAllTasks ? open : open.slice(0, 5);
   const bigSlot = [...slots].sort((a, b) => b.end - b.start - (a.end - a.start))[0];
 
-  // Upcoming and in-progress meetings first; finished ones sit behind "View all".
-  const upcoming = schedule.filter((r) => r.allDay || (r.end ?? r.at) >= now);
-  const shownSchedule = showAllSchedule ? schedule : upcoming.slice(0, 4);
-  const shownFocus = showAllFocus ? focus : focus.slice(0, 5);
-  const shownTasks = showAllTasks ? open : open.slice(0, 5);
-
   return (
-    <main className="mx-auto w-full max-w-6xl p-6">
-      <div className="flex flex-wrap items-baseline gap-x-3">
-        <h1 className="text-2xl font-bold">My Day</h1>
-        <p className="text-sm text-muted">{dateLabel}</p>
+    <main className="mx-auto w-full max-w-7xl p-6">
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">{me?.name ? `Welcome back, ${me.name.split(" ")[0]}` : "My Day"}</h1>
+          <p className="text-sm text-muted">{dateLabel}</p>
+        </div>
+        <button onClick={() => setAdding(true)} className="ml-auto flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Add new task</button>
       </div>
       {!isJira && <div className="mt-3"><Callout tone="info" icon="alert">Demo data. Real tickets, calendar and Google Tasks show up after sign-in.</Callout></div>}
       {flash && <div className="mt-3"><Callout tone={flash.tone} icon={flash.tone === "ok" ? "check" : "alert"}>{flash.text}</Callout></div>}
 
       {loading ? <p className="mt-6 text-sm text-muted">Loading…</p> : (
         <>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Card title="On-time score" hint="Open and finished work with a deadline">
-              <ScoreMeter score={score?.score ?? null} />
-              {score && score.score !== null && (
-                <p className="mt-2 text-sm text-muted"><b className="text-ink">{score.onTime}</b> on time · <b className={score.late ? "text-bad-fg" : "text-ink"}>{score.late}</b> late</p>
-              )}
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+            <Tile label="Open work" n={openTickets.length + open.length} note="Tickets and tasks" />
+            <Tile label="Due today" n={dueToday} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
+            <Tile label="In progress" n={inProgress} note="Being worked on" />
+            <Tile label="Overdue" n={overdue} note="Missed deadline" tone={overdue ? "bad" : undefined} />
+            <Tile label="Completed" n={comp.done} note="Last 14 days" />
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+            <Card
+              title="Project timeline"
+              action={
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
+                    <button onClick={() => setShift(0)} className="rounded-lg border border-control px-2 py-1 text-xs font-medium hover:bg-brand-soft">Today</button>
+                    <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={12} /></button>
+                  </div>
+                  <div className="flex overflow-hidden rounded-lg border border-control" role="group" aria-label="Timeline length">
+                    {WINDOWS.map((w) => <button key={w.id} onClick={() => { setWin(w.id); setShift(0); }} aria-pressed={win === w.id} className={`px-2.5 py-1 text-xs font-medium ${win === w.id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{w.label}</button>)}
+                  </div>
+                </div>
+              }
+            >
+              {bars.length === 0 ? <p className="py-6 text-center text-sm text-muted">No tickets with dates in this window.</p> : <Gantt bars={shownBars} days={days} today={today!} start={winStart} />}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+                {STATUS_META.filter((m) => m.key !== "tasks").map((m) => <span key={m.key} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: m.color }} aria-hidden />{m.label}</span>)}
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border-[1.5px] border-bad-fg" aria-hidden />Past deadline</span>
+              </div>
+              <MoreButton total={bars.length} shown={shownBars.length} expanded={showAllBars} onToggle={() => setShowAllBars(!showAllBars)} noun="tickets" limit={6} />
+              {undated > 0 && <p className="mt-2 text-xs text-muted">{undated} {undated === 1 ? "ticket has" : "tickets have"} no deadline, so {undated === 1 ? "it isn't" : "they aren't"} on the timeline.</p>}
             </Card>
-            <Card title="Status" hint="Your open tickets and tasks">
-              <Donut slices={slices} centerLabel="open" />
-            </Card>
-            <Card title="Today" hint={headline(events ?? [], focus, today!, slots)}>
-              <div className="grid grid-cols-2 gap-3">
-                <Stat n={overdue} label="Overdue" tone={overdue ? "bad" : undefined} />
-                <Stat n={dueToday} label="Due today" />
-                <Stat n={(events ?? []).filter((e) => !e.allDay).length} label={`Meetings (${hm(minutes(meetingMs))})`} />
-                <Stat n={bigSlot ? hm(minutes(bigSlot.end - bigSlot.start)) : "None"} label="Longest open stretch" />
+
+            <Card title="Task completion" hint="Tickets and tasks, finished vs open">
+              <Gauge
+                pct={comp.pct}
+                caption={`${comp.done} of ${comp.total} completed`}
+                parts={[
+                  { key: "done", label: "Completed", color: "#08794a", count: comp.done },
+                  { key: "progress", label: "In progress", color: "#348289", count: comp.progress },
+                  { key: "todo", label: "To do", color: "#908d89", count: comp.todo },
+                ]}
+              />
+              <div className="mt-4 border-t border-line pt-3">
+                <div className="mb-1 flex items-baseline justify-between text-sm"><span className="font-semibold">On-time score</span>{score && score.score !== null && <span className="text-xs text-muted">{score.onTime} on time · {score.late} late</span>}</div>
+                <ScoreMeter score={score?.score ?? null} compact />
               </div>
             </Card>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-            <Card title="Work on today" hint={`${focus.length} item${focus.length === 1 ? "" : "s"}, most urgent first`}>
-              {focus.length === 0 ? (
-                <p className="text-sm text-muted">Nothing is overdue or due soon. Pick something from <Link href="/projects" className="text-brand underline">Projects</Link>, or add a task.</p>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr]">
+            <Card
+              title={tab === "priority" ? "Task priority" : "My tasks"}
+              hint={tab === "priority" ? "Most urgent first" : "Private to you. Not added to Jira."}
+              action={
+                <div className="flex overflow-hidden rounded-lg border border-control" role="tablist" aria-label="Task views">
+                  {([["priority", "Priority"], ["tasks", `My tasks (${open.length})`]] as const).map(([id, label]) => (
+                    <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-2.5 py-1 text-xs font-medium ${tab === id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{label}</button>
+                  ))}
+                </div>
+              }
+            >
+              {taskErr && <div className="mb-3"><Callout tone="bad" icon="alert">{taskErr}</Callout></div>}
+              {syncErr && <div className="mb-3"><Callout tone="warn" icon="alert">Saved here, but Google Tasks backup is pending. {syncErr}</Callout></div>}
+              {tab === "priority" ? (
+                <>
+                  {focus.length === 0 ? (
+                    <p className="text-sm text-muted">Nothing is overdue or due soon. Pick something from <Link href="/projects" className="text-brand underline">Projects</Link>, or add a task.</p>
+                  ) : (
+                    <ol className="space-y-2">
+                      {shownFocus.map((f) => <FocusRow key={`${f.kind}${f.id}`} f={f} today={today!} slot={plan.find((p) => p.item.id === f.id)?.slot} planned={planned.has(f.id)} onDone={f.kind === "task" ? () => act(() => tasksRepo.update(f.id, { done: true })) : undefined} />)}
+                    </ol>
+                  )}
+                  <MoreButton total={focus.length} shown={shownFocus.length} expanded={showAllFocus} onToggle={() => setShowAllFocus(!showAllFocus)} noun="items" limit={4} />
+                </>
               ) : (
-                <ol className="space-y-2">
-                  {shownFocus.map((f, i) => <FocusRow key={`${f.kind}${f.id}`} f={f} n={i + 1} today={today!} slot={plan.find((p) => p.item.id === f.id)?.slot} planned={planned.has(f.id)} />)}
-                </ol>
+                <>
+                  {open.length === 0 ? <p className="text-sm text-muted">No open tasks.</p> : (
+                    <ul className="space-y-1.5">
+                      {shownTasks.map((t) => <TaskRow key={t.id} t={t} tz={tz} today={today} onToggle={() => act(() => tasksRepo.update(t.id, { done: true }))} onDelete={() => act(() => tasksRepo.remove(t.id))} />)}
+                    </ul>
+                  )}
+                  <MoreButton total={open.length} shown={shownTasks.length} expanded={showAllTasks} onToggle={() => setShowAllTasks(!showAllTasks)} noun="tasks" />
+                  {done.length > 0 && (
+                    <div className="mt-3">
+                      <button onClick={() => setShowDone(!showDone)} aria-expanded={showDone} className="flex items-center gap-1 text-sm font-medium text-brand hover:underline">
+                        <Icon name={showDone ? "chevronDown" : "chevronRight"} size={12} /> Completed ({done.length})
+                      </button>
+                      {showDone && (
+                        <ul className="mt-2 space-y-1.5">
+                          {done.map((t) => <TaskRow key={t.id} t={t} tz={tz} today={today} onToggle={() => act(() => tasksRepo.update(t.id, { done: false }))} onDelete={() => act(() => tasksRepo.remove(t.id))} />)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
-              <MoreButton total={focus.length} shown={shownFocus.length} expanded={showAllFocus} onToggle={() => setShowAllFocus(!showAllFocus)} noun="items" />
+              {google?.connected && isJira && (
+                <p className="mt-4 text-xs text-muted">
+                  Google connected as {google.googleEmail}.{" "}
+                  <button onClick={async () => { await googleRepo.disconnect(); setGoogle({ ...google, connected: false }); setEvents([]); }} className="font-medium text-brand underline">Disconnect</button>
+                </p>
+              )}
             </Card>
 
-            <div className="space-y-4">
-              <Card title="Today's schedule" hint={google?.connected ? "Google Calendar and timed tasks" : undefined}>
-                {google && !google.connected && isJira && (
-                  <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-control p-3 text-sm">
-                    <Icon name="calendar" size={18} />
-                    <span className="min-w-0 flex-1">{google.configured ? "Connect Google to plan around your meetings and back up tasks." : "Google isn't set up for this app yet."}</span>
-                    {google.configured && <a href="/api/google/connect" className="rounded-lg bg-brand px-3 py-1.5 font-medium text-n-50 hover:bg-brand-dark">Connect Google</a>}
-                  </div>
-                )}
-                {google?.broken || eventsErr?.code === "reconnect" ? (
-                  <div className="mb-3"><Callout tone="warn" icon="alert">Google needs to be reconnected. <a className="underline" href="/api/google/connect">Reconnect</a></Callout></div>
-                ) : eventsErr && eventsErr.code !== "not-connected" && eventsErr.code !== "not-configured" ? (
-                  <div className="mb-3"><Callout tone="bad" icon="alert">{eventsErr.message}</Callout></div>
-                ) : null}
-                {schedule.length === 0 ? (
-                  <p className="text-sm text-muted">{google?.connected ? "Nothing on your calendar today." : "No timed items today."}</p>
-                ) : shownSchedule.length === 0 ? (
-                  <p className="text-sm text-muted">Everything on today&apos;s calendar is finished.</p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {shownSchedule.map((r, i) => {
-                      const past = !r.allDay && (r.end ?? r.at) < now;
-                      return (
-                        <li key={i} className={`flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm ${past ? "opacity-55" : ""}`}>
-                          <span className="w-[5.5rem] shrink-0 text-xs tabular-nums text-muted">{r.allDay ? "All day" : clock(r.at)}</span>
-                          <span className="min-w-0 flex-1 truncate font-medium">{r.label}</span>
-                          <Tag tone={r.kind === "meeting" ? "info" : "progress"}>{r.kind === "meeting" ? "Meeting" : "Task"}</Tag>
-                          {r.link && <a href={r.link} target="_blank" rel="noreferrer" aria-label={`Open ${r.label}`} className="text-brand underline">Open</a>}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                <MoreButton total={schedule.length} shown={shownSchedule.length} expanded={showAllSchedule} onToggle={() => setShowAllSchedule(!showAllSchedule)} noun="events" limit={4} />
-              </Card>
+            <Card title="Reminders" hint={google?.connected ? "From Google Calendar and your timed tasks" : undefined}>
+              {google && !google.connected && isJira && (
+                <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-control p-3 text-sm">
+                  <Icon name="calendar" size={18} />
+                  <span className="min-w-0 flex-1">{google.configured ? "Connect Google to plan around your meetings and back up tasks." : "Google isn't set up for this app yet."}</span>
+                  {google.configured && <a href="/api/google/connect" className="rounded-lg bg-brand px-3 py-1.5 font-medium text-n-50 hover:bg-brand-dark">Connect Google</a>}
+                </div>
+              )}
+              {google?.broken || eventsErr?.code === "reconnect" ? (
+                <div className="mb-3"><Callout tone="warn" icon="alert">Google needs to be reconnected. <a className="underline" href="/api/google/connect">Reconnect</a></Callout></div>
+              ) : eventsErr && eventsErr.code !== "not-connected" && eventsErr.code !== "not-configured" ? (
+                <div className="mb-3"><Callout tone="bad" icon="alert">{eventsErr.message}</Callout></div>
+              ) : null}
+              {next && (
+                <div className="mb-3 rounded-xl border border-line p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">Next up</p>
+                  <p className="mt-1 font-semibold">{next.label}</p>
+                  <p className="text-sm text-muted">Today, {clock(next.at)} – {clock(next.end!)}{next.at <= now ? " (happening now)" : ""}</p>
+                  {next.link && <a href={next.link} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Open meeting</a>}
+                </div>
+              )}
+              {schedule.length === 0 ? (
+                <p className="text-sm text-muted">{google?.connected ? "Nothing on your calendar today." : "No timed items today."}</p>
+              ) : shownSchedule.length === 0 && !next ? (
+                <p className="text-sm text-muted">Everything on today&apos;s calendar is finished.</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {shownSchedule.map((r, i) => {
+                    const past = !r.allDay && (r.end ?? r.at) < now;
+                    return (
+                      <li key={i} className={`flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm ${past ? "opacity-55" : ""}`}>
+                        <span className="w-[4.75rem] shrink-0 text-xs tabular-nums text-muted">{r.allDay ? "All day" : clock(r.at)}</span>
+                        <span className="min-w-0 flex-1 truncate font-medium">{r.label}</span>
+                        <Tag tone={r.kind === "meeting" ? "info" : "progress"}>{r.kind === "meeting" ? "Meeting" : "Task"}</Tag>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              <MoreButton total={schedule.length - (next ? 1 : 0)} shown={shownSchedule.length} expanded={showAllSchedule} onToggle={() => setShowAllSchedule(!showAllSchedule)} noun="events" limit={3} />
+            </Card>
 
-              <Card title="My tasks" hint="Private to you. Not added to Jira.">
-                <form onSubmit={add} className="mb-4 space-y-2">
-                  <label className="sr-only" htmlFor="task-title">Task</label>
-                  <input id="task-title" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} placeholder="Add a task" maxLength={200} className={`${field} w-full`} />
-                  <div className="flex flex-wrap gap-2">
-                    <label className="text-xs font-semibold">Due date<input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value, time: e.target.value ? draft.time : "" })} className={`${field} mt-1 block font-normal`} /></label>
-                    <label className="text-xs font-semibold">Time<input type="time" value={draft.time} disabled={!draft.date} onChange={(e) => setDraft({ ...draft, time: e.target.value })} className={`${field} mt-1 block font-normal disabled:opacity-40`} /></label>
-                    {draft.time && (
-                      <label className="min-w-0 flex-1 text-xs font-semibold">Time zone
-                        <select value={draft.tz} onChange={(e) => setDraft({ ...draft, tz: e.target.value })} className={`${field} mt-1 block w-full font-normal`}>
-                          {timezoneOptions(draft.tz).map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}
-                        </select>
-                      </label>
-                    )}
-                  </div>
-                  <button disabled={busy || !draft.title.trim()} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Adding…" : "Add task"}</button>
-                </form>
-                {taskErr && <div className="mb-3"><Callout tone="bad" icon="alert">{taskErr}</Callout></div>}
-                {syncErr && <div className="mb-3"><Callout tone="warn" icon="alert">Saved here, but Google Tasks backup is pending. {syncErr}</Callout></div>}
-                {open.length === 0 ? <p className="text-sm text-muted">No open tasks.</p> : (
-                  <ul className="space-y-1.5">
-                    {shownTasks.map((t) => <TaskRow key={t.id} t={t} tz={tz} today={today} onToggle={() => act(() => tasksRepo.update(t.id, { done: true }))} onDelete={() => act(() => tasksRepo.remove(t.id))} />)}
-                  </ul>
-                )}
-                <MoreButton total={open.length} shown={shownTasks.length} expanded={showAllTasks} onToggle={() => setShowAllTasks(!showAllTasks)} noun="tasks" />
-                {done.length > 0 && (
-                  <div className="mt-3">
-                    <button onClick={() => setShowDone(!showDone)} aria-expanded={showDone} className="flex items-center gap-1 text-sm font-medium text-brand hover:underline">
-                      <Icon name={showDone ? "chevronDown" : "chevronRight"} size={12} /> Completed ({done.length})
-                    </button>
-                    {showDone && (
-                      <ul className="mt-2 space-y-1.5">
-                        {done.map((t) => <TaskRow key={t.id} t={t} tz={tz} today={today} onToggle={() => act(() => tasksRepo.update(t.id, { done: false }))} onDelete={() => act(() => tasksRepo.remove(t.id))} />)}
-                      </ul>
-                    )}
-                  </div>
-                )}
-                {google?.connected && isJira && (
-                  <p className="mt-4 text-xs text-muted">
-                    Google connected as {google.googleEmail}.{" "}
-                    <button onClick={async () => { await googleRepo.disconnect(); setGoogle({ ...google, connected: false }); setEvents([]); }} className="font-medium text-brand underline">Disconnect</button>
-                  </p>
-                )}
-              </Card>
-            </div>
+            <Card title="Recent activity" hint="Latest change on tickets you're on">
+              {activity === null ? <p className="text-sm text-muted">Loading…</p> : activity.length === 0 ? <p className="text-sm text-muted">No recent changes.</p> : (
+                <ul className="space-y-2">
+                  {activity.slice(0, 5).map((a) => (
+                    <li key={a.id} className="flex items-start gap-3 rounded-lg border border-line p-2.5">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-n-150 text-xs font-bold" aria-hidden>{a.who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+                      <div className="min-w-0 flex-1 text-sm">
+                        <p><b>{a.mine ? "You" : a.who}</b> {a.what}</p>
+                        <p className="truncate"><Link href={`/projects/${a.key}`} className="text-muted hover:underline">{a.key} · {a.title}</Link></p>
+                        <p className="text-xs text-muted">{relativeTime(a.at, now)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
           </div>
         </>
       )}
+      {adding && <AddTaskDialog onClose={() => setAdding(false)} onAdd={async (d) => { await act(() => tasksRepo.add(d)); setAdding(false); setTab("tasks"); }} />}
     </main>
   );
 }
 
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Card({ title, hint, action, children }: { title: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="rounded-xl border border-line bg-white p-4">
-      <h2 className="text-base font-bold">{title}</h2>
-      {hint ? <p className="mb-3 mt-0.5 text-xs text-muted">{hint}</p> : <div className="mb-3" />}
+      <div className="mb-3 flex flex-wrap items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base font-bold">{title}</h2>
+          {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
+        </div>
+        {action}
+      </div>
       {children}
     </section>
   );
 }
 
-function Stat({ n, label, tone }: { n: number | string; label: string; tone?: "bad" }) {
+function Tile({ label, n, note, tone }: { label: string; n: number; note: string; tone?: "bad" }) {
   return (
-    <div className="rounded-lg bg-n-100 px-3 py-2">
-      <div className={`text-2xl font-bold tabular-nums ${tone === "bad" ? "text-bad-fg" : ""}`}>{n}</div>
-      <div className="text-xs text-muted">{label}</div>
+    <div className="rounded-xl border border-line bg-white p-4">
+      <div className="text-sm font-semibold">{label}</div>
+      <div className="mt-1 flex items-center gap-2">
+        <span className={`text-3xl font-bold tabular-nums ${tone === "bad" ? "text-bad-fg" : ""}`}>{n}</span>
+        {tone === "bad" && n > 0 && <Tag tone="bad" icon="alert">Attention</Tag>}
+      </div>
+      <div className="mt-1 text-xs text-muted">{note}</div>
     </div>
   );
 }
@@ -292,24 +360,64 @@ function MoreButton({ total, shown, expanded, onToggle, noun, limit = 5 }: { tot
   );
 }
 
-function FocusRow({ f, n, today, slot, planned }: { f: FocusItem; n: number; today: string; slot?: { start: number; end: number }; planned: boolean }) {
+function AddTaskDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (d: { title: string; date?: string; time?: string; tz?: string }) => Promise<void> }) {
+  const [d, setD] = useState({ title: "", date: "", time: "", tz: localTimezone() });
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!d.title.trim()) return;
+    setBusy(true);
+    await onAdd({ title: d.title, date: d.date || undefined, time: d.date && d.time ? d.time : undefined, tz: d.date && d.time ? d.tz : undefined });
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[12vh]" onMouseDown={onClose}>
+      <form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Add a task" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md space-y-3 rounded-xl border border-line bg-white p-5 shadow-xl">
+        <h2 className="text-lg font-bold">Add a task</h2>
+        <p className="text-sm text-muted">Private to you. It shows on your calendar and is backed up to Google Tasks, never added to Jira.</p>
+        <label className="block text-sm font-semibold">Task
+          <input autoFocus value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} maxLength={200} placeholder="e.g. Send exports to Riley" className={`${field} mt-1 w-full font-normal`} />
+        </label>
+        <div className="flex flex-wrap gap-3">
+          <label className="text-sm font-semibold">Due date<input type="date" value={d.date} onChange={(e) => setD({ ...d, date: e.target.value, time: e.target.value ? d.time : "" })} className={`${field} mt-1 block font-normal`} /></label>
+          <label className="text-sm font-semibold">Time<input type="time" value={d.time} disabled={!d.date} onChange={(e) => setD({ ...d, time: e.target.value })} className={`${field} mt-1 block font-normal disabled:opacity-40`} /></label>
+        </div>
+        {d.time && (
+          <label className="block text-sm font-semibold">Time zone
+            <select value={d.tz} onChange={(e) => setD({ ...d, tz: e.target.value })} className={`${field} mt-1 block w-full font-normal`}>
+              {timezoneOptions(d.tz).map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}
+            </select>
+          </label>
+        )}
+        <div className="flex gap-2">
+          <button disabled={busy || !d.title.trim()} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Adding…" : "Add task"}</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function FocusRow({ f, today, slot, planned, onDone }: { f: FocusItem; today: string; slot?: { start: number; end: number }; planned: boolean; onDone?: () => void }) {
   const hot = f.reason.startsWith("Overdue");
   const stageIdx = f.kind === "ticket" ? STAGES_ORDER.indexOf(f.project.stage) + 1 : 0;
   return (
-    <li className="rounded-lg border border-line px-3 py-3">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-n-150 text-xs font-bold" aria-hidden>{n}</span>
+    <li className="rounded-lg border border-line px-3 py-2.5">
+      <div className="flex items-start gap-2.5">
+        {onDone
+          ? <input type="checkbox" checked={false} onChange={onDone} aria-label={`Mark "${f.title}" done`} className="mt-1 h-4 w-4 shrink-0 accent-brand" />
+          : <span className="mt-1 h-4 w-4 shrink-0 rounded border border-control bg-n-100" aria-hidden title="Ticket: complete it in Jira" />}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            {f.kind === "ticket" ? <Tag tone="neutral">{f.key}</Tag> : <Tag tone="progress">Task</Tag>}
-            {f.kind === "ticket"
-              ? <Link href={`/projects/${f.key}`} className="font-semibold hover:underline">{f.title}</Link>
-              : <span className="font-semibold">{f.title}</span>}
-          </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
+          {f.kind === "ticket"
+            ? <Link href={`/projects/${f.key}`} className="font-semibold hover:underline">{f.title}</Link>
+            : <span className="font-semibold">{f.title}</span>}
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <Tag tone={hot ? "bad" : f.reason.includes("Blocked") ? "warn" : "info"}>{f.reason}</Tag>
-            {f.kind === "ticket" && <span className="text-xs text-muted">{f.project.type} · {f.project.stage} (step {stageIdx} of {STAGES_ORDER.length}){f.project.requesterName ? ` · from ${f.project.requesterName}` : ""}</span>}
-            {f.kind === "task" && f.task.notes && <span className="truncate text-xs text-muted">{f.task.notes}</span>}
+            {f.kind === "ticket" ? <span className="text-xs text-muted">{f.key} · {f.project.stage} ({stageIdx}/{STAGES_ORDER.length})</span> : <Tag tone="progress">Task</Tag>}
           </div>
           {f.kind === "ticket" && <div className="mt-2"><TimelineMeter t={timeline(f.project, today)} label={`Time used on ${f.title}`} /></div>}
           {planned && slot && <p className="mt-2 text-xs text-muted">Suggested: {clock(slot.start)} – {clock(Math.min(slot.end, slot.start + 90 * 6e4))} ({hm(Math.min(90, minutes(slot.end - slot.start)))})</p>}

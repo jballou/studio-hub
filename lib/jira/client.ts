@@ -43,11 +43,12 @@ export type JiraIssue = {
     created: string;
     description?: unknown;
     customfield_10142?: JiraUser[] | null; // "Cc" user picker
+    resolutiondate?: string | null;
     [field: string]: unknown;
   };
 };
 
-export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142"];
+export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate"];
 
 export async function searchIssues(a: JiraAuth, jql: string, fields: string[] = ISSUE_FIELDS, maxResults = 50): Promise<JiraIssue[]> {
   const qs = new URLSearchParams({ jql, fields: fields.join(","), maxResults: String(maxResults) });

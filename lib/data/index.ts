@@ -22,3 +22,5 @@ export { tasksRepo } from "./tasks";
 export type { TaskDraft, TasksState } from "./tasks";
 export { googleRepo, GoogleUnavailable } from "./google";
 export type { GoogleStatus } from "./google";
+export { activityRepo } from "./activity";
+export type { ActivityItem } from "./activity";

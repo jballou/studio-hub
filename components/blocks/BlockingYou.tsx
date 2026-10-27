@@ -42,7 +42,7 @@ export function BlockingYou() {
 
   return (
     <main className="mx-auto w-full max-w-3xl p-6">
-      <h1 className="text-2xl font-bold">Blocking you</h1>
+      <h1 className="text-2xl font-bold">Waiting on you</h1>
       <p className="mb-5 mt-1 text-sm text-muted">Projects that are waiting on something from you. Clear each one when you&apos;ve done what&apos;s needed so the team can keep moving.</p>
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
 

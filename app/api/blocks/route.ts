@@ -10,7 +10,7 @@ const KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
 
 /**
  * GET /api/blocks?keys=A-1,A-2   active blocks for those tickets (for tags in lists)
- * GET /api/blocks?mine=1         what is blocked on ME, with ticket details (the "Blocking you" page)
+ * GET /api/blocks?mine=1         what is blocked on ME, with ticket details (the "Waiting on you" page)
  */
 export async function GET(req: Request) {
   try {

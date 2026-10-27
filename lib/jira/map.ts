@@ -56,6 +56,7 @@ export function toProject(issue: JiraIssue): Project {
     stage: stageOf(issue),
     flag: flagOf(issue),
     statusName: f.status.name,
+    resolvedAt: typeof f.resolutiondate === "string" ? f.resolutiondate.slice(0, 10) : undefined,
     type: projectTypeOf(issue),
     requesterId: f.reporter?.accountId ?? "",
     requesterName: f.reporter?.displayName,

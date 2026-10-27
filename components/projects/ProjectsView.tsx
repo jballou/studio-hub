@@ -7,6 +7,7 @@ import { FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StageTag, Tag } from "@/components/ui/Tag";
+import { Icon } from "@/components/ui/Icon";
 import type { Block, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
 
 const GROUPS: { id: ProjectGroup; label: string }[] = [
@@ -61,11 +62,47 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
   );
 }
 
+function Board({ projects, blocks, isStarred, toggleStar }: { projects: Project[]; blocks: Record<string, Block>; isStarred: (k: string) => boolean; toggleStar: (k: string, t: string) => void }) {
+  return (
+    <div className="overflow-x-auto pb-2">
+      <div className="grid min-w-[62rem] grid-cols-5 gap-3">
+        {STAGES.map((st) => {
+          const col = projects.filter((p) => p.stage === st);
+          return (
+            <section key={st} aria-label={`${st}, ${col.length}`} className="rounded-xl bg-n-150 p-2">
+              <h2 className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold">{st}<span className="rounded-full bg-white px-2 text-xs font-medium text-muted">{col.length}</span></h2>
+              <ul className="space-y-2">
+                {col.map((p) => (
+                  <li key={p.id} className="rounded-lg border border-line bg-white p-3 hover:border-brand">
+                    <div className="flex items-start gap-1">
+                      <Link href={`/projects/${p.jiraKey}`} className="min-w-0 flex-1 text-sm font-medium hover:underline">{p.title}</Link>
+                      <StarButton starred={isStarred(p.jiraKey)} onToggle={() => toggleStar(p.jiraKey, p.title)} label={p.title} />
+                    </div>
+                    <div className="mt-1 text-xs text-muted">{p.jiraKey} · {p.type}</div>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
+                      {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
+                    </div>
+                    <div className="mt-2 text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</div>
+                  </li>
+                ))}
+                {col.length === 0 && <li className="px-1 py-3 text-xs text-muted">Nothing here.</li>}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ProjectsView() {
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [view, setView] = useState<"list" | "month" | "week">("list");
+  const [view, setView] = useState<"list" | "board" | "month" | "week">("list");
+  const [scope, setScope] = useState<"mine" | "all">("mine");
+  const [shelf, setShelf] = useState(false);
   const [action, setAction] = useState(false);
   const [newOnly, setNewOnly] = useState(false);
   const [starredOnly, setStarredOnly] = useState(false);
@@ -81,14 +118,14 @@ export function ProjectsView() {
   const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    projectsRepo.listProjects(meId).then((p) => {
+    projectsRepo.listProjects(meId, scope).then((p) => {
       if (!live) return;
       setProjects(p);
       setLoadError(null);
       blocksRepo.list(p.map((x) => x.jiraKey)).then((bs) => { if (live) setBlocks(Object.fromEntries(bs.map((b) => [b.key, b]))); }).catch(() => {});
     }).catch((e: Error) => { if (live) setLoadError(e.message); });
     return () => { live = false; };
-  }, [meId]);
+  }, [meId, scope]);
 
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "Unknown";
 
@@ -101,8 +138,11 @@ export function ProjectsView() {
     (!type || p.type === type) && (!collab || p.collaboratorIds.includes(collab) || p.requesterId === collab) &&
     (!before || p.deadline <= before)), [projects, action, newOnly, starredOnly, blockedOnly, blocks, favs, stage, type, collab, before]);
 
+  const activeFilters = [action, newOnly, starredOnly, blockedOnly, !!stage, !!type, !!collab, !!before, scope === "all"].filter(Boolean).length;
+  const clearFilters = () => { setAction(false); setNewOnly(false); setStarredOnly(false); setBlockedOnly(false); setStage(""); setType(""); setCollab(""); setBefore(""); setScope("mine"); };
+
   return (
-    <main className="mx-auto w-full max-w-5xl p-6">
+    <main className={`mx-auto w-full p-6 ${view === "board" ? "max-w-7xl" : "max-w-5xl"}`}>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">Projects</h1>
         <div className="ml-auto flex items-center gap-3 text-xs">
@@ -112,29 +152,57 @@ export function ProjectsView() {
             </select>
           </label>}
           <div className="flex overflow-hidden rounded border border-line">
-            {(["list", "month", "week"] as const).map((v) => (
+            {(["list", "board", "month", "week"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-3 py-1 capitalize ${view === v ? "bg-brand text-white" : "bg-white"}`}>{v}</button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
-        <label className="flex items-center gap-1"><input type="checkbox" checked={action} onChange={(e) => setAction(e.target.checked)} /> Action required</label>
-        <label className="flex items-center gap-1"><input type="checkbox" checked={newOnly} onChange={(e) => setNewOnly(e.target.checked)} /> New comments</label>
-        <label className="flex items-center gap-1"><input type="checkbox" checked={starredOnly} onChange={(e) => setStarredOnly(e.target.checked)} /> Starred</label>
-        <label className="flex items-center gap-1"><input type="checkbox" checked={blockedOnly} onChange={(e) => setBlockedOnly(e.target.checked)} /> Blocked</label>
-        <select aria-label="Status" value={stage} onChange={(e) => setStage(e.target.value as Stage | "")} className="rounded border border-control px-2 py-1">
-          <option value="">Any status</option>{STAGES.map((s) => <option key={s}>{s}</option>)}
-        </select>
-        <select aria-label="Type" value={type} onChange={(e) => setType(e.target.value as ProjectType | "")} className="rounded border border-control px-2 py-1">
-          <option value="">Any type</option>{TYPES.map((t) => <option key={t}>{t}</option>)}
-        </select>
-        <select aria-label="Collaborator" value={collab} onChange={(e) => setCollab(e.target.value)} className="rounded border border-control px-2 py-1">
-          <option value="">Anyone</option>{users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-        </select>
-        <label className="flex items-center gap-1">Due by <input type="date" value={before} onChange={(e) => setBefore(e.target.value)} className="rounded border border-control px-2 py-1" /></label>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => setShelf(!shelf)}
+          aria-expanded={shelf}
+          aria-controls="filter-shelf"
+          className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium hover:bg-brand-soft ${activeFilters ? "border-brand bg-brand-soft" : "border-control bg-white"}`}
+        >
+          <Icon name="filter" size={16} /> Filters
+          {activeFilters > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs font-bold text-n-50">{activeFilters}</span>}
+        </button>
+        <span className="text-sm text-muted">{scope === "mine" ? "Assigned to you" : "All projects you can see"} · {filtered.length} {filtered.length === 1 ? "project" : "projects"}</span>
+        {activeFilters > 0 && <button onClick={clearFilters} className="text-sm font-medium text-brand hover:underline">Reset</button>}
       </div>
+
+      {shelf && (
+        <div id="filter-shelf" className="mb-6 space-y-3 rounded-xl border border-line bg-white p-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">Show</span>
+            <div className="flex overflow-hidden rounded border border-line" role="group" aria-label="Which projects">
+              {([["mine", "Assigned to me"], ["all", "All projects"]] as const).map(([id, label]) => (
+                <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className={`px-3 py-1 ${scope === id ? "bg-brand text-white" : "bg-white"}`}>{label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-1"><input type="checkbox" checked={action} onChange={(e) => setAction(e.target.checked)} /> Action required</label>
+            <label className="flex items-center gap-1"><input type="checkbox" checked={newOnly} onChange={(e) => setNewOnly(e.target.checked)} /> New comments</label>
+            <label className="flex items-center gap-1"><input type="checkbox" checked={starredOnly} onChange={(e) => setStarredOnly(e.target.checked)} /> Starred</label>
+            <label className="flex items-center gap-1"><input type="checkbox" checked={blockedOnly} onChange={(e) => setBlockedOnly(e.target.checked)} /> Blocked</label>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <select aria-label="Status" value={stage} onChange={(e) => setStage(e.target.value as Stage | "")} className="rounded border border-control px-2 py-1">
+              <option value="">Any status</option>{STAGES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <select aria-label="Type" value={type} onChange={(e) => setType(e.target.value as ProjectType | "")} className="rounded border border-control px-2 py-1">
+              <option value="">Any type</option>{TYPES.map((t) => <option key={t}>{t}</option>)}
+            </select>
+            <select aria-label="Collaborator" value={collab} onChange={(e) => setCollab(e.target.value)} className="rounded border border-control px-2 py-1">
+              <option value="">Anyone</option>{users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+            <label className="flex items-center gap-1">Due by <input type="date" value={before} onChange={(e) => setBefore(e.target.value)} className="rounded border border-control px-2 py-1" /></label>
+          </div>
+        </div>
+      )}
 
       {loadError && <div className="mb-4"><Callout tone="bad" icon="alert">Couldn&apos;t load projects: {loadError}</Callout></div>}
 
@@ -153,7 +221,7 @@ export function ProjectsView() {
         </div>
       )}
 
-      {view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
+      {view === "board" ? <Board projects={filtered} blocks={blocks} isStarred={favs.isStarred} toggleStar={favs.toggle} /> : view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
         GROUPS.map((g) => {
           const rows = filtered.filter((p) => p.group === g.id);
           return (

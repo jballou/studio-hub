@@ -157,12 +157,16 @@ export type OnTime = { score: number | null; onTime: number; late: number };
 
 /**
  * Share of dated work that is not late. An open item is late once its deadline has passed; a finished task is
- * late if it was ticked off after its date. Tickets only count while open (closed history isn't loaded here).
+ * late if it was ticked off after its date. Tickets count while open, and for 14 days after they close.
  */
 export function onTimeScore(projects: Project[], tasks: PersonalTask[], today: string): OnTime {
   let onTime = 0, late = 0;
   for (const p of projects) {
-    if (p.group === "closed" || !p.deadline) continue;
+    if (!p.deadline) continue;
+    if (p.group === "closed") {
+      if (p.resolvedAt) { if (p.resolvedAt > p.deadline) late++; else onTime++; }
+      continue;
+    }
     if (p.deadline < today) late++; else onTime++;
   }
   for (const t of tasks) {
@@ -189,3 +193,67 @@ export function timeline(p: Project, today: string): Timeline {
 }
 
 export const STAGES_ORDER = ["Submitted", "In review", "In progress", "In feedback", "Delivered"] as const;
+
+// ---- Timeline (Gantt) and completion gauge ----
+
+export type GanttBar = {
+  key: string;
+  title: string;
+  /** 0-based day columns inside the window, already clipped to it */
+  from: number;
+  to: number;
+  clippedLeft: boolean;
+  clippedRight: boolean;
+  color: string;
+  late: boolean;
+  project: Project;
+};
+
+const addDay = (s: string, n: number) => { const [y, m, d] = s.split("-").map(Number); return iso(new Date(y, m - 1, d + n)); };
+export { addDay };
+
+/** Open tickets whose submitted-to-deadline span overlaps the window. Tickets with no deadline have no span and are skipped. */
+export function ganttBars(projects: Project[], windowStart: string, days: number, today: string): { bars: GanttBar[]; undated: number } {
+  const winEnd = addDay(windowStart, days - 1);
+  const color = (p: Project) => STATUS_META.find((m) => m.key === statusOf(p))!.color;
+  const bars: GanttBar[] = [];
+  let undated = 0;
+  for (const p of projects) {
+    if (p.group === "closed") continue;
+    if (!p.deadline) { undated++; continue; }
+    const start = p.submittedAt < p.deadline ? p.submittedAt : p.deadline;
+    if (start > winEnd || p.deadline < windowStart) continue;
+    const s = start < windowStart ? windowStart : start;
+    const e = p.deadline > winEnd ? winEnd : p.deadline;
+    bars.push({ key: p.jiraKey, title: p.title, from: daysBetween(windowStart, s), to: daysBetween(windowStart, e), clippedLeft: start < windowStart, clippedRight: p.deadline > winEnd, color: color(p), late: p.deadline < today, project: p });
+  }
+  return { bars: bars.sort((a, b) => a.project.deadline.localeCompare(b.project.deadline) || a.title.localeCompare(b.title)), undated };
+}
+
+export type Completion = { done: number; progress: number; todo: number; total: number; pct: number };
+
+/** Finished vs moving vs waiting, across my tickets (open, plus recently closed) and my tasks. */
+export function completion(projects: Project[], tasks: PersonalTask[]): Completion {
+  let done = 0, progress = 0, todo = 0;
+  for (const p of projects) {
+    if (p.group === "closed") { done++; continue; }
+    const k = statusOf(p);
+    if (k === "notstarted") todo++; else progress++;
+  }
+  for (const t of tasks) {
+    if (t.done) done++;
+    else todo++;
+  }
+  const total = done + progress + todo;
+  return { done, progress, todo, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+export function relativeTime(at: string, now = Date.now()): string {
+  const m = Math.max(0, Math.round((now - +new Date(at)) / 6e4));
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const d = Math.round(h / 24);
+  return `${d} day${d === 1 ? "" : "s"} ago`;
+}

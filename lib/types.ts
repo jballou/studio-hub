@@ -156,6 +156,8 @@ export type Project = {
   flag?: ProjectFlag;
   /** Jira's own status name (real data only), e.g. "In Progress" */
   statusName?: string;
+  /** YYYY-MM-DD Jira resolved the ticket (real data, closed tickets only) */
+  resolvedAt?: string;
   /** brief as labelled sections, from the wizard */
   briefSections?: { label: string; value: string }[];
   /** plain-text ticket description when there is no structured brief (Jira data) */

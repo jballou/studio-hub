@@ -21,8 +21,7 @@ const ITEMS: Item[] = [
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },
-  { href: "/submit", label: "Submit for feedback", icon: "upload", match: (p) => p === "/submit" },
-  { href: "/blocking", label: "Blocking you", icon: "block", match: (p) => p.startsWith("/blocking") },
+  { href: "/blocking", label: "Waiting on you", icon: "block", match: (p) => p.startsWith("/blocking") },
 ];
 
 const ADMIN_ITEM: Item = { href: "/admin", label: "Admin", icon: "users", match: (p) => p.startsWith("/admin") };
@@ -149,6 +148,16 @@ export function Sidebar() {
         >
           <Icon name="plus" size={16} />
           {!collapsed && "New brief"}
+        </Link>
+        <Link
+          href="/submit"
+          title="Submit for feedback"
+          aria-label="Submit for feedback"
+          aria-current={pathname === "/submit" ? "page" : undefined}
+          className={`mb-3 flex items-center justify-center gap-2 rounded-lg border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-3"} ${pathname === "/submit" ? "bg-brand-soft" : ""}`}
+        >
+          <Icon name="upload" size={16} />
+          {!collapsed && "Submit for feedback"}
         </Link>
 
         <div className="flex flex-col gap-1">{ITEMS.map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>

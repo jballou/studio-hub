@@ -1,38 +1,35 @@
 "use client";
 
-import type { Timeline } from "@/lib/myday/plan";
+import Link from "next/link";
+import type { GanttBar, Timeline } from "@/lib/myday/plan";
 
-type Slice = { key: string; label: string; color: string; count: number };
+type Part = { key: string; label: string; color: string; count: number };
 
-/** Donut of counts by status. The legend carries every number, so color is never the only cue. */
-export function Donut({ slices, centerLabel }: { slices: Slice[]; centerLabel: string }) {
-  const total = slices.reduce((n, s) => n + s.count, 0);
-  const R = 52, C = 2 * Math.PI * R, GAP = total > 1 ? 2.5 : 0;
+/** Half-circle gauge: share finished, with the three parts in the legend so color is never the only cue. */
+export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; caption: string }) {
+  const total = parts.reduce((n, s) => n + s.count, 0);
+  const R = 70, C = Math.PI * R, GAP = 3;
   let offset = 0;
   return (
-    <div className="flex flex-wrap items-center gap-5">
-      <svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label={`${total} items. ${slices.map((s) => `${s.label}: ${s.count}`).join(". ")}`} className="shrink-0">
-        <circle cx="70" cy="70" r={R} fill="none" stroke="var(--color-n-150)" strokeWidth="16" />
-        {total > 0 && slices.filter((s) => s.count > 0).map((s) => {
+    <div>
+      <svg viewBox="0 0 180 104" role="img" aria-label={`${pct}% complete. ${parts.map((s) => `${s.label}: ${s.count}`).join(". ")}`} className="mx-auto block w-full max-w-[17rem]">
+        <path d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke="var(--color-n-150)" strokeWidth="18" strokeLinecap="butt" />
+        {total > 0 && parts.filter((s) => s.count > 0).map((s) => {
           const len = (s.count / total) * C;
           const seg = (
-            <circle key={s.key} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth="16" strokeDasharray={`${Math.max(len - GAP, 0.5)} ${C}`} strokeDashoffset={-offset} transform="rotate(-90 70 70)">
+            <path key={s.key} d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke={s.color} strokeWidth="18" strokeDasharray={`${Math.max(len - GAP, 0.5)} ${C}`} strokeDashoffset={-offset}>
               <title>{`${s.label}: ${s.count}`}</title>
-            </circle>
+            </path>
           );
           offset += len;
           return seg;
         })}
-        <text x="70" y="68" textAnchor="middle" className="fill-ink text-[26px] font-bold">{total}</text>
-        <text x="70" y="86" textAnchor="middle" className="fill-muted text-[10px]">{centerLabel}</text>
+        <text x="90" y="82" textAnchor="middle" className="fill-ink text-[30px] font-bold">{pct}%</text>
       </svg>
-      <ul className="min-w-[10rem] flex-1 space-y-1.5 text-sm">
-        {slices.map((s) => (
-          <li key={s.key} className={`flex items-center gap-2 ${s.count === 0 ? "opacity-50" : ""}`}>
-            <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: s.color }} aria-hidden />
-            <span className="flex-1">{s.label}</span>
-            <span className="font-semibold tabular-nums">{s.count}</span>
-          </li>
+      <p className="mt-1 text-center text-sm text-muted">{caption}</p>
+      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+        {parts.map((s) => (
+          <li key={s.key} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} aria-hidden />{s.label} <b className="tabular-nums">{s.count}</b></li>
         ))}
       </ul>
     </div>
@@ -61,15 +58,64 @@ export function TimelineMeter({ t, label }: { t: Timeline; label: string }) {
 }
 
 /** Big percentage with a bar. Bar color follows the score band; the number stays in ink. */
-export function ScoreMeter({ score }: { score: number | null }) {
+export function ScoreMeter({ score, compact }: { score: number | null; compact?: boolean }) {
   if (score === null) return <p className="text-sm text-muted">Add a deadline to a task to start your score.</p>;
   const color = score >= 80 ? "#08794a" : score >= 50 ? "#a95c18" : "#8a3734";
   return (
     <div>
-      <div className="flex items-baseline gap-1"><span className="text-5xl font-bold tabular-nums">{score}</span><span className="text-xl font-semibold text-muted">%</span></div>
+      <div className="flex items-baseline gap-1"><span className={`${compact ? "text-2xl" : "text-5xl"} font-bold tabular-nums`}>{score}</span><span className="text-lg font-semibold text-muted">%</span></div>
       <div role="meter" aria-label="On-time score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} className="mt-2 h-2.5 overflow-hidden rounded-full bg-n-150">
         <div className="h-full rounded-full" style={{ width: `${Math.max(score, 2)}%`, background: color }} />
       </div>
+    </div>
+  );
+}
+
+/** Day-by-day bars for my tickets. Each bar runs from the day it was submitted to its deadline, clipped to the window. */
+export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: string[]; today: string; start: string }) {
+  const n = days.length;
+  const dense = n > 10;
+  const head = (d: string) => {
+    const dt = new Date(`${d}T12:00:00`);
+    return dense ? String(dt.getDate()) : dt.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
+  };
+  const todayIdx = days.indexOf(today);
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[34rem]">
+        <div className="grid items-end border-b border-line pb-1.5 text-xs text-muted" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
+          <span className="sr-only">Ticket</span><span aria-hidden />
+          {days.map((d, i) => <span key={d} className={`text-center ${i === todayIdx ? "font-bold text-brand" : ""}`}>{head(d)}</span>)}
+        </div>
+        <div className="relative">
+          {todayIdx >= 0 && (
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 w-0.5 bg-brand/70" style={{ left: `calc(9rem + (100% - 9rem) * ${(todayIdx + 0.5) / n})` }} />
+          )}
+          <ul>
+            {bars.map((b) => (
+              <li key={b.key} className="grid items-center border-b border-dashed border-line py-1.5" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
+                <Link href={`/projects/${b.key}`} className="truncate pr-3 text-sm hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
+                <Link
+                  href={`/projects/${b.key}`}
+                  title={`${b.title}: ${b.project.stage}, ${b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
+                  className="flex h-8 items-center gap-1 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
+                  style={{
+                    gridColumn: `${b.from + 2} / ${b.to + 3}`,
+                    background: `color-mix(in srgb, ${b.color} 16%, white)`,
+                    borderLeft: b.clippedLeft ? undefined : `3px solid ${b.color}`,
+                    outline: b.late ? "1.5px solid #8a3734" : undefined,
+                  }}
+                >
+                  {b.clippedLeft && <span aria-hidden>◂</span>}
+                  <span className="truncate">{b.title}</span>
+                  {b.clippedRight && <span aria-hidden className="ml-auto">▸</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <span className="sr-only">Window starts {start}</span>
     </div>
   );
 }

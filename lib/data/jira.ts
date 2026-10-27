@@ -17,8 +17,8 @@ async function get<T>(url: string): Promise<T> {
 
 export const jiraProjects: ProjectsRepo = {
   // viewerId is ignored: the server knows who is signed in.
-  async listProjects() {
-    return (await get<{ projects: Project[] }>("/api/jira/projects")).projects;
+  async listProjects(_viewerId, scope = "all") {
+    return (await get<{ projects: Project[] }>(`/api/jira/projects?scope=${scope}`)).projects;
   },
   async searchProjects(_viewerId, query, limit = 8) {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });
