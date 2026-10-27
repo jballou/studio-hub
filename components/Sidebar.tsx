@@ -12,6 +12,7 @@ import { Avatar } from "@/components/review/Avatar";
 import { SearchDialog } from "./SearchDialog";
 import { signOut } from "next-auth/react";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "@/components/ui/Logo";
 
 const PREF_KEY = "sidebar-pref-v1";
 const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
@@ -71,7 +72,7 @@ export function Sidebar() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (pathname === "/signin") return null;
+  if (pathname === "/signin" || pathname === "/welcome") return null;
   const inWorkspace = /^\/review\/[^/]+/.test(pathname);
   const collapsed = (pref ?? (inWorkspace ? "collapsed" : "expanded")) === "collapsed";
 
@@ -126,7 +127,7 @@ export function Sidebar() {
       >
         <div className={`mb-3 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
           <Link href="/projects" title="Brand Creative Hub" className="flex min-w-0 flex-1 items-center gap-2 font-bold text-ink">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-sm text-n-50">BC</span>
+            <Logo size={32} />
             {!collapsed && <span className="truncate leading-tight">Brand Creative Hub</span>}
           </Link>
           {toggleBtn}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Callout } from "@/components/ui/Tag";
+import { Logo } from "@/components/ui/Logo";
 import { flowRepo, projectsRepo } from "@/lib/data";
 import { display, interpolate, walk, type AnswerValue, type Answers, type Flow, type QNode } from "@/lib/brief/flow";
 import { toSubmission } from "@/lib/brief/submit";
@@ -13,7 +14,7 @@ const DRAFT_KEY = "brief-wizard-draft-v1";
 function Assistant({ children }: { children: React.ReactNode }) {
   return (
     <div className="rise flex items-start gap-3">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-n-50" aria-hidden>BC</span>
+      <Logo size={32} className="mt-0.5" />
       <div className="min-w-0 max-w-[85%] rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-3">{children}</div>
     </div>
   );
