@@ -235,7 +235,7 @@ export function ganttBars(projects: Project[], windowStart: string, days: number
 export type Completion = { done: number; progress: number; todo: number; total: number; pct: number };
 
 /** Finished vs moving vs waiting, across my tickets (open, plus recently closed) and my tasks. */
-export function completion(projects: Project[], tasks: PersonalTask[]): Completion {
+export function completion(projects: Project[], tasks: PersonalTask[], today?: string): Completion {
   let done = 0, progress = 0, todo = 0;
   for (const p of projects) {
     if (p.group === "closed") { done++; continue; }
@@ -243,7 +243,7 @@ export function completion(projects: Project[], tasks: PersonalTask[]): Completi
     if (k === "notstarted") todo++; else progress++;
   }
   for (const t of tasks) {
-    if (t.done) done++;
+    if (t.done) { if (!today || recentlyDone(t, today)) done++; }
     else todo++;
   }
   const total = done + progress + todo;
@@ -271,4 +271,37 @@ export function dueTodayItems(projects: Project[], tasks: PersonalTask[], today:
     tickets: projects.filter((p) => p.group !== "closed" && p.deadline === today).sort((a, b) => a.title.localeCompare(b.title)),
     tasks: tasks.filter((t) => !t.done && t.date === today).sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99") || a.title.localeCompare(b.title)),
   };
+}
+
+// ---- The five status tiles on My Day. Each tile's number and its list come from the same function. ----
+
+export type TileKind = "open" | "due" | "progress" | "overdue" | "done";
+
+/** Done tasks only count for 14 days, matching the "Last 14 days" label. A task with no recorded time counts. */
+const recentlyDone = (t: PersonalTask, today: string) => t.done && (!t.doneAt || daysBetween(localDay(new Date(t.doneAt)), today) <= 14);
+
+export function tileItems(kind: TileKind, projects: Project[], tasks: PersonalTask[], today: string): DueToday {
+  const open = projects.filter((p) => p.group !== "closed");
+  const byTitle = (a: Project, b: Project) => a.title.localeCompare(b.title);
+  switch (kind) {
+    case "open":
+      return { tickets: open.sort(byTitle), tasks: tasks.filter((t) => !t.done) };
+    case "due":
+      return dueTodayItems(projects, tasks, today);
+    case "progress":
+      return {
+        tickets: open.filter((p) => p.stage === "In progress" || p.stage === "In review" || p.stage === "In feedback").sort(byTitle),
+        tasks: tasks.filter((t) => !t.done && (t.lane === "progress" || t.lane === "review")),
+      };
+    case "overdue":
+      return {
+        tickets: open.filter((p) => p.deadline && p.deadline < today).sort((a, b) => a.deadline.localeCompare(b.deadline)),
+        tasks: tasks.filter((t) => !t.done && t.date && t.date < today).sort((a, b) => (a.date ?? "").localeCompare(b.date ?? "")),
+      };
+    case "done":
+      return {
+        tickets: projects.filter((p) => p.group === "closed").sort((a, b) => (b.resolvedAt ?? "").localeCompare(a.resolvedAt ?? "")),
+        tasks: tasks.filter((t) => recentlyDone(t, today)).sort((a, b) => (b.doneAt ?? "").localeCompare(a.doneAt ?? "")),
+      };
+  }
 }

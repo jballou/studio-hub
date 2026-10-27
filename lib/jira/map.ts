@@ -3,6 +3,8 @@ import type { Project, ProjectFlag, ProjectGroup, ProjectType, Stage } from "@/l
 import type { JiraIssue } from "./client";
 
 export const PROJECT_KEY = "MKTGCRTV";
+/** Jira label put on every ticket created from the Hub's brief wizard. */
+export const HUB_LABEL = "brand-hub";
 
 // Real MKTGCRTV statuses seen so far: Intake, Open, In Progress. Extend as the full workflow is confirmed.
 const STATUS_TO_STAGE: Record<string, Stage> = {
@@ -64,8 +66,10 @@ export function toProject(issue: JiraIssue): Project {
     startDate: "startDate" in f ? (typeof f.startDate === "string" ? f.startDate.slice(0, 10) : "") : undefined,
     resolvedAt: typeof f.resolutiondate === "string" ? f.resolutiondate.slice(0, 10) : undefined,
     type: projectTypeOf(issue),
-    requesterId: f.reporter?.accountId ?? "",
-    requesterName: f.reporter?.displayName,
+    // The site's Requestor field wins when it's filled in; otherwise the reporter is the requester.
+    requesterId: (f.requestor ?? f.reporter)?.accountId ?? "",
+    requesterName: (f.requestor ?? f.reporter)?.displayName,
+    viaHub: Array.isArray(f.labels) ? f.labels.includes(HUB_LABEL) : undefined,
     collaboratorIds: unique.map((u) => u.accountId),
     collaboratorNames: unique.map((u) => u.displayName),
     deadline: f.duedate ?? "",

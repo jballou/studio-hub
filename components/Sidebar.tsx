@@ -17,17 +17,18 @@ import { Logo } from "@/components/ui/Logo";
 const PREF_KEY = "sidebar-pref-v1";
 const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
 
-type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean };
+type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean };
 
 const ITEMS: Item[] = [
   { href: "/my-day", label: "My Day", icon: "check", match: (p) => p.startsWith("/my-day") },
+  { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "comment", match: (p) => p.startsWith("/review") },
   { href: "/blocking", label: "Waiting on you", icon: "block", match: (p) => p.startsWith("/blocking") },
 ];
 
-const ADMIN_ITEM: Item = { href: "/admin", label: "Admin", icon: "users", match: (p) => p.startsWith("/admin") };
+const ADMIN_ITEM: Item = { href: "/admin", label: "Preferences", icon: "sliders", match: (p) => p.startsWith("/admin") };
 
 /**
  * Persistent app nav with an expanded and a collapsed (icon rail) mode. The toggle is always visible.
@@ -163,7 +164,7 @@ export function Sidebar() {
           {!collapsed && "Submit for feedback"}
         </Link>
 
-        <div className="flex flex-col gap-1">{ITEMS.map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
+        <div className="flex flex-col gap-1">{ITEMS.filter((i) => !i.forRequesters || !isJira || me?.role === "requester").map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
 
         {/* Favorites folder */}
         <div className="mt-3 min-h-0 flex-1 overflow-y-auto">

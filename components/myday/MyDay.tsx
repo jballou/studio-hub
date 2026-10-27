@@ -7,10 +7,11 @@ import { Icon } from "@/components/ui/Icon";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { IssueIcon } from "@/components/ui/IssueIcon";
 import { StaleNotice } from "@/components/ui/StaleNotice";
+import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import { activityRepo, googleRepo, GoogleUnavailable, isJira, projectsRepo, tasksRepo, type ActivityItem, type GoogleStatus } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
 import { celebrate } from "@/lib/celebrate";
-import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, dueTodayItems, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
+import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, tileItems, type TileKind, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
 import { Gantt, Gauge, ScoreMeter, TimelineMeter } from "./Charts";
 import { NoStartTag, PlanWork } from "@/components/projects/PlanWork";
 import { needsStartDate } from "@/lib/startdate";
@@ -69,7 +70,7 @@ export function MyDay() {
   const [showAllSchedule, setShowAllSchedule] = useState(false);
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [showAllBars, setShowAllBars] = useState(false);
-  const [dueOpen, setDueOpen] = useState(false);
+  const [tileOpen, setTileOpen] = useState<TileKind | null>(null);
   const [jiraErr, setJiraErr] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
 
@@ -125,12 +126,15 @@ export function MyDay() {
   const dateLabel = today ? new Date(`${today}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "";
 
   const score = useMemo(() => (today && projects ? onTimeScore(projects, tasks ?? [], today) : null), [projects, tasks, today]);
-  const comp = useMemo(() => completion(projects ?? [], tasks ?? []), [projects, tasks]);
-  const openTickets = (projects ?? []).filter((p) => p.group !== "closed");
-  const overdue = today ? [...openTickets.filter((p) => p.deadline && p.deadline < today), ...open.filter((t) => t.date && t.date < today)].length : 0;
-  const dueNow = today ? dueTodayItems(projects ?? [], tasks ?? [], today) : { tickets: [], tasks: [] };
-  const dueToday = dueNow.tickets.length + dueNow.tasks.length;
-  const inProgress = openTickets.filter((p) => p.stage === "In progress" || p.stage === "In review" || p.stage === "In feedback").length;
+  const comp = useMemo(() => completion(projects ?? [], tasks ?? [], today ?? undefined), [projects, tasks, today]);
+  // Each tile's number is the length of the list it opens, so the two can never disagree.
+  const tiles = useMemo(() => {
+    const at = (k: TileKind) => (today ? tileItems(k, projects ?? [], tasks ?? [], today) : { tickets: [], tasks: [] });
+    const n = (k: TileKind) => { const i = at(k); return { items: i, count: i.tickets.length + i.tasks.length }; };
+    return { open: n("open"), due: n("due"), progress: n("progress"), overdue: n("overdue"), done: n("done") };
+  }, [projects, tasks, today]);
+  const dueToday = tiles.due.count;
+  const overdue = tiles.overdue.count;
 
   // Timeline window. The 3-day view starts today; arrows move it by its own length.
   const winDef = WINDOWS.find((w) => w.id === win)!;
@@ -168,11 +172,11 @@ export function MyDay() {
       {loading ? <p className="mt-6 text-sm text-muted">Loading…</p> : (
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-            <Tile label="Open work" n={openTickets.length + open.length} note="Tickets and tasks" />
-            <Tile label="Due today" n={dueToday} onClick={() => setDueOpen(true)} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
-            <Tile label="In progress" n={inProgress} note="Being worked on" />
-            <Tile label="Overdue" n={overdue} note="Missed deadline" tone={overdue ? "bad" : undefined} />
-            <Tile label="Completed" n={comp.done} note="Last 14 days" />
+            <Tile label="Open work" n={tiles.open.count} onClick={() => setTileOpen("open")} note="Tickets and tasks" />
+            <Tile label="Due today" n={dueToday} onClick={() => setTileOpen("due")} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
+            <Tile label="In progress" n={tiles.progress.count} onClick={() => setTileOpen("progress")} note="Being worked on" />
+            <Tile label="Overdue" n={overdue} onClick={() => setTileOpen("overdue")} note="Missed deadline" tone={overdue ? "bad" : undefined} />
+            <Tile label="Completed" n={tiles.done.count} onClick={() => setTileOpen("done")} note="Last 14 days" />
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
@@ -333,7 +337,7 @@ export function MyDay() {
           </div>
         </>
       )}
-      {dueOpen && today && <DueTodayDialog items={dueNow} tz={tz} today={today} onClose={() => setDueOpen(false)} onDone={(t) => { celebrate(); void act(() => tasksRepo.update(t.id, { done: true })); }} />}
+      {tileOpen && today && <TileDialog kind={tileOpen} items={tiles[tileOpen].items} tz={tz} today={today} onClose={() => setTileOpen(null)} onDone={(t) => { celebrate(); void act(() => tasksRepo.update(t.id, { done: true })); }} />}
       {adding && <AddTaskDialog onClose={() => setAdding(false)} onAdd={async (d) => { await act(() => tasksRepo.add(d)); setAdding(false); setTab("tasks"); }} />}
     </main>
   );
@@ -372,37 +376,55 @@ function Tile({ label, n, note, tone, onClick }: { label: string; n: number; not
   );
 }
 
-/** Everything due today in one list: Jira tickets and your own tasks (backed up to Google Tasks). */
-function DueTodayDialog({ items, tz, today, onClose, onDone }: { items: { tickets: Project[]; tasks: PersonalTask[] }; tz: string; today: string; onClose: () => void; onDone: (t: PersonalTask) => void }) {
+const TILE_COPY: Record<TileKind, { title: string; empty: string }> = {
+  open: { title: "Open work", empty: "No open tickets or tasks." },
+  due: { title: "Due today", empty: "Nothing is due today." },
+  progress: { title: "In progress", empty: "Nothing is in progress." },
+  overdue: { title: "Overdue", empty: "Nothing is overdue. Nice." },
+  done: { title: "Completed in the last 14 days", empty: "Nothing finished in the last 14 days yet." },
+};
+
+/** A summary of the tickets and tasks behind one of the tiles at the top of My Day. */
+function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKind; items: { tickets: Project[]; tasks: PersonalTask[] }; tz: string; today: string; onClose: () => void; onDone: (t: PersonalTask) => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
   const total = items.tickets.length + items.tasks.length;
+  const copy = TILE_COPY[kind];
   const day = new Date(`${today}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const when = (p: Project) => {
+    if (kind === "done") return p.resolvedAt ? <span>Closed {new Date(`${p.resolvedAt}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : null;
+    const late = pastDueDays(p, today);
+    if (late !== null) return <span className="font-semibold text-bad-fg">Past due · {pastDueWords(late)}</span>;
+    return p.deadline ? <span>Due {new Date(`${p.deadline}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : <span>No deadline</span>;
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[10vh]" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Due today" onMouseDown={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-white p-5 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label={copy.title} onMouseDown={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-white p-5 shadow-xl">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold">Due today</h2>
-            <p className="text-sm text-muted">{day} · {total} {total === 1 ? "item" : "items"} ({items.tickets.length} Jira {items.tickets.length === 1 ? "ticket" : "tickets"}, {items.tasks.length} {items.tasks.length === 1 ? "task" : "tasks"})</p>
+            <h2 className="text-lg font-bold">{copy.title}</h2>
+            <p className="text-sm text-muted">{day} · {plural(total, "item", "items")} ({plural(items.tickets.length, "Jira ticket", "Jira tickets")}, {plural(items.tasks.length, "task", "tasks")})</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-n-150"><Icon name="x" size={16} /></button>
         </div>
         {total === 0 ? (
-          <p className="mt-4 rounded-lg border border-dashed border-control p-4 text-center text-sm text-muted">Nothing is due today.</p>
+          <p className="mt-4 rounded-lg border border-dashed border-control p-4 text-center text-sm text-muted">{copy.empty}</p>
         ) : (
           <ul className="mt-4 space-y-2">
             {items.tasks.map((t) => (
               <li key={t.id} className="flex items-start gap-2.5 rounded-lg border border-line px-3 py-2.5 text-sm">
-                <input type="checkbox" checked={false} onChange={() => onDone(t)} aria-label={`Mark "${t.title}" done`} className="mt-1 h-4 w-4 shrink-0 accent-brand" />
+                {kind === "done"
+                  ? <span className="mt-0.5 text-ok-fg" aria-label="Done"><Icon name="check" size={16} /></span>
+                  : <input type="checkbox" checked={false} onChange={() => onDone(t)} aria-label={`Mark "${t.title}" done`} className="mt-1 h-4 w-4 shrink-0 accent-brand" />}
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium">{t.title}</div>
+                  <div className={`font-medium ${kind === "done" ? "text-muted line-through" : ""}`}>{t.title}</div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
                     <Tag tone="progress" icon="task">My task</Tag>
-                    <span>{dueText(t, tz)}</span>
+                    <span className={kind === "overdue" ? "font-semibold text-bad-fg" : ""}>{dueText(t, tz)}</span>
                     <BackupTag t={t} />
                   </div>
                 </div>
@@ -417,6 +439,7 @@ function DueTodayDialog({ items, tz, today, onClose, onDone }: { items: { ticket
                     <Tag tone="info" icon="ticket">Jira ticket</Tag>
                     <span>{p.jiraKey}</span>
                     <StatusTag project={p} />
+                    {when(p)}
                   </div>
                 </div>
               </li>
@@ -488,7 +511,7 @@ function FocusRow({ f, today, slot, planned, onDone, canPlan, onPlanned }: { f: 
       <div className="flex items-start gap-2.5">
         {onDone
           ? <input type="checkbox" checked={false} onChange={onDone} aria-label={`Mark "${f.title}" done`} className="mt-1 h-4 w-4 shrink-0 accent-brand" />
-          : <span className="mt-1 h-4 w-4 shrink-0 rounded border border-control bg-n-100" aria-hidden title="Ticket: complete it in Jira" />}
+          : <span className="mt-0.5 shrink-0"><IssueIcon level={f.kind === "ticket" ? f.project.issueType?.level ?? 0 : 0} typeName={f.kind === "ticket" ? f.project.issueType?.name : undefined} size={18} /></span>}
         <div className="min-w-0 flex-1">
           {f.kind === "ticket"
             ? <Link href={`/projects/${f.key}`} className="font-semibold hover:underline">{f.title}</Link>

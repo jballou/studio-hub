@@ -90,9 +90,10 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
     return (
       <main className="mx-auto w-full max-w-2xl p-8">
         <h1 className="mb-2 text-2xl font-bold">Brief submitted</h1>
-        <p className="mb-4">Created <Link href={`/projects/${created}`} className="rounded bg-line px-1.5 py-0.5 font-mono text-sm text-brand hover:underline">{created}</Link>. You can follow it from Projects.</p>
+        <p className="mb-4">Created <Link href={`/projects/${created}`} className="rounded bg-line px-1.5 py-0.5 font-mono text-sm text-brand hover:underline">{created}</Link>. It&apos;s in <Link href="/briefs" className="text-brand underline">My briefs</Link>, where you can follow it.</p>
         <div className="flex gap-2">
-          <Link href={`/projects/${created}`} className="rounded-lg bg-brand px-4 py-2 font-medium text-n-50 hover:bg-brand-dark">Open project</Link>
+          <Link href="/briefs" className="rounded-lg bg-brand px-4 py-2 font-medium text-n-50 hover:bg-brand-dark">See it in My briefs</Link>
+          <Link href={`/projects/${created}`} className="rounded-lg border border-control px-4 py-2 font-medium hover:bg-brand-soft">Open project</Link>
           <button onClick={startOver} className="rounded-lg border border-control px-4 py-2 font-medium hover:bg-brand-soft">Start another</button>
         </div>
       </main>

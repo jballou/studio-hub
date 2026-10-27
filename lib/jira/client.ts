@@ -46,6 +46,9 @@ export function parseRetryAfter(v: string | null): number | undefined {
   return Math.max(0, Math.ceil(Number(v)));
 }
 
+/** Any Jira call with the retry and burst protection above. Prefer the named helpers; this is for writes that have none. */
+export const jiraRequest = <T>(a: JiraAuth, path: string, init?: { method: string; body?: unknown }): Promise<T> => request<T>(a, path, init);
+
 async function request<T>(a: JiraAuth, path: string, init?: { method: string; body?: unknown }): Promise<T> {
   const method = init?.method ?? "GET";
   for (let attempt = 0; ; attempt++) {
@@ -69,7 +72,8 @@ async function request<T>(a: JiraAuth, path: string, init?: { method: string; bo
       let detail = "";
       try {
         const body = await res.json();
-        detail = (body.errorMessages ?? []).join("; ") || body.message || "";
+        // Jira names the field it refused in `errors` (e.g. "customfield_10142: …"); show it rather than a bare "400".
+        detail = [...(body.errorMessages ?? []), ...Object.entries(body.errors ?? {}).map(([k, v]) => `${k}: ${v}`)].join("; ") || body.message || "";
       } catch { /* non-JSON error body */ }
       throw new JiraError(res.status, detail || `Jira returned HTTP ${res.status}`);
     }
@@ -95,6 +99,9 @@ export type JiraIssue = {
     resolutiondate?: string | null;
     /** the site's Start date field, copied here by startDateField/withStartDate */
     startDate?: string | null;
+    /** the site's Requestor people field, copied here (null when empty) */
+    requestor?: JiraUser | null;
+    labels?: string[];
     [field: string]: unknown;
   };
 };
@@ -105,47 +112,73 @@ export type JiraIssue = {
  */
 export const LIST_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "resolutiondate", "parent"];
 
+/** Field-list token: "ask for the Requestor field, whatever its id is on this site". */
+const REQUESTOR_TOKEN = "@requestor";
+
+/** My Briefs: a list plus the Requestor, labels (to tell Hub-made briefs apart) and the description for the card's summary. */
+export const BRIEF_FIELDS = [...LIST_FIELDS, "labels", "description", REQUESTOR_TOKEN];
+
 export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent"];
 
-// Jira calls its date field "Start date" but the id differs per site, so it is found by name once and remembered.
-// Set JIRA_START_DATE_FIELD (e.g. customfield_10015) to skip the lookup.
-let startField: { id: string | null; at: number } | null = null;
+// Some fields have site-specific ids (Start date, Requestor), so they are found by name once and remembered, both in
+// memory and in our own store, so a fresh server instance doesn't spend a Jira call on it.
+// Set JIRA_START_DATE_FIELD / JIRA_REQUESTOR_FIELD (e.g. customfield_10015) to skip the lookup.
+type FieldKey = "startDateField" | "requestorField";
+type RawField = { id: string; name: string; custom?: boolean; schema?: { type?: string } };
+const found = new Map<FieldKey, { id: string | null; at: number }>();
 
-export async function startDateField(a: JiraAuth): Promise<string | null> {
-  if (process.env.JIRA_START_DATE_FIELD) return process.env.JIRA_START_DATE_FIELD;
+async function namedField(a: JiraAuth, key: FieldKey, env: string | undefined, pick: (all: RawField[]) => RawField | undefined): Promise<string | null> {
+  if (env) return env;
   // A found field is kept for the life of the server; "not found" is rechecked every 10 minutes.
-  if (startField && (startField.id || Date.now() - startField.at < 600_000)) return startField.id;
-  // A found id is also saved in our own store, so a fresh server instance doesn't spend a Jira call on it.
-  const saved = await readDoc<{ startDateField?: string }>("jira-fields", () => ({})).then((d) => d.data.startDateField ?? null).catch(() => null);
-  if (saved) { startField = { id: saved, at: Date.now() }; return saved; }
+  const mem = found.get(key);
+  if (mem && (mem.id || Date.now() - mem.at < 600_000)) return mem.id;
+  const saved = await readDoc<Partial<Record<FieldKey, string>>>("jira-fields", () => ({})).then((d) => d.data[key] ?? null).catch(() => null);
+  if (saved) { found.set(key, { id: saved, at: Date.now() }); return saved; }
   try {
-    const all = await request<{ id: string; name: string; custom?: boolean; schema?: { type?: string } }[]>(a, "/field");
-    const hit = all.find((f) => f.name.toLowerCase() === "start date" && f.custom !== false && (f.schema?.type === "date" || f.schema?.type === "datetime")) ?? all.find((f) => f.name.toLowerCase() === "start date");
-    startField = { id: hit?.id ?? null, at: Date.now() };
-    if (hit) await updateDoc("jira-fields", () => ({}), (d) => ({ data: { ...d, startDateField: hit.id }, result: undefined })).catch(() => {});
+    const hit = pick(await request<RawField[]>(a, "/field"));
+    found.set(key, { id: hit?.id ?? null, at: Date.now() });
+    if (hit) await updateDoc<Partial<Record<FieldKey, string>>>("jira-fields", () => ({}), (d) => ({ data: { ...d, [key]: hit.id }, result: undefined })).catch(() => {});
   } catch {
     return null; // can't tell right now; try again next request
   }
-  return startField.id;
+  return found.get(key)?.id ?? null;
 }
 
-/** Moves the discovered start date field's value to `fields.startDate` (null when empty) so the rest of the app doesn't need its id. */
-function withStartDate(issue: JiraIssue, id: string | null): JiraIssue {
-  if (id) issue.fields.startDate = (issue.fields[id] as string | null | undefined) ?? null;
+export const startDateField = (a: JiraAuth) => namedField(a, "startDateField", process.env.JIRA_START_DATE_FIELD, (all) => {
+  const named = all.filter((f) => f.name.toLowerCase() === "start date");
+  return named.find((f) => f.custom !== false && (f.schema?.type === "date" || f.schema?.type === "datetime")) ?? named[0];
+});
+
+/** The "Requestor" (or "Requester") people field, when the site has one. Falls back to the reporter when it doesn't. */
+export const requestorField = (a: JiraAuth) => namedField(a, "requestorField", process.env.JIRA_REQUESTOR_FIELD, (all) => {
+  const named = all.filter((f) => ["requestor", "requester"].includes(f.name.toLowerCase()) && f.custom !== false);
+  return named.find((f) => f.schema?.type === "user") ?? named[0];
+});
+
+/** Copies the discovered fields' values onto `fields.startDate` / `fields.requestor` so the rest of the app doesn't need their ids. */
+function withNamed(issue: JiraIssue, ids: { start: string | null; requestor: string | null }): JiraIssue {
+  if (ids.start) issue.fields.startDate = (issue.fields[ids.start] as string | null | undefined) ?? null;
+  if (ids.requestor) issue.fields.requestor = (issue.fields[ids.requestor] as JiraUser | null | undefined) ?? null;
   return issue;
 }
 
+const REQUESTOR = REQUESTOR_TOKEN;
+
 export async function searchIssues(a: JiraAuth, jql: string, fields: string[] = ISSUE_FIELDS, maxResults = 50): Promise<JiraIssue[]> {
-  const sf = fields === ISSUE_FIELDS || fields === LIST_FIELDS ? await startDateField(a) : null;
-  const qs = new URLSearchParams({ jql, fields: (sf ? [...fields, sf] : fields).join(","), maxResults: String(maxResults) });
+  const wantsStart = fields === ISSUE_FIELDS || fields === LIST_FIELDS || fields === BRIEF_FIELDS;
+  const start = wantsStart ? await startDateField(a) : null;
+  const requestor = fields.includes(REQUESTOR) ? await requestorField(a) : null;
+  const asked = [...fields.filter((f) => f !== REQUESTOR), ...(start ? [start] : []), ...(requestor ? [requestor] : [])];
+  const qs = new URLSearchParams({ jql, fields: asked.join(","), maxResults: String(maxResults) });
   const data = await request<{ issues: JiraIssue[] }>(a, `/search/jql?${qs}`);
-  return data.issues.map((i) => withStartDate(i, sf));
+  return data.issues.map((i) => withNamed(i, { start, requestor }));
 }
 
 export async function getIssue(a: JiraAuth, key: string): Promise<JiraIssue> {
   if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
-  const sf = await startDateField(a);
-  return withStartDate(await request<JiraIssue>(a, `/issue/${key}?fields=${(sf ? [...ISSUE_FIELDS, sf] : ISSUE_FIELDS).join(",")}`), sf);
+  const [start, requestor] = await Promise.all([startDateField(a), requestorField(a)]);
+  const asked = [...ISSUE_FIELDS, ...(start ? [start] : []), ...(requestor ? [requestor] : [])];
+  return withNamed(await request<JiraIssue>(a, `/issue/${key}?fields=${asked.join(",")}`), { start, requestor });
 }
 
 /** Sets the ticket's start date (YYYY-MM-DD). Needs write:jira-work and edit permission on the ticket. */

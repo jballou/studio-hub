@@ -32,8 +32,12 @@ const PATHS = {
   comment: <><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /><path d="M8.500 11h7M8.500 14h4" /></>,
   ticket: <><path d="M3 9a2 2 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a2 2 0 0 1 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1Z" /><path d="M9 5v14" strokeDasharray="2 2.500" /></>,
   task: <><rect x="4" y="4" width="16" height="16" rx="4" /><path d="m8.500 12.200 2.500 2.500 4.500-4.800" /></>,
+  // Brand "sliders" icon (filled, drawn on a 16px grid, so it's scaled up to this file's 24px grid)
+  sliders: <g transform="scale(1.5)"><path d="M3.89655 8C4.29648 8 4.62069 8.33579 4.62069 8.75V15.25C4.62069 15.6642 4.29648 16 3.89655 16C3.49662 16 3.17241 15.6642 3.17241 15.25V8.75C3.17241 8.33579 3.49662 8 3.89655 8ZM12.1034 12C12.5034 12 12.8276 12.3358 12.8276 12.75V15.25C12.8276 15.6642 12.5034 16 12.1034 16C11.7035 16 11.3793 15.6642 11.3793 15.25V12.75C11.3793 12.3358 11.7035 12 12.1034 12ZM9.93104 10.5C9.5311 10.5 9.2069 10.1642 9.2069 9.75C9.2069 9.33579 9.5311 9 9.93104 9H11.3793V0.75C11.3793 0.335786 11.7035 0 12.1034 0C12.5034 0 12.8276 0.335786 12.8276 0.75V9H14.2759C14.6758 9 15 9.33579 15 9.75C15 10.1642 14.6758 10.5 14.2759 10.5H9.93104ZM3.89655 0C4.29648 0 4.62069 0.335786 4.62069 0.75V5H6.06897C6.4689 5 6.7931 5.33579 6.7931 5.75C6.7931 6.16421 6.4689 6.5 6.06897 6.5H1.72414C1.32421 6.5 1 6.16421 1 5.75C1 5.33579 1.32421 5 1.72414 5H3.17241V0.75C3.17241 0.335786 3.49662 0 3.89655 0Z" fillRule="evenodd" clipRule="evenodd" /></g>,
   // Lucide: log-out
   logOut: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></>,
+  // Lucide: file-text
+  brief: <><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></>,
   // Lucide: moon, sun, volume-2, volume-x, zap (epic), target (initiative), corner-down-right (sub-task), bookmark (story), link-2
   moon: <><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></>,
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></>,
@@ -53,10 +57,14 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS;
 
+/** Icons drawn as filled shapes rather than strokes. */
+const FILLED: ReadonlySet<IconName> = new Set<IconName>(["sliders"]);
+
 export function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
+  const filled = FILLED.has(name);
   return (
     <svg
-      width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      width={size} height={size} viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke={filled ? "none" : "currentColor"}
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0"
     >
       {PATHS[name]}

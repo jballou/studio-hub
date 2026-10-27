@@ -198,6 +198,8 @@ export type Project = {
   briefSections?: { label: string; value: string }[];
   /** plain-text ticket description when there is no structured brief (Jira data) */
   description?: string;
+  /** Made with the Hub's brief wizard (the ticket carries the brand-hub label), as opposed to created straight in Jira */
+  viaHub?: boolean;
   /** the description as Jira's rich-text document, on single-ticket reads, so formatting can be shown as in Jira */
   descriptionAdf?: unknown;
   requesterName?: string;

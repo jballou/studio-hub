@@ -38,6 +38,9 @@ export const jiraProjects: ProjectsRepo = {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });
     return (await get<{ projects: Project[] }>(`/api/jira/projects?${qs}`)).projects;
   },
+  async myBriefs() {
+    return (await get<{ projects: Project[] }>("/api/jira/briefs")).projects;
+  },
   async relations(jiraKey) {
     try {
       return (await get<{ relations: Relations }>(`/api/jira/projects/${encodeURIComponent(jiraKey)}/relations`)).relations;
@@ -66,7 +69,10 @@ export const jiraProjects: ProjectsRepo = {
       throw e;
     }
   },
-  async createBrief(): Promise<{ jiraKey: string }> {
-    throw new Error("Creating Jira tickets isn't connected yet. For now, create the ticket in Jira.");
+  async createBrief(input) {
+    const res = await fetch("/api/jira/briefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? `Couldn't send the brief (${res.status}).`);
+    return { jiraKey: body.key as string };
   },
 };

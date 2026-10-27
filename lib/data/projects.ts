@@ -8,6 +8,8 @@ export interface ProjectsRepo {
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
   /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
   searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
+  /** Briefs I submitted: from Jira (reporter or Requestor field) and from the Hub's wizard. */
+  myBriefs(viewerId: string): Promise<Project[]>;
   /** Parents, children and linked tickets. Null when they can't be read; the page still works without them. */
   relations(jiraKey: string): Promise<Relations | null>;
   /** Sets the ticket's start date (YYYY-MM-DD). Rejects with a plain message. */
@@ -22,7 +24,7 @@ export interface ProjectsRepo {
 const projects: Project[] = [
   { id: "p95", jiraKey: "MKTGCRTV-95", issueType: { name: "Epic", level: 1 }, title: "Spring campaign", startDate: "2026-10-01", group: "open", stage: "In progress", type: "Campaign", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-11-20", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-09-28" },
   { id: "p1", jiraKey: "MKTGCRTV-101", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Spring campaign: social ad", startDate: "2026-10-06", group: "open", stage: "In feedback", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-10-30", actionRequired: true, newComments: 3, assetIds: ["a-ad"], submittedAt: "2026-10-05", brief: { problem: "Our spring offer is not getting noticed on mobile feeds.", opportunity: "A clear, bold social ad can lift sign-ups during the spring push.", scope: "One static social ad, two sizes (1:1 and 4:5).", requirements: "Use spring brand palette. Include the 20% offer and a Get started CTA.", antiGoals: "No stock photography. No competitor mentions.", deliverables: "PNG exports for LinkedIn and Instagram.", northStar: "Click-through rate above 1.2%.", openQuestions: "Do we need a Spanish version?" } },
-  { id: "p2", jiraKey: "MKTGCRTV-102", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Product teaser (15s)", startDate: "2026-10-14", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
+  { id: "p2", jiraKey: "MKTGCRTV-102", viaHub: true, parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Product teaser (15s)", startDate: "2026-10-14", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
   { id: "p3", jiraKey: "MKTGCRTV-103", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Brand one-pager", startDate: "", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-10-20", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
   { id: "p4", jiraKey: "MKTGCRTV-110", title: "Webinar landing page refresh", startDate: "", group: "ideas", stage: "Submitted", flag: "at-risk", type: "Web", requesterId: "u-jordan", collaboratorIds: [], deadline: "2026-12-01", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-20" },
   { id: "p5", jiraKey: "MKTGCRTV-090", title: "Summer promo banner set", group: "closed", stage: "Delivered", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-09-15", actionRequired: false, newComments: 0, assetIds: ["a-ad"], submittedAt: "2026-08-20" },
@@ -87,6 +89,11 @@ export const mockProjects: ProjectsRepo = {
         .slice(0, limit),
     );
   },
+  async myBriefs(viewerId) {
+    // Demo: the demo person is a creative, so show the briefs of the demo requester instead (Riley, who also "sends" new ones).
+    const who = viewerId === "u-avery" ? "u-riley" : viewerId;
+    return structuredClone(projects.filter((p) => p.requesterId === who).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt) || b.jiraKey.localeCompare(a.jiraKey)));
+  },
   async relations(jiraKey) {
     return structuredClone(DEMO_RELATIONS[jiraKey] ?? { ancestors: [], children: [], links: [] });
   },
@@ -124,7 +131,8 @@ export const mockProjects: ProjectsRepo = {
       type: projectTypeFor(input.typeLabel), requesterId, collaboratorIds: input.stakeholders.map((p) => p.id),
       collaboratorNames: input.stakeholders.map((p) => p.name),
       deadline: input.deadline ?? "", actionRequired: false, newComments: 0, assetIds: [],
-      submittedAt: new Date().toISOString().slice(0, 10), briefSections: input.sections,
+      submittedAt: new Date().toISOString().slice(0, 10), briefSections: input.sections, viaHub: true,
+      issueType: { name: input.typeLabel || "Task", level: 0 },
     });
     return { jiraKey };
   },
