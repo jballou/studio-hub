@@ -259,3 +259,16 @@ export function relativeTime(at: string, now = Date.now()): string {
   const d = Math.round(h / 24);
   return `${d} day${d === 1 ? "" : "s"} ago`;
 }
+
+export type DueToday = { tickets: Project[]; tasks: PersonalTask[] };
+
+/**
+ * Everything due today: open Jira tickets with today's deadline, and open personal tasks (the ones backed up to
+ * Google Tasks) dated today. Timed tasks come first, in time order. The tile count and the list both use this.
+ */
+export function dueTodayItems(projects: Project[], tasks: PersonalTask[], today: string): DueToday {
+  return {
+    tickets: projects.filter((p) => p.group !== "closed" && p.deadline === today).sort((a, b) => a.title.localeCompare(b.title)),
+    tasks: tasks.filter((t) => !t.done && t.date === today).sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99") || a.title.localeCompare(b.title)),
+  };
+}

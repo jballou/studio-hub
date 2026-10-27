@@ -4,11 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
-import { Callout, Tag } from "@/components/ui/Tag";
+import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
+import { IssueIcon } from "@/components/ui/IssueIcon";
 import { activityRepo, googleRepo, GoogleUnavailable, isJira, projectsRepo, tasksRepo, type ActivityItem, type GoogleStatus } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
 import { celebrate } from "@/lib/celebrate";
-import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
+import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, dueTodayItems, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
 import { Gantt, Gauge, ScoreMeter, TimelineMeter } from "./Charts";
 import { NoStartTag, PlanWork } from "@/components/projects/PlanWork";
 import { needsStartDate } from "@/lib/startdate";
@@ -67,6 +68,7 @@ export function MyDay() {
   const [showAllSchedule, setShowAllSchedule] = useState(false);
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [showAllBars, setShowAllBars] = useState(false);
+  const [dueOpen, setDueOpen] = useState(false);
 
   useEffect(() => {
     // The date is read in the browser so "today" is the person's own day, not the server's.
@@ -123,7 +125,8 @@ export function MyDay() {
   const comp = useMemo(() => completion(projects ?? [], tasks ?? []), [projects, tasks]);
   const openTickets = (projects ?? []).filter((p) => p.group !== "closed");
   const overdue = today ? [...openTickets.filter((p) => p.deadline && p.deadline < today), ...open.filter((t) => t.date && t.date < today)].length : 0;
-  const dueToday = today ? [...openTickets.filter((p) => p.deadline === today), ...open.filter((t) => t.date === today)].length : 0;
+  const dueNow = today ? dueTodayItems(projects ?? [], tasks ?? [], today) : { tickets: [], tasks: [] };
+  const dueToday = dueNow.tickets.length + dueNow.tasks.length;
   const inProgress = openTickets.filter((p) => p.stage === "In progress" || p.stage === "In review" || p.stage === "In feedback").length;
 
   // Timeline window. The 3-day view starts today; arrows move it by its own length.
@@ -156,7 +159,7 @@ export function MyDay() {
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             <Tile label="Open work" n={openTickets.length + open.length} note="Tickets and tasks" />
-            <Tile label="Due today" n={dueToday} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
+            <Tile label="Due today" n={dueToday} onClick={() => setDueOpen(true)} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
             <Tile label="In progress" n={inProgress} note="Being worked on" />
             <Tile label="Overdue" n={overdue} note="Missed deadline" tone={overdue ? "bad" : undefined} />
             <Tile label="Completed" n={comp.done} note="Last 14 days" />
@@ -320,6 +323,7 @@ export function MyDay() {
           </div>
         </>
       )}
+      {dueOpen && today && <DueTodayDialog items={dueNow} tz={tz} today={today} onClose={() => setDueOpen(false)} onDone={(t) => { celebrate(); void act(() => tasksRepo.update(t.id, { done: true })); }} />}
       {adding && <AddTaskDialog onClose={() => setAdding(false)} onAdd={async (d) => { await act(() => tasksRepo.add(d)); setAdding(false); setTab("tasks"); }} />}
     </main>
   );
@@ -340,15 +344,76 @@ function Card({ title, hint, action, children }: { title: string; hint?: string;
   );
 }
 
-function Tile({ label, n, note, tone }: { label: string; n: number; note: string; tone?: "bad" }) {
+function Tile({ label, n, note, tone, onClick }: { label: string; n: number; note: string; tone?: "bad"; onClick?: () => void }) {
+  const Wrap = onClick ? "button" : "div";
   return (
-    <div className="rounded-xl border border-line bg-white p-4">
+    <Wrap
+      {...(onClick ? { onClick, type: "button" as const, "aria-haspopup": "dialog" as const, title: "See the list" } : {})}
+      className={`rounded-xl border border-line bg-white p-4 text-left ${onClick ? "cursor-pointer hover:border-brand hover:bg-brand-soft focus-visible:outline-offset-2" : ""}`}
+    >
       <div className="text-sm font-semibold">{label}</div>
       <div className="mt-1 flex items-center gap-2">
         <span className={`text-3xl font-bold tabular-nums ${tone === "bad" ? "text-bad-fg" : ""}`}>{n}</span>
         {tone === "bad" && n > 0 && <Tag tone="bad" icon="alert">Attention</Tag>}
       </div>
       <div className="mt-1 text-xs text-muted">{note}</div>
+      {onClick && <div className="mt-2 flex items-center gap-1 text-xs font-medium text-brand">See the list <Icon name="chevronRight" size={12} /></div>}
+    </Wrap>
+  );
+}
+
+/** Everything due today in one list: Jira tickets and your own tasks (backed up to Google Tasks). */
+function DueTodayDialog({ items, tz, today, onClose, onDone }: { items: { tickets: Project[]; tasks: PersonalTask[] }; tz: string; today: string; onClose: () => void; onDone: (t: PersonalTask) => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const total = items.tickets.length + items.tasks.length;
+  const day = new Date(`${today}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[10vh]" onMouseDown={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="Due today" onMouseDown={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-white p-5 shadow-xl">
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold">Due today</h2>
+            <p className="text-sm text-muted">{day} · {total} {total === 1 ? "item" : "items"} ({items.tickets.length} Jira {items.tickets.length === 1 ? "ticket" : "tickets"}, {items.tasks.length} {items.tasks.length === 1 ? "task" : "tasks"})</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-n-150"><Icon name="x" size={16} /></button>
+        </div>
+        {total === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-control p-4 text-center text-sm text-muted">Nothing is due today.</p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {items.tasks.map((t) => (
+              <li key={t.id} className="flex items-start gap-2.5 rounded-lg border border-line px-3 py-2.5 text-sm">
+                <input type="checkbox" checked={false} onChange={() => onDone(t)} aria-label={`Mark "${t.title}" done`} className="mt-1 h-4 w-4 shrink-0 accent-brand" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium">{t.title}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <Tag tone="progress" icon="task">My task</Tag>
+                    <span>{dueText(t, tz)}</span>
+                    <BackupTag t={t} />
+                  </div>
+                </div>
+              </li>
+            ))}
+            {items.tickets.map((p) => (
+              <li key={p.jiraKey} className="flex items-start gap-2.5 rounded-lg border border-line px-3 py-2.5 text-sm">
+                <span className="mt-0.5"><IssueIcon level={p.issueType?.level ?? 0} typeName={p.issueType?.name} /></span>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/projects/${p.jiraKey}`} className="font-medium hover:underline">{p.title}</Link>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <Tag tone="info" icon="ticket">Jira ticket</Tag>
+                    <span>{p.jiraKey}</span>
+                    <StatusTag project={p} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
