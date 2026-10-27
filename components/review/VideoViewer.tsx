@@ -224,7 +224,7 @@ export function VideoViewer({
             title={`${m.name} · #${m.number} at ${formatTime(m.timeMs)}`}
             aria-label={`Comment ${m.number} by ${m.name} at ${formatTime(m.timeMs)}`}
             aria-pressed={on}
-            className={`absolute top-[26px] z-10 -translate-x-1/2 transition-transform hover:z-20 hover:translate-y-0.5 focus-visible:outline-none ${on ? "z-20 translate-y-0.5 scale-110" : ""}`}
+            className={`group absolute top-[28px] z-10 -translate-x-1/2 focus-visible:outline-none hover:z-20 focus-visible:z-20 ${on ? "z-20" : ""}`}
             style={{ left: `${Math.min(100, (m.timeMs / total) * 100)}%` }}
           >
             <MapPin initials={m.initials} creative={m.creative} resolved={m.resolved} selected={on} />
@@ -305,14 +305,26 @@ function Skip({ dir }: { dir: 1 | -1 }) {
   );
 }
 
-/** A marker for a timestamped comment: the commenter's avatar with a small pointer up to the spot on the track. */
+/** A small drop on the track that opens into the commenter's avatar on hover, focus or when selected. */
 function MapPin({ initials, creative, resolved, selected }: { initials: string; creative: boolean; resolved: boolean; selected: boolean }) {
   const fill = resolved ? "#8a8780" : creative ? "#08794a" : "#464543";
   return (
-    <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true" className="block drop-shadow">
-      <path d="M13 1 8 6.5h10L13 1Z" fill={fill} />
-      <circle cx="13" cy="18" r="11" fill={fill} stroke={selected ? "var(--color-ink)" : "#fefdfb"} strokeWidth={selected ? 2.5 : 1.5} />
-      <text x="13" y="18" textAnchor="middle" dominantBaseline="central" fontSize="9.5" fontWeight="700" fill="#fefdfb" fontFamily="inherit">{initials.slice(0, 2)}</text>
-    </svg>
+    <span className="relative block h-4 w-3">
+      <svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true" className={`absolute left-0 top-0 transition-opacity duration-150 ${selected ? "opacity-0" : "group-hover:opacity-0 group-focus-visible:opacity-0"}`}>
+        <path d="M6 0C6 0 0 5.6 0 10a6 6 0 0 0 12 0C12 5.6 6 0 6 0Z" fill={fill} />
+      </svg>
+      <span
+        className={`absolute left-1/2 top-0 flex origin-top -translate-x-1/2 scale-50 flex-col items-center opacity-0 transition duration-150 ${selected ? "scale-100 opacity-100" : "group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"}`}
+        aria-hidden="true"
+      >
+        <span className="h-0 w-0 border-x-[5px] border-b-[6px] border-x-transparent" style={{ borderBottomColor: fill }} />
+        <span
+          className="-mt-px flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-n-50 shadow-md ring-2 ring-white"
+          style={{ background: fill, outline: selected ? "2px solid var(--color-ink)" : "none", outlineOffset: 1 }}
+        >
+          {initials.slice(0, 2)}
+        </span>
+      </span>
+    </span>
   );
 }

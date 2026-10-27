@@ -160,7 +160,7 @@ function ThreadCard({
             placeholder={`Reply as ${me.name}`}
             className="min-w-0 flex-1 rounded-lg border border-control px-3 py-1.5 text-sm"
           />
-          <button className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">Send</button>
+          <button className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">Post</button>
         </form>
       )}
     </div>
@@ -381,7 +381,7 @@ export function Composer({
           disabled={!body.trim() || needsTime}
           className="ml-auto rounded-lg bg-brand px-5 py-1.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650"
         >
-          Send
+          Post
         </button>
       </div>
     </div>
