@@ -10,13 +10,14 @@ import { dayLabel } from "@/lib/calendar/dates";
 import { formatDue } from "@/lib/time";
 import { loadSource, loadSources } from "@/lib/calendar/store";
 import type { CalendarItem } from "@/lib/calendar/types";
-import { blocksRepo, projectsRepo, repo } from "@/lib/data";
+import { blocksRepo, isJira, projectsRepo, repo } from "@/lib/data";
 import { BlockDialog } from "@/components/blocks/BlockDialog";
+import { UnblockDialog } from "@/components/blocks/UnblockDialog";
 import { daysSince, FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useMe } from "@/hooks/useMe";
-import type { Asset, BriefInput, Block, Project, Stage, User } from "@/lib/types";
+import type { Asset, BriefInput, Block, JiraSync, Project, Stage, User } from "@/lib/types";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
 const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
@@ -53,8 +54,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const [tab, setTab] = useState<Tab>("overview");
   const [block, setBlock] = useState<Block | undefined>();
   const [dialog, setDialog] = useState(false);
-  const [clearing, setClearing] = useState(false);
-  const [note, setNote] = useState("");
+  const [unblocking, setUnblocking] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
   const me = useMe();
   const favs = useFavorites();
@@ -89,17 +89,16 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const iHoldIt = !!block && me?.id === block.blockedBy.id;
   const reloadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
 
-  const clearBlock = async () => {
-    setBlockError(null);
-    try {
-      const { jira } = await blocksRepo.resolve(jiraKey, note);
-      setClearing(false);
-      setNote("");
-      reloadBlock();
-      if (jira && !jira.ok) setBlockError(`Cleared here, but Jira's status didn't change. ${jira.reason}`);
-    } catch (e) {
-      setBlockError(e instanceof Error ? e.message : "Couldn't clear the block.");
-    }
+  const isBlocked = !!block || project.flag === "blocked";
+  // The person it's waiting on can clear a named block; a Blocked ticket with nobody named is for the creative team.
+  const canUnblock = isBlocked && (canManage || iHoldIt);
+  const afterUnblock = async ({ status, jira }: { status: string; jira?: JiraSync }) => {
+    setUnblocking(false);
+    setBlockError(jira && !jira.ok ? `Unblocked here, but Jira's status didn't change. ${jira.reason}` : null);
+    reloadBlock();
+    // Real data: re-read the ticket so the status and tags match Jira. Demo data has no backend, so update the view directly.
+    if (isJira) projectsRepo.getProject(jiraKey, "u-avery").then((p) => p && setProject(p));
+    else setProject({ ...project, flag: undefined, stage: status === "In Progress" ? "In progress" : project.stage });
   };
 
   const brief = BRIEF_SECTIONS.filter((s) => project.brief?.[s.key]);
@@ -122,7 +121,10 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           </div>
           <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>
           <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Open in Jira</a>
-          {canManage && !block && project.group !== "closed" && (
+          {canUnblock && project.group !== "closed" && (
+            <button onClick={() => setUnblocking(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Mark as unblocked</button>
+          )}
+          {canManage && !isBlocked && project.group !== "closed" && (
             <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Mark as blocked</button>
           )}
         </div>
@@ -159,18 +161,10 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                   <p className="text-sm">Say who it&apos;s waiting on so they get a notification and can act on it.</p>
                 )}
                 {blockError && <p role="alert" className="mt-2 text-sm font-medium">{blockError}</p>}
-                {clearing ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note, e.g. Approved in Slack" aria-label="Note" className="min-w-64 flex-1 rounded-lg border border-control bg-white px-3 py-1.5 text-sm text-ink" />
-                    <button onClick={clearBlock} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">Clear block</button>
-                    <button onClick={() => { setClearing(false); setNote(""); }} className="rounded-lg border border-control bg-white px-4 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft">Cancel</button>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {block && (iHoldIt || canManage) && <button onClick={() => setClearing(true)} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">{iHoldIt ? "I\u2019ve unblocked this" : "Clear block"}</button>}
-                    {canManage && <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
-                  </div>
-                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {canUnblock && <button onClick={() => setUnblocking(true)} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">{iHoldIt ? "I\u2019ve unblocked this" : "Mark as unblocked"}</button>}
+                  {canManage && <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
+                </div>
               </section>
             )}
 
@@ -281,6 +275,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           </ul>
         )
       )}
+      {unblocking && <UnblockDialog ticketKey={project.jiraKey} previousStatus={block?.previousStatus} onClose={() => setUnblocking(false)} onDone={afterUnblock} />}
       {dialog && <BlockDialog ticketKey={project.jiraKey} existing={block} onClose={() => setDialog(false)} onSaved={() => { setDialog(false); reloadBlock(); }} />}
     </main>
   );

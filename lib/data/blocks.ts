@@ -1,6 +1,8 @@
 import type { Block, JiraSync, Person, Project } from "@/lib/types";
 import { isJira } from "./mode";
 
+export type TargetStatus = { name: string; category: "new" | "indeterminate" | "done" };
+
 export type MyBlock = Block & { project: Project | null };
 
 export interface BlocksRepo {
@@ -10,7 +12,10 @@ export interface BlocksRepo {
   mine(): Promise<MyBlock[]>;
   /** The block is always saved; `jira` says whether the ticket's status followed (absent in demo mode). */
   block(key: string, blockedBy: Person, reason: string): Promise<{ block: Block; jira?: JiraSync }>;
-  resolve(key: string, note: string): Promise<{ jira?: JiraSync }>;
+  /** Clears the block and moves the ticket to `status` (or back to where it was). */
+  resolve(key: string, note: string, status?: string): Promise<{ jira?: JiraSync }>;
+  /** Statuses the ticket can move to now, for the unblock picker. */
+  statuses(key: string): Promise<TargetStatus[]>;
 }
 
 const changed = () => typeof window !== "undefined" && window.dispatchEvent(new Event("blocks-changed"));
@@ -35,10 +40,13 @@ const jiraBlocks: BlocksRepo = {
     changed();
     return out;
   },
-  async resolve(key, note) {
-    const out = await call<{ jira: JiraSync }>(`/api/blocks/${encodeURIComponent(key)}/resolve`, { method: "POST", body: JSON.stringify({ note }) });
+  async resolve(key, note, status) {
+    const out = await call<{ jira: JiraSync }>(`/api/blocks/${encodeURIComponent(key)}/resolve`, { method: "POST", body: JSON.stringify({ note, status }) });
     changed();
     return { jira: out.jira };
+  },
+  async statuses(key) {
+    return (await call<{ statuses: TargetStatus[] }>(`/api/blocks/${encodeURIComponent(key)}/statuses`)).statuses;
   },
 };
 
@@ -79,11 +87,16 @@ const demoBlocks: BlocksRepo = {
   async resolve(key, note) {
     const all = readLocal();
     const b = all.find((x) => x.key === key && x.status === "active");
-    if (!b) throw new Error("That ticket isn't marked as blocked.");
-    b.status = "resolved"; b.resolvedAt = new Date().toISOString(); b.note = note || undefined;
-    writeLocal(all);
+    // Demo tickets can be "Blocked" with no record; there is nothing to clear and the page just updates.
+    if (b) { b.status = "resolved"; b.resolvedAt = new Date().toISOString(); b.note = note || undefined; writeLocal(all); }
     changed();
     return {};
+  },
+  async statuses() {
+    return [
+      { name: "In Progress", category: "indeterminate" }, { name: "In Review", category: "indeterminate" }, { name: "Intake", category: "new" },
+      { name: "On Hold", category: "new" }, { name: "Done", category: "done" }, { name: "Cancelled", category: "done" }, { name: "Won't Do", category: "done" },
+    ];
   },
 };
 

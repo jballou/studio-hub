@@ -116,3 +116,23 @@ export async function transitionToStatus(a: JiraAuth, key: string, statusName: s
   await request<void>(a, `/issue/${key}/transitions`, { method: "POST", body: { transition: { id: t.id } } });
   return "moved";
 }
+
+export type TargetStatus = { name: string; category: "new" | "indeterminate" | "done" };
+
+/** Statuses this ticket can be moved to right now (by the signed-in person), without the one it's already in. */
+export async function listTargetStatuses(a: JiraAuth, key: string): Promise<TargetStatus[]> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  const [issue, { transitions }] = await Promise.all([
+    getIssue(a, key),
+    request<{ transitions: { to: { name: string; statusCategory: { key: string } } }[] }>(a, `/issue/${key}/transitions`),
+  ]);
+  const seen = new Set<string>([issue.fields.status.name.toLowerCase()]);
+  const out: TargetStatus[] = [];
+  for (const t of transitions) {
+    const n = t.to.name;
+    if (seen.has(n.toLowerCase())) continue;
+    seen.add(n.toLowerCase());
+    out.push({ name: n, category: (t.to.statusCategory.key as TargetStatus["category"]) ?? "indeterminate" });
+  }
+  return out;
+}
