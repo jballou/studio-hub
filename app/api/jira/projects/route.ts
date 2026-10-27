@@ -1,6 +1,8 @@
 import { JiraError, jqlString, searchIssues } from "@/lib/jira/client";
 import { PROJECT_KEY, toProject } from "@/lib/jira/map";
 import { errorResponse, jiraSession, visibilityClause } from "@/lib/jira/session";
+import { lookbackClause } from "@/lib/settings";
+import { getSettings } from "@/lib/store/settings";
 
 /** GET /api/jira/projects?q=101&limit=8  Lists (or searches by key, number or title) tickets the user may see. */
 export async function GET(req: Request) {
@@ -12,11 +14,14 @@ export async function GET(req: Request) {
     // scope=mine: creatives see what's assigned to them. Requesters aren't assigned work, so for them "mine" is everything they're on.
     const mineOnly = url.searchParams.get("scope") === "mine" && s.role === "creative";
 
+    // Listing hides old closed work (an admin setting). Searching by key or title still finds everything.
+    const { projectLookbackDays } = await getSettings();
     const build = (withCc: boolean) => {
       const parts = [`project = ${PROJECT_KEY}`];
       const vis = visibilityClause(s.role, withCc);
       if (vis) parts.push(vis);
       if (mineOnly) parts.push("assignee = currentUser()");
+      if (!q) parts.push(lookbackClause(projectLookbackDays));
       if (q) {
         const key = /^mktgcrtv-\d+$/i.test(q) ? q.toUpperCase() : /^\d+$/.test(q) ? `${PROJECT_KEY}-${q}` : null;
         parts.push(`(${[key && `key = ${key}`, `summary ~ ${jqlString(`${q}*`)}`].filter(Boolean).join(" OR ")})`);

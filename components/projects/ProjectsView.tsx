@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { blocksRepo, isJira, projectsRepo, repo, tasksRepo } from "@/lib/data";
+import { blocksRepo, isJira, projectsRepo, repo, settingsRepo, tasksRepo } from "@/lib/data";
 import { FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -13,6 +13,7 @@ import { Board } from "./Board";
 import { NoStartTag, PlanWork } from "./PlanWork";
 import { needsStartDate } from "@/lib/startdate";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
+import { lookbackLabel } from "@/lib/settings";
 import { useMe } from "@/hooks/useMe";
 import { localDay } from "@/lib/myday/plan";
 import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
@@ -102,6 +103,8 @@ export function ProjectsView() {
   const [shelf, setShelf] = useState(false);
   const [tasks, setTasks] = useState<PersonalTask[]>([]);
   const [tick, setTick] = useState(0);
+  const [closedOpen, setClosedOpen] = useState(false);
+  const [lookback, setLookback] = useState<number | null>(null);
   const [today, setToday] = useState("");
   const me = useMe();
   const [action, setAction] = useState(false);
@@ -132,6 +135,7 @@ export function ProjectsView() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(localDay());
     tasksRepo.list().then((s) => setTasks(s.tasks)).catch(() => {});
+    if (isJira) settingsRepo.get().then((s) => setLookback(s.projectLookbackDays)).catch(() => {});
   }, []);
 
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "Unknown";
@@ -242,10 +246,20 @@ export function ProjectsView() {
       ) : view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
         GROUPS.map((g) => {
           const rows = filtered.filter((p) => p.group === g.id);
+          const collapsible = g.id === "closed";
+          const shown = !collapsible || closedOpen;
           return (
             <section key={g.id} className="mb-6">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{g.label} <span className="font-normal">({rows.length})</span></h2>
-              {rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
+                {collapsible ? (
+                  <button onClick={() => setClosedOpen(!closedOpen)} aria-expanded={closedOpen} className="flex items-center gap-1.5 rounded-md uppercase tracking-wide hover:text-ink">
+                    <Icon name={closedOpen ? "chevronDown" : "chevronRight"} size={14} />
+                    {g.label} <span className="font-normal">({rows.length})</span>
+                  </button>
+                ) : <>{g.label} <span className="font-normal">({rows.length})</span></>}
+                {collapsible && lookback !== null && <span className="ml-2 text-xs font-normal normal-case tracking-normal">Finished in {lookbackLabel(lookback)}</span>}
+              </h2>
+              {!shown ? null : rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
                   {nest(rows).map(({ p, depth }) => (
                     <li key={p.id} style={{ marginLeft: depth * 28 }} className={`flex items-center gap-1 rounded-lg border bg-white pl-2 hover:border-brand ${depth ? "border-line border-l-4 border-l-n-200" : "border-line"}`}>

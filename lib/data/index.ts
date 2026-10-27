@@ -26,3 +26,4 @@ export { activityRepo } from "./activity";
 export type { ActivityItem } from "./activity";
 export { figmaRepo } from "./figma";
 export type { FramesResult } from "./figma";
+export { settingsRepo } from "./settings";
