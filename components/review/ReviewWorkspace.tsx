@@ -65,7 +65,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       setVersionId(vs[vs.length - 1]?.id ?? null);
       // Demo users in mock mode; in real mode, just the people named on this request (plus you, below).
       setUsers(addUsers(await repo.listUsers(), [...(a.reviewers ?? []), ...(a.approvers ?? [])].map(toUser)));
-      const project = (await projectsRepo.listProjects("u-avery")).find((p) => p.jiraKey === a.projectKey);
+      const project = await projectsRepo.getProject(a.projectKey, "u-avery");
       if (project) setStage(project.stage);
     })();
   }, [assetId]);

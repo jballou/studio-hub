@@ -199,15 +199,27 @@ export async function searchUsers(a: JiraAuth, query: string, limit = 8): Promis
 
 export type TransitionResult = "moved" | "already" | "no-transition";
 
+type RawTransition = { id: string; to: { name: string; statusCategory: { key: string } } };
+/** A ticket's current status and the moves Jira offers right now. Two small calls; callers that need both share one result. */
+export type TransitionInfo = { current: string; transitions: RawTransition[] };
+
+export async function transitionInfo(a: JiraAuth, key: string): Promise<TransitionInfo> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  const [issue, { transitions }] = await Promise.all([
+    getIssueFields(a, key, ["status"]),
+    request<{ transitions: RawTransition[] }>(a, `/issue/${key}/transitions`),
+  ]);
+  return { current: issue.fields.status.name, transitions };
+}
+
 /**
  * Moves a ticket to the status with this name, using whichever transition leads there.
+ * Pass `info` when you already have it, so the move costs one call instead of three.
  * Needs the write:jira-work scope; a token without it gets a 401/403 from Jira, which the caller reports plainly.
  */
-export async function transitionToStatus(a: JiraAuth, key: string, statusName: string): Promise<TransitionResult> {
-  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
-  const issue = await getIssue(a, key);
-  if (issue.fields.status.name.toLowerCase() === statusName.toLowerCase()) return "already";
-  const { transitions } = await request<{ transitions: { id: string; to: { name: string } }[] }>(a, `/issue/${key}/transitions`);
+export async function transitionToStatus(a: JiraAuth, key: string, statusName: string, info?: TransitionInfo): Promise<TransitionResult> {
+  const { current, transitions } = info ?? (await transitionInfo(a, key));
+  if (current.toLowerCase() === statusName.toLowerCase()) return "already";
   const t = transitions.find((x) => x.to.name.toLowerCase() === statusName.toLowerCase());
   if (!t) return "no-transition";
   await request<void>(a, `/issue/${key}/transitions`, { method: "POST", body: { transition: { id: t.id } } });
@@ -217,13 +229,9 @@ export async function transitionToStatus(a: JiraAuth, key: string, statusName: s
 export type TargetStatus = { name: string; category: "new" | "indeterminate" | "done" };
 
 /** Statuses this ticket can be moved to right now (by the signed-in person), without the one it's already in. */
-export async function listTargetStatuses(a: JiraAuth, key: string): Promise<TargetStatus[]> {
-  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
-  const [issue, { transitions }] = await Promise.all([
-    getIssue(a, key),
-    request<{ transitions: { to: { name: string; statusCategory: { key: string } } }[] }>(a, `/issue/${key}/transitions`),
-  ]);
-  const seen = new Set<string>([issue.fields.status.name.toLowerCase()]);
+export async function listTargetStatuses(a: JiraAuth, key: string, info?: TransitionInfo): Promise<TargetStatus[]> {
+  const { current, transitions } = info ?? (await transitionInfo(a, key));
+  const seen = new Set<string>([current.toLowerCase()]);
   const out: TargetStatus[] = [];
   for (const t of transitions) {
     const n = t.to.name;

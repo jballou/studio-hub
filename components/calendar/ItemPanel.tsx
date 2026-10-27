@@ -24,13 +24,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export function ItemPanel({
-  panel, items, dayItems, projectKeys, onPick, onClose,
+  panel, items, dayItems, hasProject, onPick, onClose,
 }: {
   panel: Panel;
   items: CalendarItem[];
   dayItems: CalendarItem[];
   /** Jira keys that have a project home in the app */
-  projectKeys: Set<string>;
+  /** whether a ticket has its own page here */
+  hasProject: (key: string) => boolean;
   onPick: (id: string) => void;
   onClose: () => void;
 }) {
@@ -88,7 +89,7 @@ export function ItemPanel({
               {/* Primary action first. Items tied to a known project open its home; others start a feedback request. */}
               {item.type === "task" ? (
                 <Link href="/my-day" className={primary}>Open My Day</Link>
-              ) : item.jiraKey && projectKeys.has(item.jiraKey) ? (
+              ) : item.jiraKey && hasProject(item.jiraKey) ? (
                 <>
                   <Link href={`/projects/${item.jiraKey}`} className={primary}>Open project</Link>
                   <Link href={feedbackHref} className={secondary}>Submit for feedback</Link>

@@ -1,6 +1,6 @@
 import { activeBlocks, blocksHeldBy, createBlock } from "@/lib/store/blocks";
 import { cached, invalidateUser } from "@/lib/jira/cache";
-import { getIssue, LIST_FIELDS, searchIssues, transitionToStatus } from "@/lib/jira/client";
+import { LIST_FIELDS, searchIssues, transitionInfo, transitionToStatus, type TransitionInfo } from "@/lib/jira/client";
 import { jiraSyncFailure } from "@/lib/jira/sync";
 import { toProject } from "@/lib/jira/map";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
@@ -42,15 +42,16 @@ export async function POST(req: Request) {
     const key = String(body.key ?? "").trim().toUpperCase();
     // Remember where the ticket was so clearing the block can put it back; a ticket already Blocked has nothing to restore.
     let previousStatus: string | undefined;
+    let info: TransitionInfo | undefined;
     try {
-      const current = (await getIssue(s.auth, key)).fields.status.name;
-      if (current.toLowerCase() !== "blocked") previousStatus = current;
+      info = await transitionInfo(s.auth, key);
+      if (info.current.toLowerCase() !== "blocked") previousStatus = info.current;
     } catch { /* the block is still recorded; Jira is told below */ }
     const block = await createBlock(s.email, { key, blockedBy: body.blockedBy, reason: String(body.reason ?? ""), previousStatus });
     // The block lives here either way; this only reports whether Jira's status followed.
     let jira: JiraSync;
     try {
-      const r = await transitionToStatus(s.auth, key, "Blocked");
+      const r = await transitionToStatus(s.auth, key, "Blocked", info);
       jira = r === "no-transition" ? { ok: false, reason: "Jira's workflow doesn't allow moving this ticket to Blocked from its current status." } : { ok: true, changed: r === "moved", status: "Blocked" };
     } catch (e) {
       jira = await jiraSyncFailure(e, s.auth);

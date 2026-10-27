@@ -7,7 +7,7 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { formatTime } from "@/lib/calendar/csv";
 import { addDays, dayLabel, fromIso, monthGrid, monthLabel, shiftMonth, spanDays, startOfWeek, todayIso } from "@/lib/calendar/dates";
 import { loadSource, loadSources } from "@/lib/calendar/store";
-import { projectsRepo, tasksRepo } from "@/lib/data";
+import { isJira, projectsRepo, tasksRepo } from "@/lib/data";
 import { MY_TASKS_SOURCE, tasksResult } from "@/lib/calendar/tasks";
 import { ITEM_TYPES, STATUSES, type CalendarItem, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
 import { ItemPanel } from "./ItemPanel";
@@ -72,9 +72,11 @@ export function CalendarView() {
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [menu]);
 
+  // Everything loads once. A task change only re-reads the tasks, never the Jira and sheet sources.
   const load = useCallback(async () => {
     setLoading(true);
-    projectsRepo.listProjects("u-avery").then((ps) => setProjectKeys(new Set(ps.map((p) => p.jiraKey))));
+    // Demo mode links to projects it knows; with real Jira every MKTGCRTV ticket has a page here, so no lookup is needed.
+    if (!isJira) projectsRepo.listProjects("u-avery").then((ps) => setProjectKeys(new Set(ps.map((p) => p.jiraKey))));
     const srcs = loadSources();
     setSources([...srcs, MY_TASKS_SOURCE]);
     const [loaded, mine] = await Promise.all([
@@ -85,13 +87,18 @@ export function CalendarView() {
     setLoading(false);
   }, []);
 
+  const reloadTasks = useCallback(async () => {
+    const mine = await tasksRepo.list().then((s) => tasksResult(s.tasks)).catch(() => tasksResult([]));
+    setResults((cur) => [...cur.filter((r) => r.sourceId !== MY_TASKS_SOURCE.id), mine]);
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     // Tasks added or ticked off on My Day show up here without a reload.
-    window.addEventListener("tasks-changed", load);
-    return () => window.removeEventListener("tasks-changed", load);
-  }, [load]);
+    window.addEventListener("tasks-changed", reloadTasks);
+    return () => window.removeEventListener("tasks-changed", reloadTasks);
+  }, [load, reloadTasks]);
 
   const all = useMemo(() => results.flatMap((r) => r.items), [results]);
   const owners = useMemo(() => [...new Set(all.map((i) => i.owner))].sort(), [all]);
@@ -313,7 +320,7 @@ export function CalendarView() {
         panel={panel}
         items={all}
         dayItems={panel?.kind === "day" ? byDay.get(panel.day) ?? [] : []}
-        projectKeys={projectKeys}
+        hasProject={(k) => (isJira ? k.startsWith("MKTGCRTV-") : projectKeys.has(k))}
         onPick={open}
         onClose={() => setPanel(null)}
       />

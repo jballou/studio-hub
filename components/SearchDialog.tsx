@@ -11,24 +11,35 @@ type Hit = { id: string; title: string; sub: string; href: string };
 export function SearchDialog({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState("");
-  const [all, setAll] = useState<Hit[]>([]);
+  const [designs, setDesigns] = useState<Hit[]>([]);
+  const [found, setFound] = useState<Hit[]>([]);
   const [active, setActive] = useState(0);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     input.current?.focus();
-    Promise.all([projectsRepo.listProjects("u-avery"), repo.listAssets()]).then(([projects, assets]) => {
-      setAll([
-        ...projects.map((p) => ({ id: p.id, title: p.title, sub: `Project · ${p.jiraKey}`, href: "/projects" })),
-        ...assets.map((a) => ({ id: a.id, title: a.name, sub: `Design · ${a.projectKey}`, href: `/review/${a.id}` })),
-      ]);
-    });
+    repo.listAssets().then((assets) => setDesigns(assets.map((a) => ({ id: a.id, title: a.name, sub: `Design · ${a.projectKey}`, href: `/review/${a.id}` }))));
   }, []);
+
+  // Projects are looked up as you type (after a short pause, from two letters), never as a whole list on open: opening
+  // search shouldn't cost a Jira call, and each lookup is cached on the server.
+  useEffect(() => {
+    const t = q.trim();
+    if (t.length < 2) return;
+    let live = true;
+    const timer = setTimeout(() => {
+      projectsRepo.searchProjects("u-avery", t, 8).then((ps) => {
+        if (live) setFound(ps.map((p) => ({ id: p.id, title: p.title, sub: `Project · ${p.jiraKey}`, href: `/projects/${p.jiraKey}` })));
+      }).catch(() => { if (live) setFound([]); });
+    }, 300);
+    return () => { live = false; clearTimeout(timer); };
+  }, [q]);
 
   const hits = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return (t ? all.filter((h) => `${h.title} ${h.sub}`.toLowerCase().includes(t)) : all).slice(0, 8);
-  }, [q, all]);
+    const mine = t ? designs.filter((h) => `${h.title} ${h.sub}`.toLowerCase().includes(t)) : designs;
+    return [...(t.length >= 2 ? found : []), ...mine].slice(0, 8);
+  }, [q, designs, found]);
 
   const go = (h?: Hit) => {
     if (!h) return;

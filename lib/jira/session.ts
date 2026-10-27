@@ -17,6 +17,17 @@ export type JiraSession = {
  * current role and status. Disabled people are refused here, so removing access takes effect on the next request.
  * Tokens never go to the browser; only server routes call this.
  */
+// If sign-in couldn't work out the site id, don't ask Atlassian again on every request.
+const cloudMemo = new Map<string, { id: string | undefined; at: number }>();
+async function cloudFor(accessToken: string): Promise<string | undefined> {
+  const hit = cloudMemo.get(accessToken);
+  if (hit && Date.now() - hit.at < 300_000) return hit.id;
+  const id = await findCloudId(accessToken);
+  cloudMemo.set(accessToken, { id, at: Date.now() });
+  if (cloudMemo.size > 200) cloudMemo.delete(cloudMemo.keys().next().value as string);
+  return id;
+}
+
 export async function jiraSession(req: Request): Promise<JiraSession> {
   const secure = new URL(req.url).protocol === "https:";
   const token = await getToken({
@@ -30,7 +41,7 @@ export async function jiraSession(req: Request): Promise<JiraSession> {
   const email = String(token.email ?? "");
   const access = await resolveAccess(email);
   if (!access.active) throw new JiraError(403, "Your access has been removed. Ask a Brand Creative admin.");
-  const cloudId = token.cloudId ?? (await findCloudId(token.accessToken));
+  const cloudId = token.cloudId ?? (await cloudFor(token.accessToken));
   if (!cloudId) throw new JiraError(403, "Your Atlassian account can't reach the configured Jira site.");
   return {
     auth: { accessToken: token.accessToken, cloudId },

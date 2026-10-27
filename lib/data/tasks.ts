@@ -13,16 +13,17 @@ export interface TasksRepo {
 
 const changed = () => typeof window !== "undefined" && window.dispatchEvent(new Event("tasks-changed"));
 
-async function call(url: string, init?: RequestInit): Promise<TasksState> {
+/** Only changes announce themselves. A read must never fire "tasks-changed": pages reload on that event, and a read that fires it makes them read again, forever. */
+async function call(url: string, init?: RequestInit, announce = true): Promise<TasksState> {
   const res = await fetch(url, { cache: "no-store", ...init, headers: { "Content-Type": "application/json" } });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status}).`);
-  changed();
+  if (announce) changed();
   return body as TasksState;
 }
 
 const jiraTasks: TasksRepo = {
-  list: () => call("/api/tasks"),
+  list: () => call("/api/tasks", undefined, false),
   add: (t) => call("/api/tasks", { method: "POST", body: JSON.stringify(t) }),
   update: (id, patch) => call(`/api/tasks/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
   remove: (id) => call(`/api/tasks/${id}`, { method: "DELETE" }),

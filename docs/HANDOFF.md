@@ -81,3 +81,5 @@ Jira limits the app by points per hour (65,000 by default) and by bursts. What t
 - **Retries** (`lib/jira/client.ts`): waits as long as Jira asks (max 4s) and retries 429s twice; at most 4 calls in flight per server.
 - **Lighter reads**: lists don't ask for descriptions or Cc people (Jira charges per object, people count double). Closed projects load only when the Closed section or the board is opened. Sub-tasks skip the child searches. The Start date field id is stored.
 - **Not done yet**: a usage monitor in Admin > System (Atlassian only reports usage in response headers).
+
+Rule for developers: a data *read* must never dispatch a change event (`tasks-changed`, `blocks-changed`, `favorites-changed`). Pages reload when those fire, so a read that announces itself makes the page read again, forever. This once made the Calendar hammer Jira in a loop; only writes announce changes.
