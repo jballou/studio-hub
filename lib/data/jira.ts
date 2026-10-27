@@ -1,4 +1,4 @@
-import type { Project } from "@/lib/types";
+import type { Project, Relations } from "@/lib/types";
 import type { ProjectsRepo } from "./projects";
 
 /** Browser-side adapter: talks to our own /api/jira routes, which call Jira with the user's token. */
@@ -23,6 +23,13 @@ export const jiraProjects: ProjectsRepo = {
   async searchProjects(_viewerId, query, limit = 8) {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });
     return (await get<{ projects: Project[] }>(`/api/jira/projects?${qs}`)).projects;
+  },
+  async relations(jiraKey) {
+    try {
+      return (await get<{ relations: Relations }>(`/api/jira/projects/${encodeURIComponent(jiraKey)}/relations`)).relations;
+    } catch {
+      return null;
+    }
   },
   async setStartDate(jiraKey, date) {
     const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });

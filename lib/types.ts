@@ -132,6 +132,30 @@ export type Block = {
 /** What happened in Jira when a block was set or cleared. The block itself is always saved. */
 export type JiraSync = { ok: true; changed: boolean; status?: string } | { ok: false; reason: string };
 
+/** A ticket mentioned on another ticket's page (parent, child, linked). Enough to show a row and link to it. */
+export type IssueRef = {
+  key: string;
+  title: string;
+  typeName: string;
+  /** Jira hierarchy level: 2 initiative, 1 epic, 0 task or story, -1 sub-task */
+  level: number;
+  status: string;
+  statusCategory: "new" | "indeterminate" | "done";
+  /** in the Brand Creative project, so it has its own page here; others open in Jira */
+  inHub: boolean;
+};
+
+export type LinkKind = "blockedBy" | "blocks" | "related" | "other";
+export type LinkRef = IssueRef & { kind: LinkKind; /** Jira's wording, e.g. "is duplicated by" */ label: string };
+
+/** Where a ticket sits (initiative > epic > task > sub-task) and what it is linked to. Clones are left out. */
+export type Relations = {
+  /** parents, top-down: initiative first, nearest parent last */
+  ancestors: IssueRef[];
+  children: (IssueRef & { subtasks: IssueRef[] })[];
+  links: LinkRef[];
+};
+
 /** Jira statuses that need attention without being a stage. */
 export type ProjectFlag = "blocked" | "at-risk" | "on-hold" | "needs-info";
 
@@ -157,6 +181,11 @@ export type Project = {
   submittedAt: string;
   brief?: Partial<BriefInput>;
   flag?: ProjectFlag;
+  /** Jira issue type and its hierarchy level (real data only) */
+  issueType?: { name: string; level: number };
+  /** key of the parent epic or initiative, when there is one */
+  parentKey?: string;
+  parentTitle?: string;
   /** Jira's own status name (real data only), e.g. "In Progress" */
   statusName?: string;
   /** Jira's category for that status: to do / in progress / done */

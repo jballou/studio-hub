@@ -55,6 +55,9 @@ export function toProject(issue: JiraIssue): Project {
     group,
     stage: stageOf(issue),
     flag: flagOf(issue),
+    issueType: { name: f.issuetype.name, level: f.issuetype.hierarchyLevel ?? 0 },
+    parentKey: f.parent?.key,
+    parentTitle: f.parent?.fields?.summary,
     statusName: f.status.name,
     statusCategory: f.status.statusCategory.key as "new" | "indeterminate" | "done",
     // undefined = this site has no usable Start date field, so nothing is flagged; "" = the field exists and is empty

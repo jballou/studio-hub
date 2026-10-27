@@ -10,6 +10,7 @@ import { useMe } from "@/hooks/useMe";
 import type { User } from "@/lib/types";
 import { Avatar } from "@/components/review/Avatar";
 import { SearchDialog } from "./SearchDialog";
+import { ThemeToggle } from "./ThemeToggle";
 
 const PREF_KEY = "sidebar-pref-v1";
 const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
@@ -201,6 +202,7 @@ export function Sidebar() {
 
         {/* Bottom: Admin, then you */}
         <div className="border-t border-line pt-2">
+          <div className={`mb-2 flex ${collapsed ? "justify-center" : "justify-start px-1"}`}><ThemeToggle vertical={collapsed} /></div>
           {(me?.isAdmin || me?.role === "creative") && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
           <div className={`flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
             <Avatar user={user} size={32} />

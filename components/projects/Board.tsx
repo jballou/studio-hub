@@ -9,6 +9,7 @@ import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { NoStartTag, PlanWork } from "./PlanWork";
 import { needsStartDate } from "@/lib/startdate";
 import { projectsRepo, tasksRepo } from "@/lib/data";
+import { celebrate } from "@/lib/celebrate";
 import { buildCards, COLUMNS, dragBlocker, dueLabel, taskPatchFor, type BoardCard, type ColumnId } from "@/lib/board";
 import type { Block, PersonalTask, Project } from "@/lib/types";
 
@@ -73,6 +74,8 @@ export function Board({
         await projectsRepo.moveTo(card.id, COLUMNS.find((c) => c.id === col)!.jiraStatus);
         onTicketsChanged();
       }
+      // Only after the move worked: finishing something earns the confetti.
+      if (col === "done") celebrate();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't move that card.");
     }

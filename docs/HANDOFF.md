@@ -63,3 +63,9 @@ Items marked **(verify)** are from memory of how the vendor consoles work; confi
 
 - Sending several items together (several Figma frames, several files, or a mix) creates a **batch**: each item is its own review with its own comments, grouped by a shared batch id. Reviewers move between items with Previous and Next.
 - **Choose frames** (Figma file link) lists a file's frames with thumbnails using one shared token, `FIGMA_ACCESS_TOKEN` (see `docs/figma-setup.md`). The token's owner must expire-track it; when it lapses the picker shows a message and people paste frame links instead.
+
+## 9. Hierarchy, linked work, dark mode and sound effects
+
+- **Hierarchy and links** (project page): parents (initiative, epic), children and sub-tasks come from Jira's `parent` field and `parent = KEY` searches; linked work comes from `issuelinks` (Blocks, Relates, others; Clones are skipped on purpose). Code: `lib/jira/relations.ts`, `components/projects/RelationsCard.tsx`.
+- **Dark mode**: palette tokens are swapped in `app/globals.css` under `[data-theme="dark"]`; the choice is saved in this browser (`hub-theme`) and defaults to the system setting. A small head script applies it before first paint.
+- **Sounds**: `public/sounds/celebrate.wav` (finishing work, approving a design) and `night-night.wav` (turning dark mode on). Confetti is skipped for people who prefer reduced motion. The speaker button in the sidebar mutes sounds (`hub-sounds`).

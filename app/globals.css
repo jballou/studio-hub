@@ -6,7 +6,7 @@
 @font-face { font-family: "National 2"; font-weight: 600 800; font-style: normal; font-display: swap; src: url("https://prod.smassets.net/assets/static/fonts/national2/bold.woff2") format("woff2"); }
 
 /* SurveyMonkey brand palette (brand-visuals/colors.md). No hexes outside this file. */
-@theme inline {
+@theme {
   /* Core */
   --color-brand: #08794a; /* Green 600: buttons, links, small UI (AA with Paper text) */
   --color-brand-dark: #105638; /* Green 700: hover/pressed */
@@ -17,6 +17,7 @@
 
   /* Neutrals */
   --color-n-50: #fefdfb;
+  --color-n-100: #f7f5f3;
   --color-n-150: #edebe8;
   --color-n-200: #e2dfda;
   --color-n-500: #908d89;
@@ -52,8 +53,8 @@ body {
 
 /* Paper: dot grid on Neutral 100. Background only; never inside cards or controls. */
 .paper {
-  background-color: #f7f5f3;
-  background-image: radial-gradient(circle at 1px 1px, #e4e2dd 0.5px, transparent 1px);
+  background-color: var(--color-paper);
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-dot) 0.5px, transparent 1px);
   background-size: 16px 16px;
 }
 
@@ -66,3 +67,55 @@ body {
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease-out both; }
 @media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+
+/* ---- Light values for the pieces that aren't palette tokens ---- */
+:root { --paper-dot: #e4e2dd; --card: #ffffff; --surface: #fefdfb; --link: #08794a; }
+
+/* ---- Dark mode ----
+   The palette tokens are swapped here, so every utility that reads them follows. A few utilities that name
+   a fixed color (white cards, the dark video bar, links, solid red badges) are patched below. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #111714;
+  --paper-dot: #1d2621;
+  --card: #1a221e;
+  --surface: #151c18;
+  --link: #3fd08f;
+
+  --color-ink: #e8efe9;
+  --color-brand-soft: #1d3a2b;
+  --color-n-100: #202924;
+  --color-n-150: #27312c;
+  --color-n-200: #34403a;
+  --color-n-500: #7c8781;
+  --color-n-650: #9fa9a3;
+  --color-n-700: #a9b3ad;
+  --color-n-800: #c9d2cc;
+
+  --color-info-bg: #232846; --color-info-line: #3b4585; --color-info-fg: #bcc5f7;
+  --color-progress-bg: #153a3e; --color-progress-line: #2b6a70; --color-progress-fg: #a6dce1;
+  --color-warn-bg: #3d2b15; --color-warn-line: #6e4a21; --color-warn-fg: #f2c48a;
+  --color-ok-bg: #163a2b; --color-ok-line: #2a6b4c; --color-ok-fg: #b6ebc8;
+  --color-bad-bg: #3e201d; --color-bad-line: #7c3b37; --color-bad-fg: #f3aaa3;
+  --color-gold-bg: #3a3110; --color-gold-line: #6d5c1b; --color-gold-fg: #f2e2a6;
+  --color-focus: #93a0f2;
+}
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] .bg-white\/60,
+:root[data-theme="dark"] .bg-white\/70,
+:root[data-theme="dark"] .bg-white\/90,
+:root[data-theme="dark"] .hover\:bg-white:hover,
+:root[data-theme="dark"] .hover\:bg-white\/60:hover { background-color: var(--card); }
+:root[data-theme="dark"] .bg-n-50 { background-color: var(--surface); }
+:root[data-theme="dark"] .ring-n-50 { --tw-ring-color: var(--surface); }
+:root[data-theme="dark"] .ring-white { --tw-ring-color: var(--card); }
+:root[data-theme="dark"] .text-brand,
+:root[data-theme="dark"] .hover\:text-brand:hover { color: var(--link); }
+:root[data-theme="dark"] .border-brand { border-color: var(--link); }
+/* Solid chips and bars keep their own contrast: light text on a deep red or near-black fill. */
+:root[data-theme="dark"] .bg-bad-fg { background-color: #b5413d; }
+:root[data-theme="dark"] .bg-ink { background-color: #0b100d; }
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select { color: var(--color-ink); }
+:root[data-theme="dark"] ::placeholder { color: var(--color-n-650); }

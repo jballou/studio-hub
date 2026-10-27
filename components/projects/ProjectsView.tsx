@@ -8,6 +8,7 @@ import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { Icon } from "@/components/ui/Icon";
+import { IssueIcon } from "@/components/ui/IssueIcon";
 import { Board } from "./Board";
 import { NoStartTag, PlanWork } from "./PlanWork";
 import { needsStartDate } from "@/lib/startdate";
@@ -75,6 +76,21 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
       })()}
     </div>
   );
+}
+
+/** Children sit right under their parent when both are in the list; everything else keeps its order. */
+function nest(rows: Project[]): { p: Project; depth: number }[] {
+  const keys = new Set(rows.map((r) => r.jiraKey));
+  const kids = new Map<string, Project[]>();
+  const top: Project[] = [];
+  for (const r of rows) {
+    if (r.parentKey && keys.has(r.parentKey)) kids.set(r.parentKey, [...(kids.get(r.parentKey) ?? []), r]);
+    else top.push(r);
+  }
+  const out: { p: Project; depth: number }[] = [];
+  const walk = (p: Project, depth: number) => { out.push({ p, depth }); (kids.get(p.jiraKey) ?? []).forEach((c) => walk(c, Math.min(depth + 1, 3))); };
+  top.forEach((p) => walk(p, 0));
+  return out;
 }
 
 export function ProjectsView() {
@@ -231,12 +247,13 @@ export function ProjectsView() {
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{g.label} <span className="font-normal">({rows.length})</span></h2>
               {rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
-                  {rows.map((p) => (
-                    <li key={p.id} className="flex items-center gap-1 rounded-lg border border-line bg-white pl-2 hover:border-brand">
+                  {nest(rows).map(({ p, depth }) => (
+                    <li key={p.id} style={{ marginLeft: depth * 28 }} className={`flex items-center gap-1 rounded-lg border bg-white pl-2 hover:border-brand ${depth ? "border-line border-l-4 border-l-n-200" : "border-line"}`}>
                       <StarButton starred={favs.isStarred(p.jiraKey)} onToggle={() => favs.toggle(p.jiraKey, p.title)} label={p.title} />
                       <Link href={`/projects/${p.jiraKey}`} className="flex min-w-0 flex-1 items-center gap-4 p-3 pl-1">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {p.issueType && <IssueIcon level={p.issueType.level} typeName={p.issueType.name} />}
                             <span className="font-medium">{p.title}</span>
                             <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
@@ -244,7 +261,7 @@ export function ProjectsView() {
                             {needsStartDate(p) && <NoStartTag />}
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
-                          <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {p.requesterName ?? name(p.requesterId)}</div>
+                          <div className="text-xs text-muted">{p.jiraKey} · {p.issueType && p.issueType.level !== 0 ? p.issueType.name : p.type} · {p.requesterName ?? name(p.requesterId)}{p.parentKey && !rows.some((r) => r.jiraKey === p.parentKey) ? ` · in ${p.parentTitle ?? p.parentKey}` : ""}</div>
                         </div>
                         <StatusTag project={p} />
                         <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-semibold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>

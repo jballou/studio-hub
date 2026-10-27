@@ -14,6 +14,7 @@ import { ImageViewer } from "./ImageViewer";
 import { PdfViewer } from "./PdfViewer";
 import type { Zoom } from "./Stage";
 import { ZoomControl } from "./ZoomControl";
+import { celebrate } from "@/lib/celebrate";
 import { VideoViewer, type Marker, type VideoHandle } from "./VideoViewer";
 
 const initialsOf = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -213,7 +214,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         {canApprove && (
           <button
             disabled={closed}
-            onClick={() => setStage("Delivered")}
+            onClick={() => { setStage("Delivered"); celebrate(); }}
             className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
           >
             <Icon name="delivered" size={16} /> {closed ? "Approved" : "Mark as approved"}

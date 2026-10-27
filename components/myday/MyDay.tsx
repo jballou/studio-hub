@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { activityRepo, googleRepo, GoogleUnavailable, isJira, projectsRepo, tasksRepo, type ActivityItem, type GoogleStatus } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
+import { celebrate } from "@/lib/celebrate";
 import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
 import { Gantt, Gauge, ScoreMeter, TimelineMeter } from "./Charts";
 import { NoStartTag, PlanWork } from "@/components/projects/PlanWork";
@@ -223,7 +224,7 @@ export function MyDay() {
                     <p className="text-sm text-muted">Nothing is overdue or due soon. Pick something from <Link href="/projects" className="text-brand underline">Projects</Link>, or add a task.</p>
                   ) : (
                     <ol className="space-y-2">
-                      {shownFocus.map((f) => <FocusRow key={`${f.kind}${f.id}`} f={f} today={today!} canPlan={me?.role === "creative"} onPlanned={(d) => setProjects((ps) => (ps ?? []).map((p) => (p.jiraKey === f.id ? { ...p, startDate: d } : p)))} slot={plan.find((p) => p.item.id === f.id)?.slot} planned={planned.has(f.id)} onDone={f.kind === "task" ? () => act(() => tasksRepo.update(f.id, { done: true })) : undefined} />)}
+                      {shownFocus.map((f) => <FocusRow key={`${f.kind}${f.id}`} f={f} today={today!} canPlan={me?.role === "creative"} onPlanned={(d) => setProjects((ps) => (ps ?? []).map((p) => (p.jiraKey === f.id ? { ...p, startDate: d } : p)))} slot={plan.find((p) => p.item.id === f.id)?.slot} planned={planned.has(f.id)} onDone={f.kind === "task" ? () => { celebrate(); void act(() => tasksRepo.update(f.id, { done: true })); } : undefined} />)}
                     </ol>
                   )}
                   <MoreButton total={focus.length} shown={shownFocus.length} expanded={showAllFocus} onToggle={() => setShowAllFocus(!showAllFocus)} noun="items" limit={4} />
@@ -232,7 +233,7 @@ export function MyDay() {
                 <>
                   {open.length === 0 ? <p className="text-sm text-muted">No open tasks.</p> : (
                     <ul className="space-y-1.5">
-                      {shownTasks.map((t) => <TaskRow key={t.id} t={t} tz={tz} today={today} onToggle={() => act(() => tasksRepo.update(t.id, { done: true }))} onDelete={() => act(() => tasksRepo.remove(t.id))} />)}
+                      {shownTasks.map((t) => <TaskRow key={t.id} t={t} tz={tz} today={today} onToggle={() => { celebrate(); void act(() => tasksRepo.update(t.id, { done: true })); }} onDelete={() => act(() => tasksRepo.remove(t.id))} />)}
                     </ul>
                   )}
                   <MoreButton total={open.length} shown={shownTasks.length} expanded={showAllTasks} onToggle={() => setShowAllTasks(!showAllTasks)} noun="tasks" />

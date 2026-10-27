@@ -7,6 +7,8 @@ import { Icon } from "@/components/ui/Icon";
 import { Tag } from "@/components/ui/Tag";
 import { Adf } from "@/components/ui/Adf";
 import { StatusMenu } from "./StatusMenu";
+import { IssueIcon } from "@/components/ui/IssueIcon";
+import { IssueLink, openBlockers, RelationsCard } from "./RelationsCard";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import { localDay } from "@/lib/myday/plan";
 import { TYPE_TONE, TYPE_SHORT } from "@/components/calendar/meta";
@@ -23,7 +25,7 @@ import { daysSince, FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useMe } from "@/hooks/useMe";
-import type { Asset, BriefInput, Block, JiraSync, Project, Stage, User } from "@/lib/types";
+import type { Asset, BriefInput, Block, JiraSync, Project, Relations, Stage, User } from "@/lib/types";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
 // The timeline shows four steps. A ticket in Jira's review stage counts as In progress, so "In review" is not a step.
@@ -72,12 +74,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const me = useMe();
   const favs = useFavorites();
   const [today, setToday] = useState<string | null>(null);
+  const [rel, setRel] = useState<Relations | null>(null);
 
   useEffect(() => {
     // Read in the browser so "today" is the viewer's own day.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(localDay());
     projectsRepo.getProject(jiraKey, "u-avery").then(setProject);
+    projectsRepo.relations(jiraKey).then(setRel);
     const loadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
     loadBlock();
     window.addEventListener("blocks-changed", loadBlock);
@@ -128,8 +132,15 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
     <main className="w-full p-6">
       <nav aria-label="Breadcrumb" className="mb-1 flex items-center gap-1 text-sm text-muted">
         <Link href="/projects" className="hover:underline">Projects</Link>
+        {(rel?.ancestors ?? []).map((a) => (
+          <span key={a.key} className="flex min-w-0 items-center gap-1">
+            <Icon name="chevronRight" size={12} />
+            <IssueIcon level={a.level} typeName={a.typeName} size={14} />
+            <IssueLink r={a} className="max-w-48 truncate" />
+          </span>
+        ))}
         <Icon name="chevronRight" size={12} />
-        <span>{project.jiraKey}</span>
+        <span className="flex items-center gap-1"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.jiraKey}</span>
       </nav>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <StarButton starred={favs.isStarred(project.jiraKey)} onToggle={() => favs.toggle(project.jiraKey, project.title)} label={project.title} />
@@ -198,10 +209,17 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
               </section>
             )}
 
+            {openBlockers(rel).length > 0 && (
+              <section role="status" aria-label="Linked blockers" className="rounded-xl border border-warn-line bg-warn-bg p-4 text-warn-fg">
+                <h2 className="flex items-center gap-2 text-base font-semibold"><Icon name="block" size={16} /> Waiting on linked work</h2>
+                <p className="mt-1 text-sm">{openBlockers(rel).map((l, i) => <span key={l.key}>{i > 0 && ", "}<IssueLink r={l} className="font-medium underline" /> ({l.status})</span>)} {openBlockers(rel).length === 1 ? "is" : "are"} linked as blocking this ticket and not finished yet.</p>
+              </section>
+            )}
+
             <Card title="Details">
               <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
                 <div><dt className="inline text-muted">Requester: </dt><dd className="inline"><NameLink id={project.requesterId} name={project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"} /></dd></div>
-                <div><dt className="inline text-muted">Type: </dt><dd className="inline">{project.type}</dd></div>
+                <div><dt className="inline text-muted">Type: </dt><dd className="inline-flex items-center gap-1 align-middle"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.issueType?.name ?? project.type}</dd></div>
                 {project.startDate !== undefined && <div><dt className="inline text-muted">Start date: </dt><dd className="inline">{project.startDate ? dayLabel(project.startDate, { month: "short", day: "numeric", year: "numeric" }) : "Not set"}</dd></div>}
                 <div><dt className="inline text-muted">Date submitted: </dt><dd className="inline">{dayLabel(project.submittedAt, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
                 <div><dt className="inline text-muted">Deadline: </dt><dd className={`inline ${late !== null ? "font-semibold text-bad-fg" : ""}`}>{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}{late !== null ? ` (${pastDueWords(late)} late)` : ""}</dd></div>
@@ -229,6 +247,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                 {project.deadline && (late !== null ? <span className="font-semibold text-bad-fg">Past due: deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</span> : <>Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</>)}
               </p>
             </Card>
+
+            {rel && <RelationsCard project={project} rel={rel} />}
 
             <Card title={project.brief || project.briefSections ? "Project brief" : "Description"}>
               {project.briefSections?.length ? (

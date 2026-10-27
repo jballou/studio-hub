@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Callout } from "@/components/ui/Tag";
 import { blocksRepo, type TargetStatus } from "@/lib/data/blocks";
+import { celebrate, isDeliveredStatus } from "@/lib/celebrate";
 import type { JiraSync } from "@/lib/types";
 
 /** Pick the Jira status a blocked ticket moves to. The list comes from what Jira allows for this ticket right now. */
@@ -48,6 +49,7 @@ export function UnblockDialog({
     setError(null);
     try {
       const { jira } = await blocksRepo.resolve(ticketKey, note, picked);
+      if (isDeliveredStatus(picked) && (!jira || jira.ok)) celebrate();
       onDone({ status: picked, jira });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't unblock.");

@@ -36,7 +36,8 @@ export type JiraIssue = {
   fields: {
     summary: string;
     status: { name: string; statusCategory: { key: string } };
-    issuetype: { name: string };
+    issuetype: { name: string; hierarchyLevel?: number };
+    parent?: { key: string; fields?: { summary?: string; status?: { name: string; statusCategory: { key: string } }; issuetype?: { name: string; hierarchyLevel?: number } } } | null;
     reporter?: JiraUser | null;
     assignee?: JiraUser | null;
     duedate?: string | null;
@@ -50,7 +51,7 @@ export type JiraIssue = {
   };
 };
 
-export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate"];
+export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent"];
 
 // Jira calls its date field "Start date" but the id differs per site, so it is found by name once and remembered.
 // Set JIRA_START_DATE_FIELD (e.g. customfield_10015) to skip the lookup.
@@ -173,4 +174,10 @@ export async function listTargetStatuses(a: JiraAuth, key: string): Promise<Targ
     out.push({ name: n, category: (t.to.statusCategory.key as TargetStatus["category"]) ?? "indeterminate" });
   }
   return out;
+}
+
+/** One ticket with just the fields asked for. Used for parents and links, where the full set isn't needed. */
+export async function getIssueFields(a: JiraAuth, key: string, fields: string[]): Promise<JiraIssue> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  return request<JiraIssue>(a, `/issue/${key}?fields=${fields.join(",")}`);
 }

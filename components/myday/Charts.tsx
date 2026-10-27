@@ -101,7 +101,7 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
                   className="flex h-8 items-center gap-1 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
                   style={{
                     gridColumn: `${b.from + 2} / ${b.to + 3}`,
-                    background: `color-mix(in srgb, ${b.color} 16%, white)`,
+                    background: `color-mix(in srgb, ${b.color} 22%, var(--card))`,
                     borderLeft: b.clippedLeft ? undefined : `3px solid ${b.color}`,
                     outline: b.late ? "1.5px solid #8a3734" : undefined,
                   }}

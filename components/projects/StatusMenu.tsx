@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, StatusTag } from "@/components/ui/Tag";
 import { blocksRepo, projectsRepo } from "@/lib/data";
+import { celebrate, isDeliveredStatus } from "@/lib/celebrate";
 import type { TargetStatus } from "@/lib/data/blocks";
 import type { Project } from "@/lib/types";
 
@@ -44,6 +45,7 @@ export function StatusMenu({ project, canChange, onChanged }: { project: Project
     setError(null);
     try {
       await projectsRepo.moveTo(project.jiraKey, s.name);
+      if (isDeliveredStatus(s.name)) celebrate();
       setPending(null);
       setOpen(false);
       onChanged();
