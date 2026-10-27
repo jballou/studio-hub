@@ -12,7 +12,7 @@ const empty = (): TasksDoc => ({ tasks: [] });
 const name = (email: string) => `tasks/${userDocId(email)}`;
 const now = () => new Date().toISOString();
 
-export type TaskInput = { title?: unknown; notes?: unknown; date?: unknown; time?: unknown; tz?: unknown; done?: unknown };
+export type TaskInput = { title?: unknown; notes?: unknown; date?: unknown; time?: unknown; tz?: unknown; done?: unknown; lane?: unknown };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -42,6 +42,10 @@ function clean(input: TaskInput, partial: boolean): Partial<Stored> {
     out.tz = tz || undefined;
   }
   if (input.done !== undefined) out.done = input.done === true;
+  if (input.lane !== undefined) {
+    if (input.lane !== "todo" && input.lane !== "progress" && input.lane !== "review") throw new AdminError(400, "Unknown column.");
+    out.lane = input.lane;
+  }
   return out;
 }
 
@@ -61,7 +65,7 @@ export async function addTask(email: string, input: TaskInput): Promise<Stored> 
   const f = clean(input, false);
   return updateDoc(name(email), empty, (d) => {
     if (d.tasks.filter((t) => !t.deleted).length >= 500) throw new AdminError(400, "That's a lot of tasks. Clear some completed ones first.");
-    const t: Stored = { id: randomUUID(), title: f.title!, notes: f.notes, date: f.date, time: f.time, tz: f.tz, done: false, createdAt: now(), updatedAt: now(), backup: "pending" };
+    const t: Stored = { id: randomUUID(), title: f.title!, notes: f.notes, date: f.date, time: f.time, tz: f.tz, lane: f.lane, done: false, createdAt: now(), updatedAt: now(), backup: "pending" };
     d.tasks.push(t);
     return { data: d, result: t };
   });

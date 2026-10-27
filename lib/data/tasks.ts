@@ -1,7 +1,7 @@
 import type { PersonalTask } from "@/lib/types";
 import { isJira } from "./mode";
 
-export type TaskDraft = { title: string; notes?: string; date?: string; time?: string; tz?: string };
+export type TaskDraft = { title: string; notes?: string; date?: string; time?: string; tz?: string; lane?: PersonalTask["lane"] };
 export type TasksState = { tasks: PersonalTask[]; googleConnected: boolean; syncError?: string };
 
 export interface TasksRepo {
@@ -41,7 +41,7 @@ const demoTasks: TasksRepo = {
     if (!title) throw new Error("Give the task a title.");
     const now = new Date().toISOString();
     const all = read();
-    all.push({ id: crypto.randomUUID(), title, notes: t.notes?.trim() || undefined, date: t.date || undefined, time: t.date ? t.time || undefined : undefined, tz: t.date && t.time ? t.tz : undefined, done: false, createdAt: now, updatedAt: now, backup: "off" });
+    all.push({ id: crypto.randomUUID(), title, notes: t.notes?.trim() || undefined, date: t.date || undefined, time: t.date ? t.time || undefined : undefined, tz: t.date && t.time ? t.tz : undefined, lane: t.lane, done: false, createdAt: now, updatedAt: now, backup: "off" });
     write(all); changed();
     return state(all);
   },
@@ -54,6 +54,7 @@ const demoTasks: TasksRepo = {
     if (patch.date !== undefined) { t.date = patch.date || undefined; if (!patch.date) { t.time = undefined; t.tz = undefined; } }
     if (patch.time !== undefined) t.time = patch.time || undefined;
     if (patch.tz !== undefined) t.tz = patch.tz || undefined;
+    if (patch.lane !== undefined) t.lane = patch.lane;
     if (patch.done !== undefined) { t.done = patch.done; t.doneAt = patch.done ? new Date().toISOString() : undefined; }
     t.updatedAt = new Date().toISOString();
     write(all); changed();

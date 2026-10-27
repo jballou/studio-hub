@@ -24,6 +24,11 @@ export const jiraProjects: ProjectsRepo = {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });
     return (await get<{ projects: Project[] }>(`/api/jira/projects?${qs}`)).projects;
   },
+  async moveTo(jiraKey, status) {
+    const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/status`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.ok === false) throw new Error(body.reason ?? body.error ?? `Couldn't move it (${res.status}).`);
+  },
   async myWork() {
     return (await get<{ projects: Project[] }>("/api/jira/mine")).projects;
   },

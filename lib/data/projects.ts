@@ -7,6 +7,8 @@ export interface ProjectsRepo {
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
   /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
   searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
+  /** Moves a ticket to a board status. Rejects with a plain message when Jira or the rules say no. */
+  moveTo(jiraKey: string, status: string): Promise<void>;
   /** Open tickets assigned to the signed-in person, soonest deadline first. */
   myWork(viewerId: string): Promise<Project[]>;
   createBrief(input: BriefSubmission, requesterId: string): Promise<{ jiraKey: string }>;
@@ -49,6 +51,14 @@ export const mockProjects: ProjectsRepo = {
         .filter((p) => !t || p.jiraKey.toLowerCase().includes(t) || p.title.toLowerCase().includes(t))
         .slice(0, limit),
     );
+  },
+  async moveTo(jiraKey, status) {
+    const p = projects.find((x) => x.jiraKey === jiraKey);
+    if (!p) throw new Error("That ticket doesn't exist.");
+    if (p.flag === "blocked") throw new Error("This ticket is blocked. Open it and use “Mark as unblocked” to choose its next status.");
+    // Demo: the app's own stages stand in for Jira statuses.
+    p.stage = status === "Done" ? "Delivered" : status === "In Review" ? "In review" : status === "In Progress" ? "In progress" : "Submitted";
+    p.group = status === "Done" ? "closed" : p.group === "closed" ? "open" : p.group;
   },
   async myWork(viewerId) {
     // Demo: creatives own the open projects; requesters have none assigned.

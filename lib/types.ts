@@ -208,6 +208,8 @@ export type PersonalTask = {
   /** IANA zone the date and time were entered in */
   tz?: string;
   done: boolean;
+  /** Board column while not done. Tasks have no workflow, so this is just where the person parked it. */
+  lane?: "todo" | "progress" | "review";
   doneAt?: string;
   createdAt: string;
   updatedAt: string;

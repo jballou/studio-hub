@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { blocksRepo, isJira, projectsRepo, repo } from "@/lib/data";
+import { blocksRepo, isJira, projectsRepo, repo, tasksRepo } from "@/lib/data";
 import { FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { Icon } from "@/components/ui/Icon";
-import type { Block, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
+import { Board } from "./Board";
+import { useMe } from "@/hooks/useMe";
+import { localDay } from "@/lib/myday/plan";
+import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
 
 const GROUPS: { id: ProjectGroup; label: string }[] = [
   { id: "open", label: "Open" },
@@ -62,41 +65,6 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
   );
 }
 
-function Board({ projects, blocks, isStarred, toggleStar }: { projects: Project[]; blocks: Record<string, Block>; isStarred: (k: string) => boolean; toggleStar: (k: string, t: string) => void }) {
-  return (
-    <div className="overflow-x-auto pb-2">
-      <div className="grid min-w-[62rem] grid-cols-5 gap-3">
-        {STAGES.map((st) => {
-          const col = projects.filter((p) => p.stage === st);
-          return (
-            <section key={st} aria-label={`${st}, ${col.length}`} className="rounded-xl bg-n-150 p-2">
-              <h2 className="mb-2 flex items-center gap-2 px-1 text-sm font-semibold">{st}<span className="rounded-full bg-white px-2 text-xs font-medium text-muted">{col.length}</span></h2>
-              <ul className="space-y-2">
-                {col.map((p) => (
-                  <li key={p.id} className="rounded-lg border border-line bg-white p-3 hover:border-brand">
-                    <div className="flex items-start gap-1">
-                      <Link href={`/projects/${p.jiraKey}`} className="min-w-0 flex-1 text-sm font-medium hover:underline">{p.title}</Link>
-                      <StarButton starred={isStarred(p.jiraKey)} onToggle={() => toggleStar(p.jiraKey, p.title)} label={p.title} />
-                    </div>
-                    <div className="mt-1 text-xs text-muted">{p.jiraKey} · {p.type}</div>
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
-                      {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
-                      {p.statusName && <StatusTag project={p} />}
-                    </div>
-                    <div className="mt-2 text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</div>
-                  </li>
-                ))}
-                {col.length === 0 && <li className="px-1 py-3 text-xs text-muted">Nothing here.</li>}
-              </ul>
-            </section>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export function ProjectsView() {
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
@@ -104,6 +72,10 @@ export function ProjectsView() {
   const [view, setView] = useState<"list" | "board" | "month" | "week">("list");
   const [scope, setScope] = useState<"mine" | "all">("mine");
   const [shelf, setShelf] = useState(false);
+  const [tasks, setTasks] = useState<PersonalTask[]>([]);
+  const [tick, setTick] = useState(0);
+  const [today, setToday] = useState("");
+  const me = useMe();
   const [action, setAction] = useState(false);
   const [newOnly, setNewOnly] = useState(false);
   const [starredOnly, setStarredOnly] = useState(false);
@@ -126,7 +98,13 @@ export function ProjectsView() {
       blocksRepo.list(p.map((x) => x.jiraKey)).then((bs) => { if (live) setBlocks(Object.fromEntries(bs.map((b) => [b.key, b]))); }).catch(() => {});
     }).catch((e: Error) => { if (live) setLoadError(e.message); });
     return () => { live = false; };
-  }, [meId, scope]);
+  }, [meId, scope, tick]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToday(localDay());
+    tasksRepo.list().then((s) => setTasks(s.tasks)).catch(() => {});
+  }, []);
 
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "Unknown";
 
@@ -138,6 +116,10 @@ export function ProjectsView() {
     (!action || p.actionRequired) && (!newOnly || p.newComments > 0) && (!starredOnly || favs.isStarred(p.jiraKey)) && (!blockedOnly || p.flag === "blocked" || !!blocks[p.jiraKey]) && (!stage || p.stage === stage) &&
     (!type || p.type === type) && (!collab || p.collaboratorIds.includes(collab) || p.requesterId === collab) &&
     (!before || p.deadline <= before)), [projects, action, newOnly, starredOnly, blockedOnly, blocks, favs, stage, type, collab, before]);
+
+  // Tasks have no type, requester or action state, so ticket-only filters hide them; the due-by date applies to both.
+  const ticketOnlyFilter = action || newOnly || starredOnly || blockedOnly || !!stage || !!type || !!collab;
+  const boardTasks = ticketOnlyFilter ? [] : tasks.filter((t) => !before || (t.date ?? "9999") <= before);
 
   const activeFilters = [action, newOnly, starredOnly, blockedOnly, !!stage, !!type, !!collab, !!before, scope === "all"].filter(Boolean).length;
   const clearFilters = () => { setAction(false); setNewOnly(false); setStarredOnly(false); setBlockedOnly(false); setStage(""); setType(""); setCollab(""); setBefore(""); setScope("mine"); };
@@ -222,7 +204,13 @@ export function ProjectsView() {
         </div>
       )}
 
-      {view === "board" ? <Board projects={filtered} blocks={blocks} isStarred={favs.isStarred} toggleStar={favs.toggle} /> : view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
+      {view === "board" ? (
+        <Board
+          projects={filtered} tasks={boardTasks} blocks={blocks} today={today || "1970-01-01"}
+          canMove={isJira ? me?.role === "creative" : users.find((u) => u.id === meId)?.role === "creative"}
+          isStarred={favs.isStarred} toggleStar={favs.toggle} onTicketsChanged={() => setTick((t) => t + 1)} onTasks={setTasks}
+        />
+      ) : view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
         GROUPS.map((g) => {
           const rows = filtered.filter((p) => p.group === g.id);
           return (
