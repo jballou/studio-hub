@@ -11,6 +11,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Board } from "./Board";
 import { NoStartTag, PlanWork } from "./PlanWork";
 import { needsStartDate } from "@/lib/startdate";
+import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import { useMe } from "@/hooks/useMe";
 import { localDay } from "@/lib/myday/plan";
 import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
@@ -239,13 +240,14 @@ export function ProjectsView() {
                             <span className="font-medium">{p.title}</span>
                             <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
+                            {today && pastDueDays(p, today) !== null && <Tag tone="bad" icon="alert">Past due · {pastDueWords(pastDueDays(p, today)!)}</Tag>}
                             {needsStartDate(p) && <NoStartTag />}
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
                           <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {p.requesterName ?? name(p.requesterId)}</div>
                         </div>
                         <StatusTag project={p} />
-                        <span className="w-24 text-right text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>
+                        <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-semibold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>
                       </Link>
                       {needsStartDate(p) && canPlan && <span className="pr-3"><PlanWork project={p} onPlanned={() => setTick((t) => t + 1)} /></span>}
                     </li>

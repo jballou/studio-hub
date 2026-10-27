@@ -20,7 +20,7 @@ export interface ProjectsRepo {
 const projects: Project[] = [
   { id: "p1", jiraKey: "MKTGCRTV-101", title: "Spring campaign: social ad", startDate: "2026-10-06", group: "open", stage: "In feedback", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-10-30", actionRequired: true, newComments: 3, assetIds: ["a-ad"], submittedAt: "2026-10-05", brief: { problem: "Our spring offer is not getting noticed on mobile feeds.", opportunity: "A clear, bold social ad can lift sign-ups during the spring push.", scope: "One static social ad, two sizes (1:1 and 4:5).", requirements: "Use spring brand palette. Include the 20% offer and a Get started CTA.", antiGoals: "No stock photography. No competitor mentions.", deliverables: "PNG exports for LinkedIn and Instagram.", northStar: "Click-through rate above 1.2%.", openQuestions: "Do we need a Spanish version?" } },
   { id: "p2", jiraKey: "MKTGCRTV-102", title: "Product teaser (15s)", startDate: "2026-10-14", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
-  { id: "p3", jiraKey: "MKTGCRTV-103", title: "Brand one-pager", startDate: "", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-11-12", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
+  { id: "p3", jiraKey: "MKTGCRTV-103", title: "Brand one-pager", startDate: "", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-10-20", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
   { id: "p4", jiraKey: "MKTGCRTV-110", title: "Webinar landing page refresh", startDate: "", group: "ideas", stage: "Submitted", flag: "at-risk", type: "Web", requesterId: "u-jordan", collaboratorIds: [], deadline: "2026-12-01", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-20" },
   { id: "p5", jiraKey: "MKTGCRTV-090", title: "Summer promo banner set", group: "closed", stage: "Delivered", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-09-15", actionRequired: false, newComments: 0, assetIds: ["a-ad"], submittedAt: "2026-08-20" },
 ];
@@ -67,8 +67,9 @@ export const mockProjects: ProjectsRepo = {
     if (!p) throw new Error("That ticket doesn't exist.");
     if (p.flag === "blocked") throw new Error("This ticket is blocked. Open it and use “Mark as unblocked” to choose its next status.");
     // Demo: the app's own stages stand in for Jira statuses.
-    p.stage = status === "Done" ? "Delivered" : status === "In Review" ? "In review" : status === "In Progress" ? "In progress" : "Submitted";
-    p.group = status === "Done" ? "closed" : p.group === "closed" ? "open" : p.group;
+    const closing = ["Done", "Cancelled", "Won't Do", "Duplicate"].includes(status);
+    p.stage = closing ? "Delivered" : status === "In Review" ? "In review" : status === "In Progress" ? "In progress" : "Submitted";
+    p.group = closing ? "closed" : p.group === "closed" ? "open" : p.group;
   },
   async myWork(viewerId) {
     // Demo: creatives own the open projects; requesters have none assigned.

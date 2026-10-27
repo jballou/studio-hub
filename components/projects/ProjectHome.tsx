@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/review/Avatar";
 import { Icon } from "@/components/ui/Icon";
-import { StatusTag, Tag } from "@/components/ui/Tag";
+import { Tag } from "@/components/ui/Tag";
+import { Adf } from "@/components/ui/Adf";
+import { StatusMenu } from "./StatusMenu";
+import { pastDueDays, pastDueWords } from "@/lib/pastdue";
+import { localDay } from "@/lib/myday/plan";
 import { TYPE_TONE, TYPE_SHORT } from "@/components/calendar/meta";
 import { dayLabel } from "@/lib/calendar/dates";
 import { formatDue } from "@/lib/time";
@@ -22,7 +26,8 @@ import { useMe } from "@/hooks/useMe";
 import type { Asset, BriefInput, Block, JiraSync, Project, Stage, User } from "@/lib/types";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
-const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
+// The timeline shows four steps. A ticket in Jira's review stage counts as In progress, so "In review" is not a step.
+const STAGES: Stage[] = ["Submitted", "In progress", "In feedback", "Delivered"];
 const PHASE_TIPS: Record<Stage, string[]> = {
   Submitted: ["The creative team is reading your brief", "Add anything missing in Jira comments"],
   "In review": ["The team is scoping the work", "Answer questions on the ticket quickly"],
@@ -38,6 +43,12 @@ const BRIEF_SECTIONS: { key: keyof BriefInput; label: string }[] = [
   { key: "requirements", label: "Requirements" }, { key: "antiGoals", label: "Anti-goals" }, { key: "deliverables", label: "Deliverables" },
   { key: "northStar", label: "North star" }, { key: "openQuestions", label: "Open questions" },
 ];
+
+/** A person's name; in real mode it opens their Jira profile in a new tab. */
+function NameLink({ id, name }: { id: string; name: string }) {
+  if (!isJira || !id) return <>{name}</>;
+  return <a href={`${JIRA_BASE}/jira/people/${encodeURIComponent(id)}`} target="_blank" rel="noopener noreferrer" title="Open profile in Jira" className="text-brand underline-offset-2 hover:underline">{name}</a>;
+}
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
@@ -60,8 +71,12 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const [blockError, setBlockError] = useState<string | null>(null);
   const me = useMe();
   const favs = useFavorites();
+  const [today, setToday] = useState<string | null>(null);
 
   useEffect(() => {
+    // Read in the browser so "today" is the viewer's own day.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToday(localDay());
     projectsRepo.getProject(jiraKey, "u-avery").then(setProject);
     const loadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
     loadBlock();
@@ -85,13 +100,17 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
 
   const person = (id: string) => users.find((u) => u.id === id);
   const people = [project.requesterId, ...project.collaboratorIds].map(person).filter((u): u is User => !!u);
-  const current = STAGES.indexOf(project.stage);
+  const shownStage: Stage = project.stage === "In review" ? "In progress" : project.stage;
+  const current = STAGES.indexOf(shownStage);
   const next = STAGES.slice(current + 1);
   const canManage = me?.role === "creative";
   const iHoldIt = !!block && me?.id === block.blockedBy.id;
   const reloadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
 
   const isBlocked = !!block || project.flag === "blocked";
+  const late = today ? pastDueDays(project, today) : null;
+  const reloadProject = () => projectsRepo.getProject(jiraKey, "u-avery").then((p) => p && setProject(p));
+  const collaborators = project.collaboratorIds.map((id, i) => ({ id, name: project.collaboratorNames?.[i] ?? person(id)?.name ?? "" })).filter((c) => c.name);
   // The person it's waiting on can clear a named block; a Blocked ticket with nobody named is for the creative team.
   const canUnblock = isBlocked && (canManage || iHoldIt);
   const afterUnblock = async ({ status, jira }: { status: string; jira?: JiraSync }) => {
@@ -115,7 +134,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <StarButton starred={favs.isStarred(project.jiraKey)} onToggle={() => favs.toggle(project.jiraKey, project.title)} label={project.title} />
         <h1 className="text-2xl font-bold">{project.title}</h1>
-        <StatusTag project={project} />
+        <StatusMenu project={project} canChange={canManage} onChanged={reloadProject} />
+        {late !== null && <Tag tone="bad" icon="alert">Past due · {pastDueWords(late)}</Tag>}
         <FlagTags flag={project.flag} block={block} />
         {needsStartDate(project) && <NoStartTag />}
         <div className="ml-auto flex items-center gap-3">
@@ -152,6 +172,12 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
       {tab === "overview" && (
         <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
           <div className="space-y-5">
+            {late !== null && (
+              <section role="alert" aria-label="Past due" className="rounded-xl border border-bad-line bg-bad-bg p-4 text-bad-fg">
+                <h2 className="flex items-center gap-2 text-lg font-semibold"><Icon name="alert" size={18} /> Past due by {pastDueWords(late)}</h2>
+                <p className="mt-1 text-sm">The deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })} and this ticket is still {project.statusName ?? project.stage}.</p>
+              </section>
+            )}
             {(block || project.flag === "blocked") && (
               <section className="rounded-xl border border-bad-line bg-bad-bg p-5 text-bad-fg" aria-label="Blocked">
                 <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Icon name="close" size={18} /> {block ? `Blocked by ${block.blockedBy.name}` : "Blocked in Jira, but nobody is named"}</h2>
@@ -174,12 +200,12 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
 
             <Card title="Details">
               <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
-                <div><dt className="inline text-muted">Requester: </dt><dd className="inline">{project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"}</dd></div>
+                <div><dt className="inline text-muted">Requester: </dt><dd className="inline"><NameLink id={project.requesterId} name={project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"} /></dd></div>
                 <div><dt className="inline text-muted">Type: </dt><dd className="inline">{project.type}</dd></div>
                 {project.startDate !== undefined && <div><dt className="inline text-muted">Start date: </dt><dd className="inline">{project.startDate ? dayLabel(project.startDate, { month: "short", day: "numeric", year: "numeric" }) : "Not set"}</dd></div>}
                 <div><dt className="inline text-muted">Date submitted: </dt><dd className="inline">{dayLabel(project.submittedAt, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
-                <div><dt className="inline text-muted">Deadline: </dt><dd className="inline">{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}</dd></div>
-                <div className="sm:col-span-2"><dt className="inline text-muted">Collaborators: </dt><dd className="inline">{(project.collaboratorNames ?? project.collaboratorIds.map((id) => person(id)?.name).filter(Boolean)).join(", ") || "None yet"}</dd></div>
+                <div><dt className="inline text-muted">Deadline: </dt><dd className={`inline ${late !== null ? "font-semibold text-bad-fg" : ""}`}>{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}{late !== null ? ` (${pastDueWords(late)} late)` : ""}</dd></div>
+                <div className="sm:col-span-2"><dt className="inline text-muted">Collaborators: </dt><dd className="inline">{collaborators.length ? collaborators.map((c, i) => <span key={c.id}>{i > 0 && ", "}<NameLink id={c.id} name={c.name} /></span>) : "None yet"}</dd></div>
               </dl>
             </Card>
 
@@ -198,7 +224,10 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                   </li>
                 ))}
               </ol>
-              {project.deadline && <p className="mt-4 text-sm text-muted">Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</p>}
+              <p className="mt-4 text-sm text-muted">
+                {project.statusName && <>Jira status: <b className="text-ink">{project.statusName}</b>{project.deadline ? " · " : ""}</>}
+                {project.deadline && (late !== null ? <span className="font-semibold text-bad-fg">Past due: deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</span> : <>Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</>)}
+              </p>
             </Card>
 
             <Card title={project.brief || project.briefSections ? "Project brief" : "Description"}>
@@ -209,7 +238,9 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                   ))}
                 </div>
               ) : brief.length === 0 ? (
-                project.description
+                project.descriptionAdf
+                  ? <Adf doc={project.descriptionAdf} />
+                  : project.description
                   ? <p className="whitespace-pre-wrap text-sm">{project.description}</p>
                   : <p className="text-sm text-muted">No brief on file for this project.</p>
               ) : (
@@ -229,8 +260,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             <div>
               <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Current project phase</h2>
               <div className="rounded-xl bg-n-150 p-4 text-sm">
-                <p className="mb-2 font-semibold">{project.stage}</p>
-                <ul className="list-disc space-y-1 pl-5">{PHASE_TIPS[project.stage].map((t) => <li key={t}>{t}</li>)}</ul>
+                <p className="mb-2 font-semibold">{shownStage}</p>
+                <ul className="list-disc space-y-1 pl-5">{PHASE_TIPS[shownStage].map((t) => <li key={t}>{t}</li>)}</ul>
               </div>
             </div>
             {next.length > 0 && (

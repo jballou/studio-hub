@@ -93,3 +93,6 @@ export function toCalendarItem(issue: JiraIssue, dateField: string, source: { id
     jiraKey: issue.key, sourceId: source.id, sourceName: source.name, sourceRef: issue.key,
   };
 }
+
+/** One ticket's full read: the list shape plus the description as Jira's rich-text document. */
+export const toProjectDetail = (issue: JiraIssue): Project => ({ ...toProject(issue), descriptionAdf: issue.fields.description ?? undefined });

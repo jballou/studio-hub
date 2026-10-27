@@ -169,6 +169,8 @@ export type Project = {
   briefSections?: { label: string; value: string }[];
   /** plain-text ticket description when there is no structured brief (Jira data) */
   description?: string;
+  /** the description as Jira's rich-text document, on single-ticket reads, so formatting can be shown as in Jira */
+  descriptionAdf?: unknown;
   requesterName?: string;
   collaboratorNames?: string[];
 };

@@ -1,15 +1,13 @@
-import { COLUMNS } from "@/lib/board";
-import { getIssue, JiraError, transitionToStatus } from "@/lib/jira/client";
+import { getIssue, JiraError, listTargetStatuses, transitionToStatus } from "@/lib/jira/client";
 import { jiraSyncFailure } from "@/lib/jira/sync";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
 import { activeBlocks } from "@/lib/store/blocks";
 import { AdminError } from "@/lib/store/users";
 
-const ALLOWED = new Set(COLUMNS.map((c) => c.jiraStatus));
-
 /**
- * POST { status }  Moves a ticket to one of the board's statuses (Open, In Progress, In Review, Done).
- * Creative team only. Blocked tickets go through "Mark as unblocked" instead, so the block record stays honest.
+ * POST { status }  Moves a ticket to any status Jira offers for it right now (the board and the status menu both use this).
+ * Creative team only. "Blocked" has its own flow because it needs a person named, and blocked tickets go through
+ * "Mark as unblocked", so the block record stays honest.
  */
 export async function POST(req: Request, ctx: RouteContext<"/api/jira/projects/[key]/status">) {
   try {
@@ -19,9 +17,14 @@ export async function POST(req: Request, ctx: RouteContext<"/api/jira/projects/[
     if (s.role !== "creative") throw new AdminError(403, "Only the creative team can change a ticket's status.");
     const body = await req.json().catch(() => ({}));
     const status = String(body.status ?? "");
-    if (!ALLOWED.has(status)) throw new JiraError(400, "That isn't a status the board can set.");
+    if (!status || status.length > 80) throw new JiraError(400, "Choose a status.");
+    if (status.toLowerCase() === "blocked") throw new JiraError(400, "Use “Mark as blocked” so you can say who it's waiting on.");
 
     const issue = await getIssue(s.auth, key);
+    const offered = await listTargetStatuses(s.auth, key);
+    if (!offered.some((o) => o.name.toLowerCase() === status.toLowerCase())) {
+      throw new JiraError(400, `Jira doesn't allow moving this ticket to ${status} from ${issue.fields.status.name}.`);
+    }
     if (issue.fields.status.name.toLowerCase() === "blocked" || (await activeBlocks([key])).length > 0) {
       throw new AdminError(409, "This ticket is blocked. Open it and use “Mark as unblocked” to choose its next status.");
     }
