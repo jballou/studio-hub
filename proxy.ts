@@ -23,5 +23,6 @@ export default function proxy(req: NextRequest, ctx: Parameters<typeof guarded>[
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|samples/).*)"],
+  // These are fetched before anyone is signed in (the sign-in page logo, the tab icon), so they must skip the sign-in check.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|brand/|samples/).*)"],
 };
