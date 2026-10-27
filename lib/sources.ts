@@ -11,6 +11,8 @@ export type ParsedSource =
       /** natural width in px; zoom percentages are relative to it */
       baseWidth: number;
       warnings: string[];
+      /** Drive files the person says are video or audio: a direct stream for a real player with timestamps (the embed is the fallback). */
+      media?: { kind: "audio" | "video"; streamUrl: string };
     }
   | { ok: false; error: string };
 
@@ -81,7 +83,9 @@ function parseSlides(u: URL): ParsedSource {
   };
 }
 
-function parseDrive(u: URL, shape: Shape): ParsedSource {
+export type DriveType = "other" | "video" | "audio";
+
+function parseDrive(u: URL, shape: Shape, type: DriveType): ParsedSource {
   if (u.hostname === "docs.google.com") {
     return fail(/\/presentation\//.test(u.pathname) ? "That's a Slides deck. Choose “Google Slides” instead." : "Docs and Sheets aren't supported. Share a media file (video, audio, image or PDF).");
   }
@@ -89,11 +93,23 @@ function parseDrive(u: URL, shape: Shape): ParsedSource {
   if (/\/drive\/(u\/\d+\/)?folders\//.test(u.pathname)) return fail("That links to a folder. Share the file itself.");
   const id = /^\/file\/d\/([A-Za-z0-9_-]+)/.exec(u.pathname)?.[1] ?? u.searchParams.get("id");
   if (!id) return fail("Paste a Drive file link (Share → Copy link).");
+  const embedUrl = `https://drive.google.com/file/d/${id}/preview`;
+  const sharing = "Set sharing to “Anyone at SurveyMonkey with the link can view”.";
+  if (type === "audio" || type === "video") {
+    return {
+      ok: true, kind: "drive", summary: `Google Drive ${type} file`, suggestedTitle: `Drive ${type} file`,
+      embedUrl, aspect: type === "audio" ? 16 / 9 : shapeAspect(shape), baseWidth: 1280,
+      media: { kind: type, streamUrl: `https://drive.google.com/uc?export=download&id=${id}` },
+      warnings: [
+        sharing,
+        `Reviewers play it right here, and each comment is stamped with the time. If Drive won't stream it (large files, or sharing limits), the Drive player opens instead and reviewers type the time themselves.`,
+      ],
+    };
+  }
   return {
     ok: true, kind: "drive", summary: "Google Drive file", suggestedTitle: "Drive file",
-    embedUrl: `https://drive.google.com/file/d/${id}/preview`,
-    aspect: shapeAspect(shape), baseWidth: 1280,
-    warnings: ["Set sharing to “Anyone at SurveyMonkey with the link can view”.", "Drive previews can't report playback time, so video and audio comments won't get timecodes until the file is imported."],
+    embedUrl, aspect: shapeAspect(shape), baseWidth: 1280,
+    warnings: [sharing, "Choose Audio or Video above if this is a media file, so comments get timestamps."],
   };
 }
 
@@ -111,14 +127,14 @@ function parseStaging(u: URL, device: Device): ParsedSource {
   };
 }
 
-export function parseSource(kind: Exclude<SourceKind, "upload">, raw: string, device: Device = "desktop", shape: Shape = "16:10"): ParsedSource {
+export function parseSource(kind: Exclude<SourceKind, "upload">, raw: string, device: Device = "desktop", shape: Shape = "16:10", driveType: DriveType = "other"): ParsedSource {
   if (!raw.trim()) return fail("");
   const u = toUrl(raw);
   if (!u || !/^https?:$/.test(u.protocol)) return fail("That doesn't look like a link.");
   switch (kind) {
     case "figma": return parseFigma(u, shape);
     case "slides": return parseSlides(u);
-    case "drive": return parseDrive(u, shape);
+    case "drive": return parseDrive(u, shape, driveType);
     case "staging": return parseStaging(u, device);
   }
 }

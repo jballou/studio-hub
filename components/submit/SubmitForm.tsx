@@ -6,25 +6,18 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { PeoplePicker } from "@/components/ui/PeoplePicker";
 import { TicketPicker } from "./TicketPicker";
 import { peopleRepo, projectsRepo, repo } from "@/lib/data";
-import { parseSource, SHAPES, type Shape } from "@/lib/sources";
+import { parseSource, SHAPES, type DriveType, type Shape } from "@/lib/sources";
+import { ACCEPT, AUDIO_EXTENSIONS, kindFromFile, mimeOf } from "@/lib/media";
 import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
-import type { Asset, AssetKind, Device, Person, Project, SourceKind } from "@/lib/types";
+import type { Asset, Device, Person, Project, SourceKind } from "@/lib/types";
 
 const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; placeholder?: string }[] = [
   { id: "figma", label: "Figma frame", hint: "Link to one frame", icon: "link", placeholder: "https://www.figma.com/design/…?node-id=12-34" },
   { id: "staging", label: "Landing page", hint: "Staging link", icon: "link", placeholder: "https://staging.example.com/landing" },
-  { id: "drive", label: "Google Drive", hint: "Video, audio, image or PDF", icon: "link", placeholder: "https://drive.google.com/file/d/…/view" },
+  { id: "drive", label: "Google Drive", hint: "Video, audio (MP3, M4A, WAV…), image or PDF", icon: "link", placeholder: "https://drive.google.com/file/d/…/view" },
   { id: "slides", label: "Google Slides", hint: "Deck link", icon: "link", placeholder: "https://docs.google.com/presentation/d/…/edit" },
-  { id: "upload", label: "Upload a file", hint: "Image, video, audio, PDF", icon: "upload" },
+  { id: "upload", label: "Upload a file", hint: "Image, video, audio (MP3, M4A, WAV…), PDF", icon: "upload" },
 ];
-
-function kindFromFile(f: File): AssetKind | null {
-  if (f.type.startsWith("image/")) return "image";
-  if (f.type.startsWith("video/")) return "video";
-  if (f.type.startsWith("audio/")) return "audio";
-  if (f.type === "application/pdf") return "pdf";
-  return null;
-}
 
 const field = "w-full rounded-lg border border-control bg-white px-3 py-2 text-sm";
 
@@ -37,6 +30,7 @@ export function SubmitForm() {
   const [url, setUrl] = useState("");
   const [device, setDevice] = useState<Device>("desktop");
   const [shape, setShape] = useState<Shape>("16:10");
+  const [driveType, setDriveType] = useState<DriveType>("other");
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState(params.get("title") ?? "");
   const [target, setTarget] = useState(""); // "" = new asset, else existing asset id
@@ -70,10 +64,18 @@ export function SubmitForm() {
   }, [ticket]);
 
   const parsed = useMemo(
-    () => (source === "upload" ? null : parseSource(source, url, device, shape)),
-    [source, url, device, shape],
+    () => (source === "upload" ? null : parseSource(source, url, device, shape, driveType)),
+    [source, url, device, shape, driveType],
   );
   const fileKind = file ? kindFromFile(file) : null;
+  // Warn (don't block) when this browser can't play the file, e.g. AIFF outside Safari. Reviewers may be on other browsers too.
+  const [cantPlay, setCantPlay] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!file || fileKind !== "audio") { setCantPlay(false); return; }
+    const mime = mimeOf(file);
+    setCantPlay(!!mime && document.createElement("audio").canPlayType(mime) === "");
+  }, [file, fileKind]);
 
   const sourceOk = source === "upload" ? !!file && !!fileKind : !!parsed && parsed.ok;
   const projectKey = ticket?.jiraKey ?? "";
@@ -94,7 +96,8 @@ export function SubmitForm() {
       });
     } else if (parsed?.ok && source !== "upload") {
       res = await repo.submitForReview({
-        ...common, assetKind: "embed", src: "", embedUrl: parsed.embedUrl, aspect: parsed.aspect, baseWidth: parsed.baseWidth,
+        // Drive media gets a real player on the direct stream; the Drive preview stays as the fallback.
+        ...common, assetKind: parsed.media?.kind ?? "embed", src: parsed.media?.streamUrl ?? "", embedUrl: parsed.embedUrl, aspect: parsed.aspect, baseWidth: parsed.baseWidth,
         source: { kind: source, url: url.trim(), label: parsed.summary },
       });
     } else {
@@ -114,7 +117,7 @@ export function SubmitForm() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {SOURCES.map((s) => (
             <label key={s.id} className={`cursor-pointer rounded-xl border bg-white p-3 text-sm ${source === s.id ? "border-brand ring-2 ring-brand-soft" : "border-line hover:border-control"}`}>
-              <input type="radio" name="source" className="sr-only" checked={source === s.id} onChange={() => { setSource(s.id); setUrl(""); setFile(null); }} />
+              <input type="radio" name="source" className="sr-only" checked={source === s.id} onChange={() => { setSource(s.id); setUrl(""); setFile(null); setDriveType("other"); }} />
               <span className="flex items-center gap-2 font-medium"><Icon name={s.icon} size={16} /> {s.label}</span>
               <span className="mt-0.5 block text-xs text-muted">{s.hint}</span>
             </label>
@@ -127,11 +130,13 @@ export function SubmitForm() {
           <label className="block text-sm font-semibold">File
             <input
               type="file"
-              accept="image/*,video/*,audio/*,application/pdf"
+              accept={ACCEPT}
               className={`${field} mt-1 font-normal`}
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            {file && !fileKind && <span role="alert" className="mt-1 block text-xs font-normal text-bad-fg">That file type isn&apos;t supported. Use an image, video, audio or PDF.</span>}
+            {file && !fileKind && <span role="alert" className="mt-1 block text-xs font-normal text-bad-fg">That file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span>}
+            {fileKind === "audio" && !cantPlay && <span className="mt-1 block text-xs font-normal text-muted">Audio. Reviewers play it in the browser and each comment is stamped with the time.</span>}
+            {fileKind === "audio" && cantPlay && <span role="alert" className="mt-1 block text-xs font-normal text-warn-fg">This browser can&apos;t play that audio format, so some reviewers may not either. MP3, M4A and WAV work everywhere.</span>}
           </label>
         ) : (
           <>
@@ -156,7 +161,20 @@ export function SubmitForm() {
             {parsed && !parsed.ok && parsed.error && (
               <p role="alert" className="mt-2 flex items-start gap-1.5 text-sm text-bad-fg"><Icon name="close" size={16} /> {parsed.error}</p>
             )}
-            {(source === "figma" || source === "drive") && (
+            {source === "drive" && (
+              <fieldset className="mt-3">
+                <legend className="text-sm font-semibold">What kind of file is it?</legend>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {([["other", "Image, PDF or other"], ["video", "Video"], ["audio", "Audio"]] as const).map(([id, label]) => (
+                    <label key={id} className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${driveType === id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+                      <input type="radio" name="drive-type" className="sr-only" checked={driveType === id} onChange={() => setDriveType(id)} />{label}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-muted">Video and audio get a player with timestamped comments.</p>
+              </fieldset>
+            )}
+            {(source === "figma" || (source === "drive" && driveType !== "audio")) && (
               <label className="mt-2 flex items-center gap-2 text-sm">Frame shape
                 <select value={shape} onChange={(e) => setShape(e.target.value as Shape)} className="rounded border border-control px-2 py-1">
                   {SHAPES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}

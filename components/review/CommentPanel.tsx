@@ -6,7 +6,7 @@ import { Tag, UnreadDot } from "@/components/ui/Tag";
 import { knownPeople, peopleRepo } from "@/lib/data/people";
 import type { Person, Thread, User } from "@/lib/types";
 import { Avatar } from "./Avatar";
-import { formatTime } from "./VideoViewer";
+import { formatTime, parseTimecode } from "@/lib/timecode";
 
 export type Tab = "all" | "open" | "resolved";
 
@@ -247,18 +247,25 @@ export function CommentList({
 }
 
 export function Composer({
-  me, isVideo, draft, hasPdfPage, onStart, onClearPin, onSubmit,
+  me, isVideo, audio = false, manualTime = false, draft, hasPdfPage, onStart, onClearPin, onSubmit,
 }: {
   me: User;
   isVideo: boolean;
+  /** Audio has no frame to pin; comments are tied to the time only. */
+  audio?: boolean;
+  /** The player can't report time (Drive fallback), so the reviewer types it. */
+  manualTime?: boolean;
   draft: Draft | null;
   hasPdfPage: number | null;
   onStart: () => void;
   onClearPin: () => void;
-  onSubmit: (body: string, withTime: boolean) => void;
+  onSubmit: (body: string, withTime: boolean, typedMs?: number | null) => void;
 }) {
   const [body, setBody] = useState("");
   const [withTime, setWithTime] = useState(true);
+  const [typed, setTyped] = useState("");
+  const typedMs = parseTimecode(typed);
+  const needsTime = isVideo && manualTime && withTime && typedMs === null;
   const area = useRef<HTMLTextAreaElement>(null);
   const [focused, setFocused] = useState(false);
   const expanded = focused || !!body || !!draft?.hasPin;
@@ -292,9 +299,10 @@ export function Composer({
   };
 
   const submit = () => {
-    if (!body.trim()) return;
-    onSubmit(body.trim(), isVideo && withTime);
+    if (!body.trim() || needsTime) return;
+    onSubmit(body.trim(), isVideo && withTime, manualTime ? typedMs : undefined);
     setBody("");
+    setTyped("");
   };
 
   return (
@@ -321,7 +329,7 @@ export function Composer({
         onFocus={onStart}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-        placeholder={isVideo ? "Write a comment… (click the video to pin a spot)" : "Write a comment… (click the design to pin a spot)"}
+        placeholder={audio ? "Write a comment… (it's stamped with the time you're listening to)" : isVideo ? "Write a comment… (click the video to pin a spot)" : "Write a comment… (click the design to pin a spot)"}
         aria-label="Write a comment"
         className="w-full resize-none bg-transparent px-1 text-[15px] outline-none placeholder:text-n-650"
       />
@@ -335,7 +343,9 @@ export function Composer({
         >
           <Icon name="at" size={16} />
         </button>
-        {draft?.hasPin ? (
+        {audio ? (
+          <span className="text-muted">Tip: play to the moment, then comment</span>
+        ) : draft?.hasPin ? (
           <span className="flex items-center gap-1">
             <Tag tone="ok" icon="check">Pinned on design</Tag>
             <button onClick={onClearPin} className="text-muted hover:underline">Remove</button>
@@ -347,13 +357,28 @@ export function Composer({
         )}
         {isVideo && (
           <label className="flex items-center gap-1">
-            <input type="checkbox" checked={withTime} onChange={(e) => setWithTime(e.target.checked)} />
-            At <span className="font-mono">{formatTime(draft?.capturedMs ?? 0)}</span>
+            <input type="checkbox" checked={withTime} onChange={(e) => setWithTime(e.target.checked)} aria-label="Attach a timestamp" />
+            At{" "}
+            {manualTime ? (
+              <input
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                disabled={!withTime}
+                inputMode="numeric"
+                placeholder="1:23"
+                aria-label="Time in the file, like 1:23"
+                aria-invalid={needsTime && typed.trim() !== ""}
+                className="w-16 rounded border border-control px-1.5 py-0.5 font-mono disabled:opacity-40"
+              />
+            ) : (
+              <span className="font-mono">{formatTime(draft?.capturedMs ?? 0)}</span>
+            )}
           </label>
         )}
+        {needsTime && <span className="text-muted">Type the time you&apos;re at, like 1:23, or untick.</span>}
         <button
           onClick={submit}
-          disabled={!body.trim()}
+          disabled={!body.trim() || needsTime}
           className="ml-auto rounded-lg bg-brand px-5 py-1.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650"
         >
           Send

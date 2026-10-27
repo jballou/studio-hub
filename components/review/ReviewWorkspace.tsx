@@ -89,6 +89,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const version = versions.find((v) => v.id === versionId);
   const kind = asset?.kind;
   const timed = kind === "video" || kind === "audio";
+  const [manualTime, setManualTime] = useState(false);
 
   const resetDraft = useCallback(() => { setAnchor(null); setDraft(null); }, []);
   const replace = (t: Thread) => setThreads((ts) => ts.map((x) => (x.id === t.id ? t : x)));
@@ -133,13 +134,13 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const unreadIds = new Set(threads.filter((t) => t.authorId !== me.id && !seen.has(t.id)).map((t) => t.id));
   const firstUnread = threads.find((t) => unreadIds.has(t.id));
 
-  const submit = async (body: string, withTime: boolean) => {
+  const submit = async (body: string, withTime: boolean, typedMs?: number | null) => {
     const t = await repo.createThread({
       versionId: version.id,
       authorId: me.id,
       body,
       anchor,
-      timeMs: timed && withTime ? draft?.capturedMs ?? video.current?.currentMs() ?? 0 : null,
+      timeMs: timed && withTime ? (manualTime ? typedMs ?? 0 : draft?.capturedMs ?? video.current?.currentMs() ?? 0) : null,
       page: kind === "pdf" ? page : null,
     });
     setThreads((ts) => [...ts, t]);
@@ -330,7 +331,10 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           )}
           {timed && (
             <VideoViewer
+              key={src}
               audio={kind === "audio"}
+              fallbackEmbed={version.embedUrl}
+              onFallback={setManualTime}
               zoom={zoom}
               src={src}
               aspect={version.aspect}
@@ -346,6 +350,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
             <Composer
               me={me}
               isVideo={timed}
+              audio={kind === "audio"}
+              manualTime={manualTime}
               draft={draft}
               hasPdfPage={kind === "pdf" ? page : null}
               onStart={startComment}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { formatTime } from "@/lib/timecode";
 import { Stage, type Zoom } from "./Stage";
 
 export type VideoHandle = {
@@ -11,13 +12,10 @@ export type VideoHandle = {
 
 export type Marker = { id: string; timeMs: number; initials: string; number: number; resolved: boolean };
 
-export function formatTime(ms: number) {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-}
+export { formatTime };
 
 export function VideoViewer({
-  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, zoom = "fit", audio = false,
+  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, zoom = "fit", audio = false, fallbackEmbed, onFallback,
 }: {
   src: string;
   aspect: number;
@@ -30,6 +28,9 @@ export function VideoViewer({
   /** Audio files play in the same element; no frames or pins, timecoded comments only. */
   audio?: boolean;
   zoom?: Zoom;
+  /** A preview page to show if the file itself won't play (Drive files that can't be streamed). It can't report time, so the parent asks for typed timestamps. */
+  fallbackEmbed?: string;
+  onFallback?: (active: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -42,6 +43,9 @@ export function VideoViewer({
   const [natural, setNatural] = useState<number | null>(null);
   const [baseW, setBaseW] = useState(1280);
   const [failed, setFailed] = useState(false);
+
+  const usingFallback = failed && !!fallbackEmbed;
+  useEffect(() => { onFallback?.(usingFallback); }, [usingFallback, onFallback]);
 
   const report = useCallback((t: number) => {
     const next = Math.round(t * 1000);
@@ -150,14 +154,18 @@ export function VideoViewer({
             <span className="text-sm">Audio. Comment at any point on the timeline.</span>
           </div>
         )}
-        {failed && (
+        {usingFallback && <iframe src={fallbackEmbed} title="Drive player" allow="autoplay" className="absolute inset-0 h-full w-full border-0 bg-white" />}
+        {failed && !fallbackEmbed && (
           <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 p-6 text-center text-sm text-white">
-            Video could not be loaded. Use “Load local video” to review an MP4 from your machine.
+            {audio ? "Audio could not be loaded. Check the file still exists and your browser can play its format." : "Video could not be loaded. Use “Load local video” to review an MP4 from your machine."}
           </div>
         )}
         {overlay}
       </Stage>
 
+      {usingFallback ? (
+        <p className="bg-ink px-4 py-3 text-sm text-n-50">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
+      ) : (
       <div className="flex items-center gap-3 bg-ink px-4 py-3 text-n-50">
         <button onClick={toggle} className="w-12 rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label={playing ? "Pause" : "Play"}>
           {playing ? "Pause" : "Play"}
@@ -191,6 +199,7 @@ export function VideoViewer({
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
