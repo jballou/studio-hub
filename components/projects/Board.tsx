@@ -6,6 +6,8 @@ import { FlagTags } from "@/components/blocks/BlockedTag";
 import { Icon } from "@/components/ui/Icon";
 import { StarButton } from "@/components/ui/StarButton";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
+import { NoStartTag, PlanWork } from "./PlanWork";
+import { needsStartDate } from "@/lib/startdate";
 import { projectsRepo, tasksRepo } from "@/lib/data";
 import { buildCards, COLUMNS, dragBlocker, dueLabel, taskPatchFor, type BoardCard, type ColumnId } from "@/lib/board";
 import type { Block, PersonalTask, Project } from "@/lib/types";
@@ -22,7 +24,7 @@ export function KindChip({ kind }: { kind: "ticket" | "task" }) {
 }
 
 export function Board({
-  projects, tasks, blocks, canMove, isStarred, toggleStar, onTicketsChanged, onTasks, today,
+  projects, tasks, blocks, canMove, isStarred, toggleStar, onTicketsChanged, onTasks, onPlanned, today,
 }: {
   projects: Project[];
   tasks: PersonalTask[];
@@ -32,6 +34,8 @@ export function Board({
   isStarred: (k: string) => boolean;
   toggleStar: (k: string, t: string) => void;
   onTicketsChanged: () => void;
+  /** called after a ticket's start date is saved */
+  onPlanned: () => void;
   onTasks: (t: PersonalTask[]) => void;
   today: string;
 }) {
@@ -139,7 +143,7 @@ export function Board({
                   {shown.map((c) => (
                     <li key={keyOf(c)}>
                       <Card
-                        card={c} blocks={blocks} today={today} canMove={canMove} starred={c.kind === "ticket" && isStarred(c.id)}
+                        card={c} blocks={blocks} today={today} canMove={canMove} onPlanned={onPlanned} starred={c.kind === "ticket" && isStarred(c.id)}
                         onStar={() => c.kind === "ticket" && toggleStar(c.id, c.project.title)}
                         onDragStart={() => { dragged.current = c; }} onDragEnd={() => { dragged.current = null; setOver(null); }}
                         menuOpen={menu === keyOf(c)} onMenu={() => setMenu(menu === keyOf(c) ? null : keyOf(c))} onMove={(to) => { setMenu(null); move(c, to); }}
@@ -188,9 +192,9 @@ function QuickAdd({ onAdd, onCancel }: { onAdd: (t: string) => void; onCancel: (
 }
 
 function Card({
-  card, blocks, today, canMove, starred, onStar, onDragStart, onDragEnd, menuOpen, onMenu, onMove,
+  card, blocks, today, canMove, onPlanned, starred, onStar, onDragStart, onDragEnd, menuOpen, onMenu, onMove,
 }: {
-  card: BoardCard; blocks: Record<string, Block>; today: string; canMove: boolean; starred: boolean; onStar: () => void;
+  card: BoardCard; blocks: Record<string, Block>; today: string; canMove: boolean; onPlanned: () => void; starred: boolean; onStar: () => void;
   onDragStart: () => void; onDragEnd: () => void; menuOpen: boolean; onMenu: () => void; onMove: (to: ColumnId) => void;
 }) {
   const isTicket = card.kind === "ticket";
@@ -235,10 +239,13 @@ function Card({
         {isTicket && <StatusTag project={card.project} />}
         {isTicket && <FlagTags flag={card.project.flag === "blocked" && !blocks[card.id] ? "blocked" : card.project.flag === "blocked" ? undefined : card.project.flag} block={blocks[card.id]} />}
         {isTicket && card.project.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
+        {isTicket && needsStartDate(card.project) && <NoStartTag />}
         
         {!isTicket && card.task.backup === "synced" && <Tag tone="ok">In Google Tasks</Tag>}
         {!isTicket && card.task.backup === "pending" && <Tag tone="warn">Backup pending</Tag>}
       </div>
+
+      {isTicket && canMove && needsStartDate(card.project) && <div className="mt-2"><PlanWork project={card.project} onPlanned={onPlanned} /></div>}
 
       <div className="mt-3 flex items-center gap-2 border-t border-line pt-2 text-xs">
         <span className="flex -space-x-1.5">

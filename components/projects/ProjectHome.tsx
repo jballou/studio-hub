@@ -13,6 +13,8 @@ import type { CalendarItem } from "@/lib/calendar/types";
 import { blocksRepo, isJira, projectsRepo, repo } from "@/lib/data";
 import { BlockDialog } from "@/components/blocks/BlockDialog";
 import { UnblockDialog } from "@/components/blocks/UnblockDialog";
+import { NoStartTag, PlanWork } from "./PlanWork";
+import { needsStartDate } from "@/lib/startdate";
 import { daysSince, FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -115,12 +117,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         <h1 className="text-2xl font-bold">{project.title}</h1>
         <StatusTag project={project} />
         <FlagTags flag={project.flag} block={block} />
+        {needsStartDate(project) && <NoStartTag />}
         <div className="ml-auto flex items-center gap-3">
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>
             {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-full ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
           </div>
           <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>
           <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Open in Jira</a>
+          {needsStartDate(project) && canManage && <PlanWork size="md" project={project} onPlanned={(d) => setProject({ ...project, startDate: d })} />}
           {canUnblock && project.group !== "closed" && (
             <button onClick={() => setUnblocking(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Mark as unblocked</button>
           )}
@@ -172,6 +176,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
               <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
                 <div><dt className="inline text-muted">Requester: </dt><dd className="inline">{project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"}</dd></div>
                 <div><dt className="inline text-muted">Type: </dt><dd className="inline">{project.type}</dd></div>
+                {project.startDate !== undefined && <div><dt className="inline text-muted">Start date: </dt><dd className="inline">{project.startDate ? dayLabel(project.startDate, { month: "short", day: "numeric", year: "numeric" }) : "Not set"}</dd></div>}
                 <div><dt className="inline text-muted">Date submitted: </dt><dd className="inline">{dayLabel(project.submittedAt, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
                 <div><dt className="inline text-muted">Deadline: </dt><dd className="inline">{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}</dd></div>
                 <div className="sm:col-span-2"><dt className="inline text-muted">Collaborators: </dt><dd className="inline">{(project.collaboratorNames ?? project.collaboratorIds.map((id) => person(id)?.name).filter(Boolean)).join(", ") || "None yet"}</dd></div>

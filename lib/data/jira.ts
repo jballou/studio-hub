@@ -24,6 +24,11 @@ export const jiraProjects: ProjectsRepo = {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });
     return (await get<{ projects: Project[] }>(`/api/jira/projects?${qs}`)).projects;
   },
+  async setStartDate(jiraKey, date) {
+    const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? `Couldn't save the start date (${res.status}).`);
+  },
   async moveTo(jiraKey, status) {
     const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/status`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     const body = await res.json().catch(() => ({}));

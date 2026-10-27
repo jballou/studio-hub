@@ -57,6 +57,8 @@ export function toProject(issue: JiraIssue): Project {
     flag: flagOf(issue),
     statusName: f.status.name,
     statusCategory: f.status.statusCategory.key as "new" | "indeterminate" | "done",
+    // undefined = this site has no usable Start date field, so nothing is flagged; "" = the field exists and is empty
+    startDate: "startDate" in f ? (typeof f.startDate === "string" ? f.startDate.slice(0, 10) : "") : undefined,
     resolvedAt: typeof f.resolutiondate === "string" ? f.resolutiondate.slice(0, 10) : undefined,
     type: projectTypeOf(issue),
     requesterId: f.reporter?.accountId ?? "",

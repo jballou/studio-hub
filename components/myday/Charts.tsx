@@ -97,7 +97,7 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
                 <Link href={`/projects/${b.key}`} className="truncate pr-3 text-sm hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
                 <Link
                   href={`/projects/${b.key}`}
-                  title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
+                  title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.startDate || b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
                   className="flex h-8 items-center gap-1 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
                   style={{
                     gridColumn: `${b.from + 2} / ${b.to + 3}`,

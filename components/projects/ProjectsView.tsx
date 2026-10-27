@@ -9,6 +9,8 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { Icon } from "@/components/ui/Icon";
 import { Board } from "./Board";
+import { NoStartTag, PlanWork } from "./PlanWork";
+import { needsStartDate } from "@/lib/startdate";
 import { useMe } from "@/hooks/useMe";
 import { localDay } from "@/lib/myday/plan";
 import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
@@ -30,16 +32,17 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   let days: (Date | null)[];
   if (mode === "week") {
-    const start = new Date(year, month, cursor.getDate() - cursor.getDay());
-    days = Array.from({ length: 7 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+    // Monday to Friday only. Work isn't planned on weekends; anything due then is listed under the grid.
+    const start = new Date(year, month, cursor.getDate() - ((cursor.getDay() + 6) % 7));
+    days = Array.from({ length: 5 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
   } else {
     const first = new Date(year, month, 1).getDay();
     const count = new Date(year, month + 1, 0).getDate();
     days = Array.from({ length: first + count }, (_, i) => (i < first ? null : new Date(year, month, i - first + 1)));
   }
   const step = (n: number) => setCursor(mode === "week" ? new Date(year, month, cursor.getDate() + 7 * n) : new Date(year, month + n, 1));
-  const label = mode === "week" && days[0] && days[6]
-    ? `${days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${days[6].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+  const label = mode === "week" && days[0] && days[4]
+    ? `${days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${days[4].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
     : cursor.toLocaleString("en-US", { month: "long", year: "numeric" });
   return (
     <div className="rounded-lg border border-line bg-white p-4">
@@ -48,8 +51,8 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
         <span className="font-semibold">{label}</span>
         <button className="rounded border border-control px-2" onClick={() => step(1)} aria-label="Next">›</button>
       </div>
-      <div className="grid grid-cols-7 gap-px bg-line text-xs">
-        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => <div key={i} className="bg-n-150 p-1 text-center font-semibold">{d}</div>)}
+      <div className={`grid gap-px bg-line text-xs ${mode === "week" ? "grid-cols-5" : "grid-cols-7"}`}>
+        {(mode === "week" ? ["Mon", "Tue", "Wed", "Thu", "Fri"] : ["S", "M", "T", "W", "T", "F", "S"]).map((d, i) => <div key={i} className="bg-n-150 p-1 text-center font-semibold">{d}</div>)}
         {days.map((d, i) => (
           <div key={i} className={`bg-white p-1 ${mode === "week" ? "min-h-40" : "min-h-20"}`}>
             {d && <div className="text-muted">{d.getDate()}</div>}
@@ -61,6 +64,14 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
           </div>
         ))}
       </div>
+      {mode === "week" && days[0] && (() => {
+        const sat = iso(new Date(days[0].getFullYear(), days[0].getMonth(), days[0].getDate() + 5));
+        const sun = iso(new Date(days[0].getFullYear(), days[0].getMonth(), days[0].getDate() + 6));
+        const weekend = projects.filter((p) => p.deadline === sat || p.deadline === sun);
+        return weekend.length > 0 ? (
+          <p className="mt-2 text-xs text-muted">Due this weekend: {weekend.map((p, i) => <span key={p.id}>{i > 0 && ", "}<Link href={`/projects/${p.jiraKey}`} className="text-brand underline">{p.title}</Link> ({p.deadline})</span>)}</p>
+        ) : null;
+      })()}
     </div>
   );
 }
@@ -121,6 +132,7 @@ export function ProjectsView() {
   const ticketOnlyFilter = action || newOnly || starredOnly || blockedOnly || !!stage || !!type || !!collab;
   const boardTasks = ticketOnlyFilter ? [] : tasks.filter((t) => !before || (t.date ?? "9999") <= before);
 
+  const canPlan = isJira ? me?.role === "creative" : users.find((u) => u.id === meId)?.role === "creative";
   const activeFilters = [action, newOnly, starredOnly, blockedOnly, !!stage, !!type, !!collab, !!before, scope === "all"].filter(Boolean).length;
   const clearFilters = () => { setAction(false); setNewOnly(false); setStarredOnly(false); setBlockedOnly(false); setStage(""); setType(""); setCollab(""); setBefore(""); setScope("mine"); };
 
@@ -135,8 +147,8 @@ export function ProjectsView() {
             </select>
           </label>}
           <div className="flex overflow-hidden rounded border border-line">
-            {(["list", "board", "month", "week"] as const).map((v) => (
-              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-3 py-1 capitalize ${view === v ? "bg-brand text-white" : "bg-white"}`}>{v}</button>
+            {([["list", "listStart"], ["board", "kanban"], ["month", "calendarDays"], ["week", "calendarWeek"]] as const).map(([v, icon]) => (
+              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`flex items-center gap-1.5 px-3 py-1 capitalize ${view === v ? "bg-brand text-white" : "bg-white"}`}><Icon name={icon} size={14} />{v}</button>
             ))}
           </div>
         </div>
@@ -207,7 +219,7 @@ export function ProjectsView() {
       {view === "board" ? (
         <Board
           projects={filtered} tasks={boardTasks} blocks={blocks} today={today || "1970-01-01"}
-          canMove={isJira ? me?.role === "creative" : users.find((u) => u.id === meId)?.role === "creative"}
+          canMove={canPlan} onPlanned={() => setTick((t) => t + 1)}
           isStarred={favs.isStarred} toggleStar={favs.toggle} onTicketsChanged={() => setTick((t) => t + 1)} onTasks={setTasks}
         />
       ) : view !== "list" ? <CalendarMode projects={filtered} mode={view} /> : (
@@ -227,6 +239,7 @@ export function ProjectsView() {
                             <span className="font-medium">{p.title}</span>
                             <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
+                            {needsStartDate(p) && <NoStartTag />}
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
                           <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {p.requesterName ?? name(p.requesterId)}</div>
@@ -234,6 +247,7 @@ export function ProjectsView() {
                         <StatusTag project={p} />
                         <span className="w-24 text-right text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>
                       </Link>
+                      {needsStartDate(p) && canPlan && <span className="pr-3"><PlanWork project={p} onPlanned={() => setTick((t) => t + 1)} /></span>}
                     </li>
                   ))}
                 </ul>

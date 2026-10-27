@@ -9,6 +9,8 @@ import { activityRepo, googleRepo, GoogleUnavailable, isJira, projectsRepo, task
 import { useMe } from "@/hooks/useMe";
 import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTimeScore, openSlots, relativeTime, suggest, taskInstant, timeline, STAGES_ORDER, STATUS_META, type DayEvent, type FocusItem } from "@/lib/myday/plan";
 import { Gantt, Gauge, ScoreMeter, TimelineMeter } from "./Charts";
+import { NoStartTag, PlanWork } from "@/components/projects/PlanWork";
+import { needsStartDate } from "@/lib/startdate";
 import { localTimezone, timezoneOptions, zoneAbbr } from "@/lib/time";
 import type { PersonalTask, Project } from "@/lib/types";
 
@@ -221,7 +223,7 @@ export function MyDay() {
                     <p className="text-sm text-muted">Nothing is overdue or due soon. Pick something from <Link href="/projects" className="text-brand underline">Projects</Link>, or add a task.</p>
                   ) : (
                     <ol className="space-y-2">
-                      {shownFocus.map((f) => <FocusRow key={`${f.kind}${f.id}`} f={f} today={today!} slot={plan.find((p) => p.item.id === f.id)?.slot} planned={planned.has(f.id)} onDone={f.kind === "task" ? () => act(() => tasksRepo.update(f.id, { done: true })) : undefined} />)}
+                      {shownFocus.map((f) => <FocusRow key={`${f.kind}${f.id}`} f={f} today={today!} canPlan={me?.role === "creative"} onPlanned={(d) => setProjects((ps) => (ps ?? []).map((p) => (p.jiraKey === f.id ? { ...p, startDate: d } : p)))} slot={plan.find((p) => p.item.id === f.id)?.slot} planned={planned.has(f.id)} onDone={f.kind === "task" ? () => act(() => tasksRepo.update(f.id, { done: true })) : undefined} />)}
                     </ol>
                   )}
                   <MoreButton total={focus.length} shown={shownFocus.length} expanded={showAllFocus} onToggle={() => setShowAllFocus(!showAllFocus)} noun="items" limit={4} />
@@ -402,7 +404,7 @@ function AddTaskDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (d: { t
   );
 }
 
-function FocusRow({ f, today, slot, planned, onDone }: { f: FocusItem; today: string; slot?: { start: number; end: number }; planned: boolean; onDone?: () => void }) {
+function FocusRow({ f, today, slot, planned, onDone, canPlan, onPlanned }: { f: FocusItem; today: string; slot?: { start: number; end: number }; planned: boolean; onDone?: () => void; canPlan: boolean; onPlanned: (date: string) => void }) {
   const hot = f.reason.startsWith("Overdue");
   const stageIdx = f.kind === "ticket" ? STAGES_ORDER.indexOf(f.project.stage) + 1 : 0;
   return (
@@ -417,8 +419,10 @@ function FocusRow({ f, today, slot, planned, onDone }: { f: FocusItem; today: st
             : <span className="font-semibold">{f.title}</span>}
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <Tag tone={hot ? "bad" : f.reason.includes("Blocked") ? "warn" : "info"}>{f.reason}</Tag>
+            {f.kind === "ticket" && needsStartDate(f.project) && <NoStartTag />}
             {f.kind === "ticket" ? <span className="text-xs text-muted">{f.key} · {f.project.statusName ?? f.project.stage}{f.project.statusName ? "" : ` (${stageIdx}/${STAGES_ORDER.length})`}</span> : <Tag tone="progress">Task</Tag>}
           </div>
+          {f.kind === "ticket" && canPlan && needsStartDate(f.project) && <div className="mt-2"><PlanWork project={f.project} onPlanned={onPlanned} /></div>}
           {f.kind === "ticket" && <div className="mt-2"><TimelineMeter t={timeline(f.project, today)} label={`Time used on ${f.title}`} /></div>}
           {planned && slot && <p className="mt-2 text-xs text-muted">Suggested: {clock(slot.start)} – {clock(Math.min(slot.end, slot.start + 90 * 6e4))} ({hm(Math.min(90, minutes(slot.end - slot.start)))})</p>}
         </div>

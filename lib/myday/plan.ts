@@ -183,13 +183,14 @@ export type Timeline = { pct: number; daysLeft: number | null; state: "ok" | "wa
 
 /** Where a ticket is between the day it was submitted and its deadline. */
 export function timeline(p: Project, today: string): Timeline {
-  if (!p.deadline) return { pct: 0, daysLeft: null, state: "none", from: p.submittedAt, to: "" };
-  const total = daysBetween(p.submittedAt, p.deadline);
-  const used = daysBetween(p.submittedAt, today);
+  const from = p.startDate || p.submittedAt;
+  if (!p.deadline) return { pct: 0, daysLeft: null, state: "none", from, to: "" };
+  const total = daysBetween(from, p.deadline);
+  const used = daysBetween(from, today);
   const daysLeft = daysBetween(today, p.deadline);
   const pct = daysLeft < 0 ? 100 : total <= 0 ? 100 : Math.max(0, Math.min(100, Math.round((used / total) * 100)));
   const state = daysLeft < 0 ? "late" : pct >= 80 && p.stage !== "In feedback" && p.stage !== "In review" ? "watch" : "ok";
-  return { pct, daysLeft, state, from: p.submittedAt, to: p.deadline };
+  return { pct, daysLeft, state, from, to: p.deadline };
 }
 
 export const STAGES_ORDER = ["Submitted", "In review", "In progress", "In feedback", "Delivered"] as const;
@@ -221,7 +222,8 @@ export function ganttBars(projects: Project[], windowStart: string, days: number
   for (const p of projects) {
     if (p.group === "closed") continue;
     if (!p.deadline) { undated++; continue; }
-    const start = p.submittedAt < p.deadline ? p.submittedAt : p.deadline;
+    const from0 = p.startDate || p.submittedAt;
+    const start = from0 < p.deadline ? from0 : p.deadline;
     if (start > winEnd || p.deadline < windowStart) continue;
     const s = start < windowStart ? windowStart : start;
     const e = p.deadline > winEnd ? winEnd : p.deadline;

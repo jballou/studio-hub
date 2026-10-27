@@ -1,3 +1,4 @@
+import { startDateProblem } from "@/lib/startdate";
 import type { BriefSubmission, Project } from "@/lib/types";
 
 /** Data boundary for projects/briefs; the Jira-backed adapter replaces the mock later. */
@@ -7,6 +8,8 @@ export interface ProjectsRepo {
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
   /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
   searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
+  /** Sets the ticket's start date (YYYY-MM-DD). Rejects with a plain message. */
+  setStartDate(jiraKey: string, date: string): Promise<void>;
   /** Moves a ticket to a board status. Rejects with a plain message when Jira or the rules say no. */
   moveTo(jiraKey: string, status: string): Promise<void>;
   /** Open tickets assigned to the signed-in person, soonest deadline first. */
@@ -15,10 +18,10 @@ export interface ProjectsRepo {
 }
 
 const projects: Project[] = [
-  { id: "p1", jiraKey: "MKTGCRTV-101", title: "Spring campaign: social ad", group: "open", stage: "In feedback", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-10-30", actionRequired: true, newComments: 3, assetIds: ["a-ad"], submittedAt: "2026-10-05", brief: { problem: "Our spring offer is not getting noticed on mobile feeds.", opportunity: "A clear, bold social ad can lift sign-ups during the spring push.", scope: "One static social ad, two sizes (1:1 and 4:5).", requirements: "Use spring brand palette. Include the 20% offer and a Get started CTA.", antiGoals: "No stock photography. No competitor mentions.", deliverables: "PNG exports for LinkedIn and Instagram.", northStar: "Click-through rate above 1.2%.", openQuestions: "Do we need a Spanish version?" } },
-  { id: "p2", jiraKey: "MKTGCRTV-102", title: "Product teaser (15s)", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
-  { id: "p3", jiraKey: "MKTGCRTV-103", title: "Brand one-pager", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-11-12", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
-  { id: "p4", jiraKey: "MKTGCRTV-110", title: "Webinar landing page refresh", group: "ideas", stage: "Submitted", flag: "at-risk", type: "Web", requesterId: "u-jordan", collaboratorIds: [], deadline: "2026-12-01", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-20" },
+  { id: "p1", jiraKey: "MKTGCRTV-101", title: "Spring campaign: social ad", startDate: "2026-10-06", group: "open", stage: "In feedback", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-10-30", actionRequired: true, newComments: 3, assetIds: ["a-ad"], submittedAt: "2026-10-05", brief: { problem: "Our spring offer is not getting noticed on mobile feeds.", opportunity: "A clear, bold social ad can lift sign-ups during the spring push.", scope: "One static social ad, two sizes (1:1 and 4:5).", requirements: "Use spring brand palette. Include the 20% offer and a Get started CTA.", antiGoals: "No stock photography. No competitor mentions.", deliverables: "PNG exports for LinkedIn and Instagram.", northStar: "Click-through rate above 1.2%.", openQuestions: "Do we need a Spanish version?" } },
+  { id: "p2", jiraKey: "MKTGCRTV-102", title: "Product teaser (15s)", startDate: "2026-10-14", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
+  { id: "p3", jiraKey: "MKTGCRTV-103", title: "Brand one-pager", startDate: "", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-11-12", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
+  { id: "p4", jiraKey: "MKTGCRTV-110", title: "Webinar landing page refresh", startDate: "", group: "ideas", stage: "Submitted", flag: "at-risk", type: "Web", requesterId: "u-jordan", collaboratorIds: [], deadline: "2026-12-01", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-20" },
   { id: "p5", jiraKey: "MKTGCRTV-090", title: "Summer promo banner set", group: "closed", stage: "Delivered", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-09-15", actionRequired: false, newComments: 0, assetIds: ["a-ad"], submittedAt: "2026-08-20" },
 ];
 
@@ -51,6 +54,13 @@ export const mockProjects: ProjectsRepo = {
         .filter((p) => !t || p.jiraKey.toLowerCase().includes(t) || p.title.toLowerCase().includes(t))
         .slice(0, limit),
     );
+  },
+  async setStartDate(jiraKey, date) {
+    const p = projects.find((x) => x.jiraKey === jiraKey);
+    if (!p) throw new Error("That ticket doesn't exist.");
+    const problem = startDateProblem(date, p.deadline);
+    if (problem) throw new Error(problem);
+    p.startDate = date;
   },
   async moveTo(jiraKey, status) {
     const p = projects.find((x) => x.jiraKey === jiraKey);

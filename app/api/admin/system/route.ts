@@ -2,6 +2,7 @@ import { readDoc } from "@/lib/store/doc";
 import { activeBlocks } from "@/lib/store/blocks";
 import { listUsers } from "@/lib/store/users";
 import { adminSession, errorResponse } from "@/lib/jira/session";
+import { startDateField } from "@/lib/jira/client";
 
 type Check = { id: string; label: string; ok: boolean; detail: string };
 
@@ -38,6 +39,13 @@ export async function GET(req: Request) {
       id: "env", label: "Settings (environment variables)", ok: missing.length === 0,
       detail: missing.length ? `Missing: ${missing.join(", ")}` : `All ${REQUIRED_ENV.length} present`,
     });
+
+    try {
+      const sf = await startDateField(s.auth);
+      checks.push({ id: "startdate", label: "Jira Start date field", ok: !!sf, detail: sf ? `Found (${sf}). Tickets with an empty start date are flagged.` : "No field named “Start date” was found, so “Plan work” is off. Set JIRA_START_DATE_FIELD to its id (customfield_…) if it has another name." });
+    } catch {
+      checks.push({ id: "startdate", label: "Jira Start date field", ok: false, detail: "Couldn't check" });
+    }
 
     const google = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
     checks.push({ id: "google", label: "Google (My Day calendar and Tasks backup)", ok: google, detail: google ? "Client credentials present" : "Not set up. My Day shows Jira work only. See docs/google-setup.md" });

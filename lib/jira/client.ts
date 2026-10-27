@@ -44,21 +44,58 @@ export type JiraIssue = {
     description?: unknown;
     customfield_10142?: JiraUser[] | null; // "Cc" user picker
     resolutiondate?: string | null;
+    /** the site's Start date field, copied here by startDateField/withStartDate */
+    startDate?: string | null;
     [field: string]: unknown;
   };
 };
 
 export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate"];
 
+// Jira calls its date field "Start date" but the id differs per site, so it is found by name once and remembered.
+// Set JIRA_START_DATE_FIELD (e.g. customfield_10015) to skip the lookup.
+let startField: { id: string | null; at: number } | null = null;
+
+export async function startDateField(a: JiraAuth): Promise<string | null> {
+  if (process.env.JIRA_START_DATE_FIELD) return process.env.JIRA_START_DATE_FIELD;
+  // A found field is kept for the life of the server; "not found" is rechecked every 10 minutes.
+  if (startField && (startField.id || Date.now() - startField.at < 600_000)) return startField.id;
+  try {
+    const all = await request<{ id: string; name: string; custom?: boolean; schema?: { type?: string } }[]>(a, "/field");
+    const hit = all.find((f) => f.name.toLowerCase() === "start date" && f.custom !== false && (f.schema?.type === "date" || f.schema?.type === "datetime")) ?? all.find((f) => f.name.toLowerCase() === "start date");
+    startField = { id: hit?.id ?? null, at: Date.now() };
+  } catch {
+    return null; // can't tell right now; try again next request
+  }
+  return startField.id;
+}
+
+/** Moves the discovered start date field's value to `fields.startDate` (null when empty) so the rest of the app doesn't need its id. */
+function withStartDate(issue: JiraIssue, id: string | null): JiraIssue {
+  if (id) issue.fields.startDate = (issue.fields[id] as string | null | undefined) ?? null;
+  return issue;
+}
+
 export async function searchIssues(a: JiraAuth, jql: string, fields: string[] = ISSUE_FIELDS, maxResults = 50): Promise<JiraIssue[]> {
-  const qs = new URLSearchParams({ jql, fields: fields.join(","), maxResults: String(maxResults) });
+  const sf = fields === ISSUE_FIELDS ? await startDateField(a) : null;
+  const qs = new URLSearchParams({ jql, fields: (sf ? [...fields, sf] : fields).join(","), maxResults: String(maxResults) });
   const data = await request<{ issues: JiraIssue[] }>(a, `/search/jql?${qs}`);
-  return data.issues;
+  return data.issues.map((i) => withStartDate(i, sf));
 }
 
 export async function getIssue(a: JiraAuth, key: string): Promise<JiraIssue> {
   if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
-  return request<JiraIssue>(a, `/issue/${key}?fields=${ISSUE_FIELDS.join(",")}`);
+  const sf = await startDateField(a);
+  return withStartDate(await request<JiraIssue>(a, `/issue/${key}?fields=${(sf ? [...ISSUE_FIELDS, sf] : ISSUE_FIELDS).join(",")}`), sf);
+}
+
+/** Sets the ticket's start date (YYYY-MM-DD). Needs write:jira-work and edit permission on the ticket. */
+export async function setStartDate(a: JiraAuth, key: string, date: string): Promise<void> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new JiraError(400, "That date doesn't look right.");
+  const sf = await startDateField(a);
+  if (!sf) throw new JiraError(409, "This Jira site has no Start date field the app can use.");
+  await request<void>(a, `/issue/${key}`, { method: "PUT", body: { fields: { [sf]: date } } });
 }
 
 /** Quotes a value for use inside a JQL string literal. */
