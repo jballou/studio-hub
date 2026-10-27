@@ -18,7 +18,10 @@ export type BoxAnchor = { kind: "box"; x: number; y: number; w: number; h: numbe
 export type Anchor = DotAnchor | BoxAnchor;
 
 export type AssetKind = "image" | "video" | "audio" | "pdf" | "embed";
-export type SourceKind = "figma" | "staging" | "drive" | "slides" | "upload";
+export type SourceKind = "figma" | "staging" | "drive" | "slides" | "lottie" | "upload";
+
+/** Where a submission stands with its reviewers. */
+export type ReviewState = "awaiting" | "changes" | "approved";
 export type Device = "desktop" | "mobile";
 
 export type AssetSource = { kind: SourceKind; url: string; label: string };
@@ -40,6 +43,8 @@ export type Asset = {
   /** what the creative wants feedback on */
   instructions?: string;
   submittedBy?: string;
+  /** where this stands with reviewers; absent means awaiting feedback */
+  review?: ReviewState;
   /** set when this was sent together with other items; items of one batch share an id */
   batch?: { id: string; title: string; index: number; total: number };
 };

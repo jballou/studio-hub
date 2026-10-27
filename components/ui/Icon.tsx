@@ -9,6 +9,8 @@ const PATHS = {
   check: <><path d="m5 12.5 4.5 4.5L19 7.5" /></>,
   folder: <><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></>,
   plus: <><path d="M12 5v14M5 12h14" /></>,
+  play: <><polygon points="6 3 20 12 6 21 6 3" /></>,
+  pause: <><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></>,
   upload: <><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></>,
   link: <><path d="M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1" /></>,
   search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.500-3.500" /></>,
@@ -67,11 +69,11 @@ export type IconName = keyof typeof PATHS;
 /** Icons drawn as filled shapes rather than strokes. */
 const FILLED: ReadonlySet<IconName> = new Set<IconName>(["sliders", "dashboardAdd", "calendarEdit", "chat", "danger", "folderFilled", "listChecks"]);
 
-export function Icon({ name, size = 14 }: { name: IconName; size?: number }) {
+export function Icon({ name, size = 14, fill = false }: { name: IconName; size?: number; /** fill a stroke icon (e.g. a solid play triangle) */ fill?: boolean }) {
   const filled = FILLED.has(name);
   return (
     <svg
-      width={size} height={size} viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke={filled ? "none" : "currentColor"}
+      width={size} height={size} viewBox="0 0 24 24" fill={filled || fill ? "currentColor" : "none"} stroke={filled ? "none" : "currentColor"}
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0"
     >
       {PATHS[name]}

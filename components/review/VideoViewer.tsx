@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { Icon } from "@/components/ui/Icon";
 import { formatTime } from "@/lib/timecode";
 import { Stage, type Zoom } from "./Stage";
 
@@ -10,7 +11,7 @@ export type VideoHandle = {
   currentMs: () => number;
 };
 
-export type Marker = { id: string; timeMs: number; initials: string; number: number; resolved: boolean };
+export type Marker = { id: string; timeMs: number; initials: string; name: string; creative: boolean; number: number; resolved: boolean };
 
 export { formatTime };
 
@@ -43,6 +44,7 @@ export function VideoViewer({
   const [natural, setNatural] = useState<number | null>(null);
   const [baseW, setBaseW] = useState(1280);
   const [failed, setFailed] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   const usingFallback = failed && !!fallbackEmbed;
   useEffect(() => { onFallback?.(usingFallback); }, [usingFallback, onFallback]);
@@ -118,6 +120,7 @@ export function VideoViewer({
   };
 
   const total = duration * 1000;
+  const pct = total ? Math.min(100, (ms / total) * 100) : 0;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -166,40 +169,91 @@ export function VideoViewer({
       {usingFallback ? (
         <p className="bg-ink px-4 py-3 text-sm text-n-50">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
       ) : (
-      <div className="flex items-center gap-3 bg-ink px-4 py-3 text-n-50">
-        <button onClick={toggle} className="w-12 rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label={playing ? "Pause" : "Play"}>
-          {playing ? "Pause" : "Play"}
-        </button>
-        {!audio && <button onClick={() => step(-1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Back one frame">‹ 1f</button>}
-        {!audio && <button onClick={() => step(1)} className="rounded px-2 py-1 text-sm hover:bg-brand-dark" aria-label="Forward one frame">1f ›</button>}
-        <span className="w-24 font-mono text-xs text-n-50">{formatTime(ms)} / {formatTime(total)}</span>
-
-        <div
-          ref={barRef}
-          className="relative mt-5 h-2 flex-1 cursor-pointer rounded-full bg-brand-dark"
-          onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); scrub(e.clientX); }}
-          onPointerMove={(e) => { if (e.buttons) scrub(e.clientX); }}
+      <div className="flex items-center gap-4 bg-ink px-5 pb-3 pt-9 text-n-50">
+        <button
+          onClick={toggle}
+          aria-label={playing ? "Pause" : "Play"}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-n-50 text-ink shadow-sm transition hover:scale-105 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-50"
         >
-          <div className="absolute inset-y-0 left-0 rounded-full bg-brand-fill" style={{ width: total ? `${(ms / total) * 100}%` : 0 }} />
-          {total > 0 && markers.map((m) => (
-            <button
-              key={m.id}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => onMarkerClick(m.id)}
-              title={`#${m.number} at ${formatTime(m.timeMs)}`}
-              className="absolute -top-6 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full text-[9px] font-bold"
-              style={{
-                left: `${Math.min(100, (m.timeMs / total) * 100)}%`,
-                background: m.resolved ? "#9e9b94" : "#39c67f", color: "#0f2e21",
-                outline: m.id === selectedId ? "2px solid #fefdfb" : "none",
-              }}
-            >
-              {m.initials}
-            </button>
-          ))}
+          <span className={playing ? "" : "translate-x-px"}><Icon name={playing ? "pause" : "play"} size={18} fill /></span>
+        </button>
+        {!audio && (
+          <span className="flex shrink-0 items-center gap-1">
+            <button onClick={() => step(-1)} className="h-8 rounded-md px-2 text-xs font-medium text-n-50/80 hover:bg-white/10 hover:text-n-50" aria-label="Back one frame">‹ 1f</button>
+            <button onClick={() => step(1)} className="h-8 rounded-md px-2 text-xs font-medium text-n-50/80 hover:bg-white/10 hover:text-n-50" aria-label="Forward one frame">1f ›</button>
+          </span>
+        )}
+        <span className="w-28 shrink-0 text-center font-mono text-xs tabular-nums text-n-50/90">
+          {formatTime(ms)} <span className="text-n-50/50">/</span> {formatTime(total)}
+        </span>
+
+        <div className="relative h-10 min-w-0 flex-1">
+          <div
+            ref={barRef}
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            aria-valuenow={Math.round(ms / 1000)}
+            aria-valuetext={`${formatTime(ms)} of ${formatTime(total)}`}
+            className="group absolute inset-0 cursor-pointer touch-none rounded outline-none focus-visible:ring-2 focus-visible:ring-n-50/60"
+            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); scrub(e.clientX); }}
+            onPointerMove={(e) => { if (e.buttons) scrub(e.clientX); }}
+            onPointerUp={() => setDragging(false)}
+            onPointerCancel={() => setDragging(false)}
+            onKeyDown={(e) => {
+              const v = videoRef.current;
+              if (!v || !duration) return;
+              const by = e.key === "ArrowLeft" ? -5 : e.key === "ArrowRight" ? 5 : 0;
+              if (by) { e.preventDefault(); v.currentTime = Math.min(duration, Math.max(0, v.currentTime + by)); }
+              else if (e.key === "Home") { e.preventDefault(); v.currentTime = 0; }
+              else if (e.key === "End") { e.preventDefault(); v.currentTime = duration; }
+            }}
+          >
+            <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-white/20 transition-[height] group-hover:h-2">
+              <div className="absolute inset-y-0 left-0 rounded-full bg-brand-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <div
+              className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-n-50 shadow-md ring-4 ring-brand-fill/30 transition-transform ${dragging ? "scale-125" : "group-hover:scale-110"}`}
+              style={{ left: `${pct}%` }}
+            />
+          </div>
+          {total > 0 && markers.map((m) => {
+            const left = Math.min(100, (m.timeMs / total) * 100);
+            const on = m.id === selectedId;
+            return (
+              <button
+                key={m.id}
+                onClick={() => onMarkerClick(m.id)}
+                title={`${m.name} · #${m.number} at ${formatTime(m.timeMs)}`}
+                aria-label={`Comment ${m.number} by ${m.name} at ${formatTime(m.timeMs)}`}
+                aria-pressed={on}
+                className={`absolute bottom-1/2 z-10 -translate-x-1/2 transition-transform hover:z-20 hover:-translate-y-0.5 focus-visible:outline-none ${on ? "z-20 -translate-y-1 scale-110" : ""}`}
+                style={{ left: `${left}%`, marginBottom: 8 }}
+              >
+                <MapPin initials={m.initials} creative={m.creative} resolved={m.resolved} selected={on} />
+              </button>
+            );
+          })}
         </div>
       </div>
       )}
     </div>
+  );
+}
+
+/** A map marker: a teardrop pin with the commenter's avatar on it. */
+function MapPin({ initials, creative, resolved, selected }: { initials: string; creative: boolean; resolved: boolean; selected: boolean }) {
+  const fill = resolved ? "#8a8780" : creative ? "#0b7a4a" : "#3d3b37";
+  return (
+    <svg width="30" height="38" viewBox="0 0 30 38" aria-hidden="true" className="block drop-shadow-md">
+      <path
+        d="M15 37C15 37 2 23.5 2 14.5C2 7.04 7.82 1.5 15 1.5C22.18 1.5 28 7.04 28 14.5C28 23.5 15 37 15 37Z"
+        fill={fill} stroke={selected ? "#fefdfb" : "rgba(254,253,251,0.85)"} strokeWidth={selected ? 2.5 : 1.5}
+      />
+      <circle cx="15" cy="14.5" r="9" fill="#fefdfb" fillOpacity={resolved ? 0.75 : 1} />
+      <text x="15" y="14.5" textAnchor="middle" dominantBaseline="central" fontSize="9.5" fontWeight="700" fill={fill} fontFamily="inherit">{initials.slice(0, 2)}</text>
+    </svg>
   );
 }

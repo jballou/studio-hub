@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { PeoplePicker } from "@/components/ui/PeoplePicker";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { TicketPicker } from "./TicketPicker";
 import { FramePicker } from "./FramePicker";
+import { UploadZone, type Upload } from "./UploadZone";
+import { useMe } from "@/hooks/useMe";
 import { peopleRepo, projectsRepo, repo } from "@/lib/data";
 import { addedFrameIds, defaultBatchTitle, figmaFrameItem, itemKey, toSubmitInput, type BatchInfo, type BatchItem } from "@/lib/batch";
 import { parseFigmaLink } from "@/lib/figma";
 import { parseSource, SHAPES, type DriveType, type Shape } from "@/lib/sources";
-import { ACCEPT, AUDIO_EXTENSIONS, kindFromFile, mimeOf } from "@/lib/media";
+import { AUDIO_EXTENSIONS, kindFromFile, mimeOf } from "@/lib/media";
 import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
 import type { Asset, AssetKind, Device, Person, Project, SourceKind } from "@/lib/types";
 
@@ -20,6 +22,7 @@ const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; pl
   { id: "staging", label: "Landing page", hint: "Staging link", icon: "link", placeholder: "https://staging.example.com/landing" },
   { id: "drive", label: "Google Drive", hint: "Video, audio (MP3, M4A, WAV…), image or PDF", icon: "link", placeholder: "https://drive.google.com/file/d/…/view" },
   { id: "slides", label: "Google Slides", hint: "Deck link", icon: "link", placeholder: "https://docs.google.com/presentation/d/…/edit" },
+  { id: "lottie", label: "LottieFiles", hint: "Animation link", icon: "link", placeholder: "https://lottiefiles.com/animations/… or a lottie.host embed link" },
   { id: "upload", label: "Upload files", hint: "Image, video, audio (MP3, M4A, WAV…), PDF. Pick several.", icon: "upload" },
 ];
 
@@ -29,6 +32,7 @@ const field = "w-full rounded-lg border border-control bg-white px-3 py-2 text-s
 export function SubmitForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const me = useMe();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [ticket, setTicket] = useState<Project | null>(null);
   const [source, setSource] = useState<SourceKind>("figma");
@@ -38,6 +42,8 @@ export function SubmitForm() {
   const [driveType, setDriveType] = useState<DriveType>("other");
   const [items, setItems] = useState<BatchItem[]>([]);
   const [uploadNote, setUploadNote] = useState<{ bad: string[]; cantPlay: string[] } | null>(null);
+  const [uploads, setUploads] = useState<Upload[]>([]);
+  const cancels = useRef(new Map<string, () => void>());
   const [picker, setPicker] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulk, setBulk] = useState("");
@@ -103,26 +109,58 @@ export function SubmitForm() {
   const batchTitle = title.trim() || defaultBatchTitle(all);
   const valid = all.length > 0 && all.every((i) => !!itemTitle(i)) && !!projectKey && reviewers.length > 0 && approvers.length > 0 && !!dueDate && !!dueTime;
 
-  const addFiles = (list: FileList | null) => {
-    if (!list?.length) return;
+  // Files stay in the browser; reading them is the "upload" and gives real progress for big videos.
+  const addFiles = (list: File[]) => {
+    if (!list.length) return;
     const bad: string[] = [];
     const cantPlay: string[] = [];
-    const next: BatchItem[] = [];
-    for (const f of Array.from(list)) {
+    for (const f of list) {
       const kind = kindFromFile(f);
       if (!kind) { bad.push(f.name); continue; }
       // Warn (don't block) when this browser can't play it, e.g. AIFF outside Safari. Reviewers may be on other browsers too.
       const mime = mimeOf(f);
       if (kind === "audio" && mime && document.createElement("audio").canPlayType(mime) === "") cantPlay.push(f.name);
-      next.push({
-        key: itemKey(), title: f.name.replace(/\.[^.]+$/, ""), assetKind: kind, src: URL.createObjectURL(f),
-        aspect: kind === "pdf" ? 8.5 / 11 : 16 / 9, source: { kind: "upload", url: "", label: f.name },
-        thumb: kind === "image" ? URL.createObjectURL(f) : undefined,
-      });
+      void ingest(f, kind);
     }
-    setItems((cur) => [...cur, ...next]);
     setUploadNote(bad.length || cantPlay.length ? { bad, cantPlay } : null);
   };
+
+  const ingest = async (f: File, kind: AssetKind) => {
+    const id = itemKey();
+    const start = performance.now();
+    let cancelled = false;
+    cancels.current.set(id, () => { cancelled = true; });
+    setUploads((u) => [...u, { id, name: f.name, size: f.size, progress: 0, secondsLeft: null }]);
+    const tick = (p: number) => setUploads((u) => u.map((x) => (x.id === id ? { ...x, progress: p, secondsLeft: p > 0.02 ? Math.ceil(((performance.now() - start) / p) * (1 - p) / 1000) : null } : x)));
+    try {
+      const reader = f.stream().getReader();
+      let read = 0;
+      let last = 0;
+      for (;;) {
+        if (cancelled) { await reader.cancel(); return; }
+        const { done, value } = await reader.read();
+        if (done) break;
+        read += value.length;
+        if (performance.now() - last > 60) { last = performance.now(); tick(f.size ? read / f.size : 1); }
+      }
+      tick(1);
+      await new Promise((r) => setTimeout(r, 350)); // let the full bar show before the card moves into the list
+      if (cancelled) return;
+      const item: BatchItem = {
+        key: id, title: f.name.replace(/\.[^.]+$/, ""), assetKind: kind, src: URL.createObjectURL(f),
+        aspect: kind === "pdf" ? 8.5 / 11 : 16 / 9, source: { kind: "upload", url: "", label: f.name },
+        thumb: kind === "image" ? URL.createObjectURL(f) : undefined,
+      };
+      setItems((cur) => [...cur, item]);
+    } catch {
+      setUploadNote((n) => ({ bad: [...(n?.bad ?? []), f.name], cantPlay: n?.cantPlay ?? [] }));
+    } finally {
+      cancels.current.delete(id);
+      setUploads((u) => u.filter((x) => x.id !== id));
+    }
+  };
+
+  const cancelUpload = (id: string) => { cancels.current.get(id)?.(); setUploads((u) => u.filter((x) => x.id !== id)); };
 
   const addPending = () => {
     if (!pending) return;
@@ -154,7 +192,7 @@ export function SubmitForm() {
 
   const submit = async () => {
     setBusy(true);
-    const common = { projectKey, existingAssetId: !isBatch ? target || null : null, reviewers: [...new Map([...reviewers, ...approvers].map((p) => [p.id, p])).values()], approvers, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: "u-avery" };
+    const common = { projectKey, existingAssetId: !isBatch ? target || null : null, reviewers: [...new Map([...reviewers, ...approvers].map((p) => [p.id, p])).values()], approvers, dueAt: zonedToInstant(dueDate, dueTime, dueTz), dueTz, instructions: instructions.trim(), submittedBy: me?.id ?? "u-avery" };
     const batchId = isBatch ? crypto.randomUUID() : null;
     let first: string | null = null;
     for (const [index, it] of all.entries()) {
@@ -186,12 +224,12 @@ export function SubmitForm() {
 
       <section className="mb-4">
         {source === "upload" ? (
-          <label className="block text-sm font-semibold">Files
-            <input type="file" multiple accept={ACCEPT} className={`${field} mt-1 font-normal`} value="" onChange={(e) => addFiles(e.target.files)} />
-            {uploadNote?.bad.length ? <span role="alert" className="mt-1 block text-xs font-normal text-bad-fg">Skipped {uploadNote.bad.join(", ")}: that file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span> : null}
-            {uploadNote?.cantPlay.length ? <span role="alert" className="mt-1 block text-xs font-normal text-warn-fg">This browser can&apos;t play {uploadNote.cantPlay.join(", ")}, so some reviewers may not either. MP3, M4A and WAV work everywhere.</span> : null}
-            <span className="mt-1 block text-xs font-normal text-muted">Audio files are played in the browser and each comment is stamped with the time.</span>
-          </label>
+          <div>
+            <span className="mb-1 block text-sm font-semibold">Files</span>
+            <UploadZone uploads={uploads} onFiles={addFiles} onCancel={cancelUpload} hint="Image, video, audio (MP3, M4A, WAV…) or PDF. Audio is played in the browser and each comment is stamped with the time." />
+            {uploadNote?.bad.length ? <span role="alert" className="mt-2 block text-xs text-bad-fg">Skipped {uploadNote.bad.join(", ")}: that file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span> : null}
+            {uploadNote?.cantPlay.length ? <span role="alert" className="mt-2 block text-xs text-warn-fg">This browser can&apos;t play {uploadNote.cantPlay.join(", ")}, so some reviewers may not either. MP3, M4A and WAV work everywhere.</span> : null}
+          </div>
         ) : (
           <>
             <label className="block text-sm font-semibold">Link

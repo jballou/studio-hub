@@ -113,6 +113,31 @@ function parseDrive(u: URL, shape: Shape, type: DriveType): ParsedSource {
   };
 }
 
+/** LottieFiles: an embed or direct lottie.host file plays inline; a regular page link is shown as-is and may be blocked from framing. */
+function parseLottie(u: URL): ParsedSource {
+  const host = u.hostname.replace(/^www\./, "");
+  if (host === "lottie.host") {
+    const m = /^\/(?:embed\/)?([A-Za-z0-9-]+)\/([A-Za-z0-9-]+)\.(?:lottie|json)$/.exec(u.pathname);
+    if (!m) return fail("Paste a LottieFiles embed link (Share → Embed), or the animation's page link.");
+    return {
+      ok: true, kind: "lottie", summary: "LottieFiles animation", suggestedTitle: "Lottie animation",
+      embedUrl: `https://lottie.host/embed/${m[1]}/${m[2]}.lottie`, aspect: 1, baseWidth: 800,
+      warnings: ["Reviewers see the animation looping; pins mark a spot in the visible frame."],
+    };
+  }
+  if (host !== "lottiefiles.com" && !host.endsWith(".lottiefiles.com")) return fail("That isn't a LottieFiles link.");
+  if (/^\/?$/.test(u.pathname)) return fail("Paste the link to a specific animation.");
+  const name = /\/(?:animations?|free-animation|share)\/([^/?]+)/.exec(u.pathname)?.[1];
+  return {
+    ok: true, kind: "lottie", summary: "LottieFiles animation", suggestedTitle: name ? decodeURIComponent(name).replace(/-\d+$/, "").replace(/-/g, " ") : "Lottie animation",
+    embedUrl: u.toString(), aspect: 1, baseWidth: 800,
+    warnings: [
+      "LottieFiles may refuse to load its pages inside another page. If the preview is blank, use Share → Embed on LottieFiles and paste the lottie.host link instead.",
+      "Make sure the animation is public or shared with link access.",
+    ],
+  };
+}
+
 function parseStaging(u: URL, device: Device): ParsedSource {
   if (u.protocol !== "https:") return fail("Staging links must start with https://.");
   if (isBlockedHost(u.hostname)) return fail("Use the staging hostname, not localhost or an IP address.");
@@ -134,6 +159,7 @@ export function parseSource(kind: Exclude<SourceKind, "upload">, raw: string, de
   switch (kind) {
     case "figma": return parseFigma(u, shape);
     case "slides": return parseSlides(u);
+    case "lottie": return parseLottie(u);
     case "drive": return parseDrive(u, shape, driveType);
     case "staging": return parseStaging(u, device);
   }

@@ -1,6 +1,6 @@
 import type { ReviewRepo } from "./repo";
 import { isJira } from "./mode";
-import type { Anchor, Asset, AssetVersion, NewThread, SubmitInput, Thread, User } from "@/lib/types";
+import type { Anchor, Asset, ReviewState, AssetVersion, NewThread, SubmitInput, Thread, User } from "@/lib/types";
 
 const users: User[] = [
   { id: "u-avery", name: "Avery Chen", initials: "AC", role: "creative" },
@@ -10,9 +10,9 @@ const users: User[] = [
 ];
 
 const assets: Asset[] = [
-  { id: "a-ad", projectKey: "MKTGCRTV-101", name: "Spring campaign: social ad", kind: "image", versionIds: ["v-ad-1", "v-ad-2"], approvers: [{ id: "u-riley", name: "Riley Brooks" }] },
-  { id: "a-video", projectKey: "MKTGCRTV-102", name: "Product teaser (15s)", kind: "video", versionIds: ["v-video-1"], approvers: [{ id: "u-riley", name: "Riley Brooks" }] },
-  { id: "a-pdf", projectKey: "MKTGCRTV-103", name: "Brand one-pager", kind: "pdf", versionIds: ["v-pdf-1"], approvers: [{ id: "u-jordan", name: "Jordan Patel" }] },
+  { id: "a-ad", projectKey: "MKTGCRTV-101", name: "Spring campaign: social ad", kind: "image", versionIds: ["v-ad-1", "v-ad-2"], submittedBy: "u-avery", review: "changes", approvers: [{ id: "u-riley", name: "Riley Brooks" }] },
+  { id: "a-video", projectKey: "MKTGCRTV-102", name: "Product teaser (15s)", kind: "video", versionIds: ["v-video-1"], submittedBy: "u-avery", review: "awaiting", approvers: [{ id: "u-riley", name: "Riley Brooks" }] },
+  { id: "a-pdf", projectKey: "MKTGCRTV-103", name: "Brand one-pager", kind: "pdf", versionIds: ["v-pdf-1"], submittedBy: "u-avery", review: "approved", approvers: [{ id: "u-jordan", name: "Jordan Patel" }] },
 ];
 
 const versions: AssetVersion[] = [
@@ -124,16 +124,24 @@ export const mockRepo: ReviewRepo = {
       asset.dueTz = input.dueTz;
       asset.approvers = input.approvers;
       asset.instructions = input.instructions;
+      asset.review = "awaiting";
     } else {
       asset = {
         id: nid("a-"), projectKey: input.projectKey, name: input.title, kind: input.assetKind, versionIds: [versionId],
         source: input.source, reviewers: input.reviewers, dueAt: input.dueAt, dueTz: input.dueTz, approvers: input.approvers,
-        instructions: input.instructions, submittedBy: input.submittedBy, batch: input.batch,
+        instructions: input.instructions, submittedBy: input.submittedBy, batch: input.batch, review: "awaiting",
       };
       assets.push(asset);
     }
     versions[versions.length - 1].assetId = asset.id;
     return delay({ assetId: asset.id, versionId });
+  },
+
+  setReviewState(assetId: string, state: ReviewState) {
+    const a = assets.find((x) => x.id === assetId);
+    if (!a) throw new Error(`asset ${assetId} not found`);
+    a.review = state;
+    return delay(a);
   },
 
   async pushToJira(threadId, actorId) {

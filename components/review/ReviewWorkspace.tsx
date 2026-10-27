@@ -66,7 +66,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       // Demo users in mock mode; in real mode, just the people named on this request (plus you, below).
       setUsers(addUsers(await repo.listUsers(), [...(a.reviewers ?? []), ...(a.approvers ?? [])].map(toUser)));
       const project = await projectsRepo.getProject(a.projectKey, "u-avery");
-      if (project) setStage(project.stage);
+      if (a.review === "approved") setStage("Delivered");
+      else if (a.review === "changes") setStage("In progress");
+      else if (project) setStage(project.stage);
     })();
   }, [assetId]);
 
@@ -179,6 +181,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     .map((t) => ({
       id: t.id, timeMs: t.timeMs!, number: t.number, resolved: t.status === "resolved",
       initials: users.find((u) => u.id === t.authorId)?.initials ?? "?",
+      name: users.find((u) => u.id === t.authorId)?.name ?? "Someone",
+      creative: users.find((u) => u.id === t.authorId)?.role === "creative",
     }));
 
   const counts: Record<Tab, number> = {
@@ -210,11 +214,11 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         <h1 className="truncate font-semibold"><Link href={`/projects/${asset.projectKey}`} className="font-mono text-brand hover:underline" title="Open project">{asset.projectKey}</Link> · {asset.name}</h1>
         <StageTag stage={stage} />
         <span className="h-5 w-px bg-line" />
-        <button className={btn} disabled={closed} onClick={() => setStage("In progress")}>Ask for changes</button>
+        <button className={btn} disabled={closed} onClick={() => { setStage("In progress"); void repo.setReviewState(asset.id, "changes"); }}>Ask for changes</button>
         {canApprove && (
           <button
             disabled={closed}
-            onClick={() => { setStage("Delivered"); celebrate(); }}
+            onClick={() => { setStage("Delivered"); void repo.setReviewState(asset.id, "approved"); celebrate(); }}
             className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
           >
             <Icon name="delivered" size={16} /> {closed ? "Approved" : "Mark as approved"}
