@@ -7,6 +7,7 @@ import { FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
 import { IssueIcon } from "@/components/ui/IssueIcon";
 import { Board } from "./Board";
@@ -237,7 +238,7 @@ export function ProjectsView() {
             <select aria-label="Collaborator" value={collab} onChange={(e) => setCollab(e.target.value)} className="rounded border border-control px-2 py-1">
               <option value="">Anyone</option>{users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
-            <label className="flex items-center gap-1">Due by <input type="date" value={before} onChange={(e) => setBefore(e.target.value)} className="rounded border border-control px-2 py-1" /></label>
+            <label className="flex items-center gap-1">Due by <span className="w-44"><DatePicker value={before} onChange={setBefore} placeholder="Any date" className="!py-1" /></span></label>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { PeoplePicker } from "@/components/ui/PeoplePicker";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { TicketPicker } from "./TicketPicker";
@@ -369,7 +370,7 @@ export function SubmitForm() {
         <div>
           <span className="text-sm font-semibold">Feedback needed by</span>
           <div className="mt-1 flex flex-wrap gap-2">
-            <input aria-label="Date" type="date" className={`${field} w-44 font-normal`} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <div className="w-48"><DatePicker ariaLabel="Date" value={dueDate} onChange={setDueDate} /></div>
             <input aria-label="Time" type="time" className={`${field} w-32 font-normal`} value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
             <select aria-label="Timezone" className={`${field} min-w-56 flex-1 font-normal`} value={dueTz} onChange={(e) => setDueTz(e.target.value)}>
               {timezoneOptions(dueTz).map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}

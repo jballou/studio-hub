@@ -8,8 +8,8 @@
 /* SurveyMonkey brand palette (brand-visuals/colors.md). No hexes outside this file. */
 @theme {
   /* Core */
-  --color-brand: #08794a; /* Green 600: buttons, links, small UI (AA with Paper text) */
-  --color-brand-dark: #105638; /* Green 700: hover/pressed */
+  --color-brand: #089b5e; /* Green 500: primary interaction color (buttons, selection, focus of action) */
+  --color-brand-dark: #08794a; /* Green 600: hover/pressed */
   --color-brand-fill: #089b5e; /* Green 500: large fills, icons, graphics only */
   --color-brand-soft: #d6f5de; /* Green 100 */
   --color-ink: #0f2e21; /* Green 900: primary text [CONFIRM vs Neutral 900] */
@@ -44,6 +44,9 @@
 
   --font-sans: "National 2", system-ui, sans-serif;
 }
+
+/* Green 500 is too light for small text on white (3.6:1), so text uses the darker link green. */
+.text-brand, .hover\:text-brand:hover { color: var(--link); }
 
 body {
   background: var(--color-paper);

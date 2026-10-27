@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { projectsRepo } from "@/lib/data";
@@ -77,7 +78,7 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
           ) : (
             <div className="rounded-lg border border-control p-3">
               <label className="block text-sm font-semibold">Start date
-                <input type="date" autoFocus value={date} max={project.deadline || undefined} onChange={(e) => setDate(e.target.value)} className="mt-1 block w-full rounded-lg border border-control bg-white px-3 py-2 text-sm font-normal" />
+                <div className="mt-1"><DatePicker autoFocus value={date} max={project.deadline || undefined} onChange={setDate} /></div>
               </label>
               <button disabled={busy || !date} onClick={() => save(date)} className="mt-2 w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save start date"}</button>
             </div>

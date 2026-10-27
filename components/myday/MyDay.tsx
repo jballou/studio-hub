@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { IssueIcon } from "@/components/ui/IssueIcon";
@@ -493,7 +494,7 @@ function AddTaskDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (d: { t
           <input autoFocus value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} maxLength={200} placeholder="e.g. Send exports to Riley" className={`${field} mt-1 w-full font-normal`} />
         </label>
         <div className="flex flex-wrap gap-3">
-          <label className="text-sm font-semibold">Due date<input type="date" value={d.date} onChange={(e) => setD({ ...d, date: e.target.value, time: e.target.value ? d.time : "" })} className={`${field} mt-1 block font-normal`} /></label>
+          <label className="text-sm font-semibold">Due date<div className="mt-1 w-48"><DatePicker value={d.date} onChange={(v) => setD({ ...d, date: v, time: v ? d.time : "" })} placeholder="No date" /></div></label>
           <label className="text-sm font-semibold">Time<input type="time" value={d.time} disabled={!d.date} onChange={(e) => setD({ ...d, time: e.target.value })} className={`${field} mt-1 block font-normal disabled:opacity-40`} /></label>
         </div>
         {d.time && (
