@@ -12,11 +12,13 @@ export const ZOOM_STEPS = [50, 75, 90, 100, 125, 150, 200] as const;
  * `baseWidth` (the asset's natural width) and scrolls when larger than the area.
  */
 export function Stage({
-  aspect, zoom = "fit", baseWidth = 1280, children,
+  aspect, zoom = "fit", baseWidth = 1280, reserve = 0, children,
 }: {
   aspect: number;
   zoom?: Zoom;
   baseWidth?: number;
+  /** px kept clear at the bottom for something floating over the area, such as player controls */
+  reserve?: number;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -42,7 +44,7 @@ export function Stage({
   }
 
   return (
-    <div ref={ref} className="flex min-h-0 min-w-0 flex-1 overflow-auto p-2">
+    <div ref={ref} className="flex min-h-0 min-w-0 flex-1 overflow-auto p-2" style={reserve ? { paddingBottom: reserve + 8 } : undefined}>
       <div className="relative m-auto shrink-0 bg-white shadow-md" style={{ width: size.w, height: size.h }}>
         {children}
       </div>

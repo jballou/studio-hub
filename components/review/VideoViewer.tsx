@@ -45,6 +45,7 @@ export function VideoViewer({
   const [baseW, setBaseW] = useState(1280);
   const [failed, setFailed] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [rate, setRate] = useState(1);
 
   const usingFallback = failed && !!fallbackEmbed;
   useEffect(() => { onFallback?.(usingFallback); }, [usingFallback, onFallback]);
@@ -85,17 +86,28 @@ export function VideoViewer({
       report(meta.mediaTime);
       id = v.requestVideoFrameCallback(tick);
     };
-    if (hasRvfc) id = v.requestVideoFrameCallback(tick);
-    const onTU = () => { if (!hasRvfc) report(v.currentTime); };
+    if (hasRvfc && !audio) id = v.requestVideoFrameCallback(tick);
+    // Audio never produces video frames, so the frame callback stays silent; timeupdate (and the loop below) drive it.
+    const onTU = () => { if (!hasRvfc || audio) report(v.currentTime); };
     const onSeeked = () => { lastMedia.current = null; report(v.currentTime); };
     v.addEventListener("timeupdate", onTU);
     v.addEventListener("seeked", onSeeked);
     return () => {
       v.removeEventListener("timeupdate", onTU);
       v.removeEventListener("seeked", onSeeked);
-      if (hasRvfc) v.cancelVideoFrameCallback(id);
+      if (hasRvfc && !audio) v.cancelVideoFrameCallback(id);
     };
-  }, [report, src]);
+  }, [report, src, audio]);
+
+  // Smooth playhead for audio while it plays.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!audio || !playing || !v) return;
+    let id = 0;
+    const loop = () => { report(v.currentTime); id = requestAnimationFrame(loop); };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
+  }, [audio, playing, report]);
 
   const step = (dir: 1 | -1) => {
     const v = videoRef.current;
@@ -111,52 +123,154 @@ export function VideoViewer({
     if (v.paused) void v.play(); else v.pause();
   };
 
+  const seekTo = (sec: number) => {
+    const v = videoRef.current;
+    if (!v || !duration) return;
+    v.currentTime = Math.min(duration, Math.max(0, sec));
+    report(v.currentTime);
+  };
+  const skip = (by: number) => { const v = videoRef.current; if (v) seekTo(v.currentTime + by); };
+
   const scrub = (clientX: number) => {
     const v = videoRef.current;
     const bar = barRef.current;
     if (!v || !bar || !duration) return;
     const r = bar.getBoundingClientRect();
-    v.currentTime = Math.min(1, Math.max(0, (clientX - r.left) / r.width)) * duration;
+    seekTo(Math.min(1, Math.max(0, (clientX - r.left) / r.width)) * duration);
   };
 
   const total = duration * 1000;
   const pct = total ? Math.min(100, (ms / total) * 100) : 0;
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <Stage aspect={natural ?? aspect} zoom={zoom} baseWidth={baseW}>
-        <video
-          ref={videoRef}
-          src={src}
-          playsInline
-          preload="metadata"
-          className="absolute inset-0 h-full w-full bg-black"
-          onLoadedMetadata={(e) => {
-            const v = e.currentTarget;
-            if (Number.isFinite(v.duration)) {
-              setDuration(v.duration);
-            } else {
-              // MediaRecorder-style WebM reports Infinity until the end is reached once.
-              v.addEventListener("durationchange", () => {
-                if (Number.isFinite(v.duration)) { setDuration(v.duration); v.currentTime = 0; }
-              }, { once: true });
-              v.currentTime = 1e101;
-            }
-            if (v.videoWidth) { setNatural(v.videoWidth / v.videoHeight); setBaseW(v.videoWidth); }
-            setFailed(false);
-          }}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onError={() => setFailed(true)}
+  const videoEl = (
+    <video
+      ref={videoRef}
+      src={src}
+      playsInline
+      preload="metadata"
+      className={audio ? "hidden" : "absolute inset-0 h-full w-full bg-black"}
+      onLoadedMetadata={(e) => {
+        const v = e.currentTarget;
+        if (Number.isFinite(v.duration)) {
+          setDuration(v.duration);
+        } else {
+          // MediaRecorder-style WebM reports Infinity until the end is reached once.
+          v.addEventListener("durationchange", () => {
+            if (Number.isFinite(v.duration)) { setDuration(v.duration); v.currentTime = 0; }
+          }, { once: true });
+          v.currentTime = 1e101;
+        }
+        if (v.videoWidth) { setNatural(v.videoWidth / v.videoHeight); setBaseW(v.videoWidth); }
+        setFailed(false);
+      }}
+      onPlay={() => setPlaying(true)}
+      onPause={() => setPlaying(false)}
+      onError={() => setFailed(true)}
+    />
+  );
+
+  const bar = (
+  <div className="flex flex-wrap items-start gap-x-1.5 gap-y-1 text-ink">
+    <span className="flex h-8 items-center gap-0.5">
+      <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Skip dir={-1} /></button>
+      <button onClick={toggle} aria-label={playing ? "Pause" : "Play"} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150">
+        <span className={playing ? "" : "translate-x-px"}><Icon name={playing ? "pause" : "play"} size={20} fill /></span>
+      </button>
+      <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Skip dir={1} /></button>
+      {!audio && (
+        <>
+          <button onClick={() => step(-1)} className="h-8 rounded-md px-1.5 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Back one frame">‹1f</button>
+          <button onClick={() => step(1)} className="h-8 rounded-md px-1.5 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Forward one frame">1f›</button>
+        </>
+      )}
+    </span>
+
+    <div className="relative mx-2 h-[3.25rem] min-w-[10rem] flex-1">
+      <div
+        ref={barRef}
+        role="slider"
+        tabIndex={0}
+        aria-label="Seek"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration)}
+        aria-valuenow={Math.round(ms / 1000)}
+        aria-valuetext={`${formatTime(ms)} of ${formatTime(total)}`}
+        className="group absolute inset-x-0 top-0 h-8 cursor-pointer touch-none rounded outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); scrub(e.clientX); }}
+        onPointerMove={(e) => { if (e.buttons) scrub(e.clientX); }}
+        onPointerUp={() => setDragging(false)}
+        onPointerCancel={() => setDragging(false)}
+        onKeyDown={(e) => {
+          const by = e.key === "ArrowLeft" ? -5 : e.key === "ArrowRight" ? 5 : 0;
+          if (by) { e.preventDefault(); skip(by); }
+          else if (e.key === "Home") { e.preventDefault(); seekTo(0); }
+          else if (e.key === "End") { e.preventDefault(); seekTo(duration); }
+        }}
+      >
+        <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-n-200">
+          <div className="absolute inset-y-0 left-0 rounded-full bg-brand" style={{ width: `${pct}%` }} />
+        </div>
+        <div
+          className={`absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand bg-white shadow transition-transform ${dragging ? "scale-125" : "group-hover:scale-110"}`}
+          style={{ left: `${pct}%` }}
         />
-        {audio && !failed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-ink text-n-50">
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />
-            </svg>
-            <span className="text-sm">Audio. Comment at any point on the timeline.</span>
+      </div>
+      {total > 0 && markers.map((m) => {
+        const on = m.id === selectedId;
+        return (
+          <button
+            key={m.id}
+            onClick={() => onMarkerClick(m.id)}
+            title={`${m.name} · #${m.number} at ${formatTime(m.timeMs)}`}
+            aria-label={`Comment ${m.number} by ${m.name} at ${formatTime(m.timeMs)}`}
+            aria-pressed={on}
+            className={`absolute top-[26px] z-10 -translate-x-1/2 transition-transform hover:z-20 hover:translate-y-0.5 focus-visible:outline-none ${on ? "z-20 translate-y-0.5 scale-110" : ""}`}
+            style={{ left: `${Math.min(100, (m.timeMs / total) * 100)}%` }}
+          >
+            <MapPin initials={m.initials} creative={m.creative} resolved={m.resolved} selected={on} />
+          </button>
+        );
+      })}
+    </div>
+
+    <span className="flex h-8 items-center gap-2">
+      <span className="whitespace-nowrap font-mono text-xs tabular-nums text-muted">{formatTime(ms)} / {formatTime(total)}</span>
+      <button
+        onClick={() => { const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length]; setRate(next); if (videoRef.current) videoRef.current.playbackRate = next; }}
+        aria-label={`Playback speed ${rate}x. Click to change.`}
+        className="h-7 min-w-9 rounded-md px-1.5 text-xs font-semibold hover:bg-n-150"
+      >{rate}x</button>
+    </span>
+  </div>
+
+  );
+
+  if (audio && !usingFallback) {
+    // One card: artwork on top, controls attached below.
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-6">
+        <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-line bg-white shadow-lg">
+          <div className="flex h-52 flex-col items-center justify-center gap-2 bg-n-150 text-ink">
+            {failed ? (
+              <span className="px-6 text-center text-sm">Audio could not be loaded. Check the file still exists and your browser can play its format.</span>
+            ) : (
+              <>
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" /></svg>
+                <span className="text-sm">Audio. Comment at any point on the timeline.</span>
+              </>
+            )}
           </div>
-        )}
+          {videoEl}
+          <div className="px-4 pb-3 pt-2.5">{bar}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <Stage aspect={natural ?? aspect} zoom={zoom} baseWidth={baseW} reserve={usingFallback ? 0 : 104}>
+        {videoEl}
         {usingFallback && <iframe src={fallbackEmbed} title="Drive player" allow="autoplay" className="absolute inset-0 h-full w-full border-0 bg-white" />}
         {failed && !fallbackEmbed && (
           <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 p-6 text-center text-sm text-white">
@@ -167,75 +281,11 @@ export function VideoViewer({
       </Stage>
 
       {usingFallback ? (
-        <p className="bg-ink px-4 py-3 text-sm text-n-50">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
+        <p className="border-t border-line bg-white px-4 py-3 text-sm">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
       ) : (
-      <div className="flex items-center gap-4 bg-ink px-5 pb-3 pt-9 text-n-50">
-        <button
-          onClick={toggle}
-          aria-label={playing ? "Pause" : "Play"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-n-50 text-ink shadow-sm transition hover:scale-105 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-n-50"
-        >
-          <span className={playing ? "" : "translate-x-px"}><Icon name={playing ? "pause" : "play"} size={18} fill /></span>
-        </button>
-        {!audio && (
-          <span className="flex shrink-0 items-center gap-1">
-            <button onClick={() => step(-1)} className="h-8 rounded-md px-2 text-xs font-medium text-n-50/80 hover:bg-white/10 hover:text-n-50" aria-label="Back one frame">‹ 1f</button>
-            <button onClick={() => step(1)} className="h-8 rounded-md px-2 text-xs font-medium text-n-50/80 hover:bg-white/10 hover:text-n-50" aria-label="Forward one frame">1f ›</button>
-          </span>
-        )}
-        <span className="w-28 shrink-0 text-center font-mono text-xs tabular-nums text-n-50/90">
-          {formatTime(ms)} <span className="text-n-50/50">/</span> {formatTime(total)}
-        </span>
-
-        <div className="relative h-10 min-w-0 flex-1">
-          <div
-            ref={barRef}
-            role="slider"
-            tabIndex={0}
-            aria-label="Seek"
-            aria-valuemin={0}
-            aria-valuemax={Math.round(duration)}
-            aria-valuenow={Math.round(ms / 1000)}
-            aria-valuetext={`${formatTime(ms)} of ${formatTime(total)}`}
-            className="group absolute inset-0 cursor-pointer touch-none rounded outline-none focus-visible:ring-2 focus-visible:ring-n-50/60"
-            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); scrub(e.clientX); }}
-            onPointerMove={(e) => { if (e.buttons) scrub(e.clientX); }}
-            onPointerUp={() => setDragging(false)}
-            onPointerCancel={() => setDragging(false)}
-            onKeyDown={(e) => {
-              const v = videoRef.current;
-              if (!v || !duration) return;
-              const by = e.key === "ArrowLeft" ? -5 : e.key === "ArrowRight" ? 5 : 0;
-              if (by) { e.preventDefault(); v.currentTime = Math.min(duration, Math.max(0, v.currentTime + by)); }
-              else if (e.key === "Home") { e.preventDefault(); v.currentTime = 0; }
-              else if (e.key === "End") { e.preventDefault(); v.currentTime = duration; }
-            }}
-          >
-            <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-white/20 transition-[height] group-hover:h-2">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-brand-fill" style={{ width: `${pct}%` }} />
-            </div>
-            <div
-              className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-n-50 shadow-md ring-4 ring-brand-fill/30 transition-transform ${dragging ? "scale-125" : "group-hover:scale-110"}`}
-              style={{ left: `${pct}%` }}
-            />
-          </div>
-          {total > 0 && markers.map((m) => {
-            const left = Math.min(100, (m.timeMs / total) * 100);
-            const on = m.id === selectedId;
-            return (
-              <button
-                key={m.id}
-                onClick={() => onMarkerClick(m.id)}
-                title={`${m.name} · #${m.number} at ${formatTime(m.timeMs)}`}
-                aria-label={`Comment ${m.number} by ${m.name} at ${formatTime(m.timeMs)}`}
-                aria-pressed={on}
-                className={`absolute bottom-1/2 z-10 -translate-x-1/2 transition-transform hover:z-20 hover:-translate-y-0.5 focus-visible:outline-none ${on ? "z-20 -translate-y-1 scale-110" : ""}`}
-                style={{ left: `${left}%`, marginBottom: 8 }}
-              >
-                <MapPin initials={m.initials} creative={m.creative} resolved={m.resolved} selected={on} />
-              </button>
-            );
-          })}
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-4">
+        <div className="pointer-events-auto w-full max-w-3xl rounded-2xl border border-line bg-white px-4 pb-3 pt-2.5 shadow-lg">
+          {bar}
         </div>
       </div>
       )}
@@ -243,17 +293,26 @@ export function VideoViewer({
   );
 }
 
-/** A map marker: a teardrop pin with the commenter's avatar on it. */
-function MapPin({ initials, creative, resolved, selected }: { initials: string; creative: boolean; resolved: boolean; selected: boolean }) {
-  const fill = resolved ? "#8a8780" : creative ? "#0b7a4a" : "#3d3b37";
+const RATES = [1, 1.25, 1.5, 2, 0.75];
+
+/** Skip icon: a circular arrow with "10" inside. */
+function Skip({ dir }: { dir: 1 | -1 }) {
   return (
-    <svg width="30" height="38" viewBox="0 0 30 38" aria-hidden="true" className="block drop-shadow-md">
-      <path
-        d="M15 37C15 37 2 23.5 2 14.5C2 7.04 7.82 1.5 15 1.5C22.18 1.5 28 7.04 28 14.5C28 23.5 15 37 15 37Z"
-        fill={fill} stroke={selected ? "#fefdfb" : "rgba(254,253,251,0.85)"} strokeWidth={selected ? 2.5 : 1.5}
-      />
-      <circle cx="15" cy="14.5" r="9" fill="#fefdfb" fillOpacity={resolved ? 0.75 : 1} />
-      <text x="15" y="14.5" textAnchor="middle" dominantBaseline="central" fontSize="9.5" fontWeight="700" fill={fill} fontFamily="inherit">{initials.slice(0, 2)}</text>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {dir < 0 ? <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></> : <><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></>}
+      <text x="12" y="15.2" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="currentColor" stroke="none" fontFamily="inherit">10</text>
+    </svg>
+  );
+}
+
+/** A marker for a timestamped comment: the commenter's avatar with a small pointer up to the spot on the track. */
+function MapPin({ initials, creative, resolved, selected }: { initials: string; creative: boolean; resolved: boolean; selected: boolean }) {
+  const fill = resolved ? "#8a8780" : creative ? "#08794a" : "#464543";
+  return (
+    <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true" className="block drop-shadow">
+      <path d="M13 1 8 6.5h10L13 1Z" fill={fill} />
+      <circle cx="13" cy="18" r="11" fill={fill} stroke={selected ? "var(--color-ink)" : "#fefdfb"} strokeWidth={selected ? 2.5 : 1.5} />
+      <text x="13" y="18" textAnchor="middle" dominantBaseline="central" fontSize="9.5" fontWeight="700" fill="#fefdfb" fontFamily="inherit">{initials.slice(0, 2)}</text>
     </svg>
   );
 }
