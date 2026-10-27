@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     const mine = "(assignee = currentUser() OR reporter = currentUser() OR watcher = currentUser())";
     const vis = visibilityClause(s.role, false);
     const jql = `project = ${PROJECT_KEY} AND ${mine}${vis ? ` AND ${vis}` : ""} ORDER BY updated DESC`;
-    const { value: items, stale } = await cached(s.accountId, "activity", 60_000, async () => {
+    const { value: items, stale } = await cached(s.accountId, "activity", 180_000, async () => {
       const issues = await searchWithChangelog(s.auth, jql, 5);
       const items = issues.flatMap((i) => {
         const latest = [...(i.changelog?.histories ?? [])].sort((a, b) => b.created.localeCompare(a.created))[0];

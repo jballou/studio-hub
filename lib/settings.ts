@@ -24,4 +24,10 @@ export function lookbackClause(days: number): string {
   return `(statusCategory != Done OR resolutiondate >= -${days}d OR (resolutiondate is EMPTY AND updated >= -${days}d))`;
 }
 
+/** Open tickets only. The Projects page loads these first. */
+export const OPEN_CLAUSE = "statusCategory != Done";
+
+/** Closed tickets finished inside the window, loaded only when someone opens the Closed section or the board. */
+export const closedClause = (days: number): string => `(statusCategory = Done AND (resolutiondate >= -${days}d OR (resolutiondate is EMPTY AND updated >= -${days}d)))`;
+
 export const lookbackLabel = (days: number): string => (days === 1 ? "the last day" : `the last ${days} days`);

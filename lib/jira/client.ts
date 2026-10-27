@@ -99,8 +99,11 @@ export type JiraIssue = {
   };
 };
 
-/** What a list needs. Left out on purpose: the description (rich text, by far the heaviest field), which only the ticket page shows. */
-export const LIST_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "customfield_10142", "resolutiondate", "parent"];
+/**
+ * What a list needs. Left out on purpose: the description (rich text) and the Cc people. Jira charges quota per object
+ * returned, and each person counts double, so the ticket page is the only place that asks for Cc.
+ */
+export const LIST_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "resolutiondate", "parent"];
 
 export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent"];
 

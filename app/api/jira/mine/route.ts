@@ -7,7 +7,7 @@ import { errorResponse, jiraSession } from "@/lib/jira/session";
 export async function GET(req: Request) {
   try {
     const s = await jiraSession(req);
-    const { value: projects, stale } = await cached(s.accountId, "mine", 30_000, async () => {
+    const { value: projects, stale } = await cached(s.accountId, "mine", 60_000, async () => {
       const issues = await searchIssues(s.auth, `project = ${PROJECT_KEY} AND assignee = currentUser() AND (statusCategory != Done OR resolutiondate >= -14d) ORDER BY duedate ASC, updated DESC`, LIST_FIELDS, 60);
       return issues.map(toProject);
     });

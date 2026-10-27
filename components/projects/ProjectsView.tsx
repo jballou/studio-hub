@@ -98,7 +98,9 @@ function nest(rows: Project[]): { p: Project; depth: number }[] {
 export function ProjectsView() {
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [openProjects, setOpenProjects] = useState<Project[]>([]);
+  // Closed work is fetched only when someone looks at it (the Closed section or the board), which keeps Jira calls down.
+  const [closedState, setClosedState] = useState<{ key: string; list: Project[] } | null>(null);
   const [view, setView] = useState<"list" | "board" | "month" | "week">("list");
   const [scope, setScope] = useState<"mine" | "all">("mine");
   const [shelf, setShelf] = useState(false);
@@ -121,16 +123,35 @@ export function ProjectsView() {
 
   useEffect(() => { if (!isJira) repo.listUsers().then(setUsers); }, []);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const needClosed = closedOpen || view === "board";
+  const closedKey = `${meId}|${scope}`;
+  const loadBlocks = (list: Project[], live: () => boolean) => blocksRepo.list(list.map((x) => x.jiraKey)).then((bs) => { if (live()) setBlocks((cur) => ({ ...cur, ...Object.fromEntries(bs.map((b) => [b.key, b])) })); }).catch(() => {});
+
   useEffect(() => {
     let live = true;
-    projectsRepo.listProjects(meId, scope).then((p) => {
+    projectsRepo.listProjects(meId, scope, "open").then((p) => {
       if (!live) return;
-      setProjects(p);
+      setOpenProjects(p);
       setLoadError(null);
-      blocksRepo.list(p.map((x) => x.jiraKey)).then((bs) => { if (live) setBlocks(Object.fromEntries(bs.map((b) => [b.key, b]))); }).catch(() => {});
+      loadBlocks(p, () => live);
     }).catch((e: Error) => { if (live) setLoadError(e.message); });
     return () => { live = false; };
   }, [meId, scope, tick]);
+
+  useEffect(() => {
+    if (!needClosed) return;
+    let live = true;
+    projectsRepo.listProjects(meId, scope, "closed").then((p) => {
+      if (!live) return;
+      setClosedState({ key: closedKey, list: p });
+      loadBlocks(p, () => live);
+    }).catch((e: Error) => { if (live) setLoadError(e.message); });
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needClosed, meId, scope, tick]);
+
+  const closedList = closedState?.key === closedKey ? closedState.list : null;
+  const projects = useMemo(() => [...openProjects, ...(closedList ?? [])], [openProjects, closedList]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -261,12 +282,12 @@ export function ProjectsView() {
                 {collapsible ? (
                   <button onClick={() => setClosedOpen(!closedOpen)} aria-expanded={closedOpen} className="flex items-center gap-1.5 rounded-md uppercase tracking-wide hover:text-ink">
                     <Icon name={closedOpen ? "chevronDown" : "chevronRight"} size={14} />
-                    {g.label} <span className="font-normal">({rows.length})</span>
+                    {g.label} {closedList !== null && <span className="font-normal">({rows.length})</span>}
                   </button>
                 ) : <>{g.label} <span className="font-normal">({rows.length})</span></>}
                 {collapsible && lookback !== null && <span className="ml-2 text-xs font-normal normal-case tracking-normal">Finished in {lookbackLabel(lookback)}</span>}
               </h2>
-              {!shown ? null : rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
+              {!shown ? null : collapsible && closedList === null ? <p className="text-sm text-muted">Loading closed projects…</p> : rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
                   {nest(rows).map(({ p, depth }) => (
                     <li key={p.id} style={{ marginLeft: depth * 28 }} className={`flex items-center gap-1 rounded-lg border bg-white pl-2 hover:border-brand ${depth ? "border-line border-l-4 border-l-n-200" : "border-line"}`}>

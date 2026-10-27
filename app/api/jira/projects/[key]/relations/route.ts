@@ -14,7 +14,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/jira/projects/[k
       const hit = await searchIssues(s.auth, `key = ${key} AND ${visibilityClause("requester", false)}`, ["summary"], 1);
       if (hit.length === 0) throw new JiraError(404, "Ticket not found.");
     }
-    const { value: relations, stale } = await cached(s.accountId, `relations|${key}`, 60_000, () => loadRelations(s.auth, key));
+    const { value: relations, stale } = await cached(s.accountId, `relations|${key}`, 300_000, () => loadRelations(s.auth, key));
     return Response.json({ relations, stale });
   } catch (e) {
     return errorResponse(e);

@@ -1,6 +1,6 @@
 import { activeBlocks, blocksHeldBy, createBlock } from "@/lib/store/blocks";
-import { invalidateUser } from "@/lib/jira/cache";
-import { getIssue, searchIssues, transitionToStatus } from "@/lib/jira/client";
+import { cached, invalidateUser } from "@/lib/jira/cache";
+import { getIssue, LIST_FIELDS, searchIssues, transitionToStatus } from "@/lib/jira/client";
 import { jiraSyncFailure } from "@/lib/jira/sync";
 import { toProject } from "@/lib/jira/map";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
@@ -21,8 +21,9 @@ export async function GET(req: Request) {
       const blocks = await blocksHeldBy(s.accountId);
       if (blocks.length === 0) return Response.json({ blocks: [] });
       // Runs as the blocker, so Jira only returns tickets they're allowed to see.
-      const issues = await searchIssues(s.auth, `key in (${blocks.map((b) => b.key).join(",")})`, undefined, 50);
-      const byKey = new Map(issues.map((i) => [i.key, toProject(i)]));
+      const ks = blocks.map((b) => b.key).sort().join(",");
+      const { value: projects } = await cached(s.accountId, `blocked-on-me|${ks}`, 60_000, async () => (await searchIssues(s.auth, `key in (${ks})`, LIST_FIELDS, 50)).map(toProject));
+      const byKey = new Map(projects.map((p) => [p.jiraKey, p]));
       return Response.json({ blocks: blocks.map((b) => ({ ...b, project: byKey.get(b.key) ?? null })) });
     }
     const keys = (p.get("keys") ?? "").split(",").map((k) => k.trim()).filter((k) => KEY_RE.test(k)).slice(0, 100);

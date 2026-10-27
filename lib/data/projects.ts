@@ -4,7 +4,7 @@ import type { BriefSubmission, Project, Relations } from "@/lib/types";
 /** Data boundary for projects/briefs; the Jira-backed adapter replaces the mock later. */
 export interface ProjectsRepo {
   /** scope "mine" (default for the Projects page) is work assigned to the viewer; "all" is everything they may see. */
-  listProjects(viewerId: string, scope?: "mine" | "all"): Promise<Project[]>;
+  listProjects(viewerId: string, scope?: "mine" | "all", group?: "open" | "closed" | "all"): Promise<Project[]>;
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
   /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
   searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
@@ -70,11 +70,11 @@ const projectTypeFor = (label: string): Project["type"] => {
 };
 
 export const mockProjects: ProjectsRepo = {
-  async listProjects(viewerId, scope = "all") {
+  async listProjects(viewerId, scope = "all", group = "all") {
     // Real adapter: reporter OR assignee OR watcher OR invited reviewer, intersected with Jira Browse.
     const creative = ["u-avery", "u-sam"].includes(viewerId);
     return structuredClone(
-      projects.filter((p) => (creative || p.requesterId === viewerId || p.collaboratorIds.includes(viewerId)) && (scope === "all" || !creative || p.collaboratorIds.includes(viewerId))),
+      projects.filter((p) => (creative || p.requesterId === viewerId || p.collaboratorIds.includes(viewerId)) && (scope === "all" || !creative || p.collaboratorIds.includes(viewerId)) && (group === "all" || (group === "closed") === (p.group === "closed"))),
     );
   },
   async searchProjects(viewerId, query, limit = 8) {

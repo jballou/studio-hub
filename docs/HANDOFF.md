@@ -73,3 +73,11 @@ Items marked **(verify)** are from memory of how the vendor consoles work; confi
 ## 10. Settings
 
 - **Admin > Settings** holds organization-wide settings (stored in Blob as `settings`, changes are in the audit log). Today: how far back project lists go for *closed* work (default 90 days; presets 7, 30, 60, 90, 120, 365, or a custom number). Open projects always show, and searching by key or title ignores it.
+
+## 11. Keeping Jira calls low
+
+Jira limits the app by points per hour (65,000 by default) and by bursts. What the app does about it:
+- **Cache** (`lib/jira/cache.ts`): every Jira read is cached per person, in memory and in the Vercel Runtime Cache (shared across servers, kept across deploys). Fresh for 20 to 300 seconds, then served instantly for 5 more minutes while it refreshes in the background; if Jira says 429 an older copy (up to 10 minutes) is shown with a notice. Writes clear that person's entries. Entries are never shared between people.
+- **Retries** (`lib/jira/client.ts`): waits as long as Jira asks (max 4s) and retries 429s twice; at most 4 calls in flight per server.
+- **Lighter reads**: lists don't ask for descriptions or Cc people (Jira charges per object, people count double). Closed projects load only when the Closed section or the board is opened. Sub-tasks skip the child searches. The Start date field id is stored.
+- **Not done yet**: a usage monitor in Admin > System (Atlassian only reports usage in response headers).

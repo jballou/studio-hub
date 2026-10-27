@@ -52,7 +52,7 @@ export function Sidebar() {
     } catch { /* storage unavailable */ }
   }, []);
 
-  // How many projects are waiting on me. Refreshed when blocks change and once a minute so a new block shows up unprompted.
+  // How many projects are waiting on me. Refreshed when blocks change and every two minutes so a new block shows up unprompted.
   const refreshWaiting = useCallback(() => {
     blocksRepo.mine().then((b) => setWaiting(b.length)).catch(() => {});
   }, []);
@@ -60,7 +60,7 @@ export function Sidebar() {
     if (isJira && !me) return;
     refreshWaiting();
     window.addEventListener("blocks-changed", refreshWaiting);
-    const t = setInterval(() => { if (document.visibilityState === "visible") refreshWaiting(); }, 60_000);
+    const t = setInterval(() => { if (document.visibilityState === "visible") refreshWaiting(); }, 120_000);
     return () => { window.removeEventListener("blocks-changed", refreshWaiting); clearInterval(t); };
   }, [me, refreshWaiting]);
 

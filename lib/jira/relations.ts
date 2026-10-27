@@ -51,7 +51,7 @@ const ORDER: Record<LinkKind, number> = { blockedBy: 0, blocks: 1, related: 2, o
 
 /** Parents (up to two levels), children with their sub-tasks, and links, read with the viewer's own Jira permissions. */
 export async function loadRelations(a: JiraAuth, key: string): Promise<Relations> {
-  const self = await getIssueFields(a, key, ["parent", "issuelinks"]);
+  const self = await getIssueFields(a, key, ["parent", "issuelinks", "issuetype"]);
   const links = linksFrom(self.fields.issuelinks as RawLink[] | undefined).sort((x, y) => ORDER[x.kind] - ORDER[y.kind] || x.key.localeCompare(y.key));
 
   const ancestors: IssueRef[] = [];
@@ -61,7 +61,9 @@ export async function loadRelations(a: JiraAuth, key: string): Promise<Relations
     p = depth === 0 ? (await getIssueFields(a, p.key, ["parent"]).catch(() => null))?.fields.parent : null;
   }
 
-  const kids = await searchIssues(a, `parent = ${key} ORDER BY created ASC`, REF_FIELDS, 50).catch(() => []);
+  // A sub-task can't have children, so skip those two searches for it.
+  const isSubtask = (self.fields.issuetype?.hierarchyLevel ?? 0) < 0;
+  const kids = isSubtask ? [] : await searchIssues(a, `parent = ${key} ORDER BY created ASC`, REF_FIELDS, 50).catch(() => []);
   const subs = kids.length ? await searchIssues(a, `parent in (${kids.map((k) => k.key).join(",")}) ORDER BY created ASC`, REF_FIELDS, 100).catch(() => []) : [];
   const children = kids.map((k) => ({ ...toRef(k), subtasks: subs.filter((s) => s.fields.parent?.key === k.key).map(toRef) }));
 
