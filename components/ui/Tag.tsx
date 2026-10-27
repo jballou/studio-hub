@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Stage } from "@/lib/types";
+import type { Project, Stage } from "@/lib/types";
 import { Icon, type IconName } from "./Icon";
 
 export type Tone = "neutral" | "info" | "progress" | "warn" | "ok" | "bad" | "gold";
@@ -38,6 +38,22 @@ const STAGE: Record<Stage, { tone: Tone; icon: IconName }> = {
 export function StageTag({ stage }: { stage: Stage }) {
   const s = STAGE[stage];
   return <Tag tone={s.tone} icon={s.icon}>{stage}</Tag>;
+}
+
+const CATEGORY: Record<NonNullable<Project["statusCategory"]>, { tone: Tone; icon: IconName }> = {
+  new: { tone: "neutral", icon: "submitted" },
+  indeterminate: { tone: "info", icon: "progress" },
+  done: { tone: "ok", icon: "delivered" },
+};
+
+/**
+ * The ticket's status as Jira names it (Done, Intake, At Risk…), colored like Jira's categories: gray to do, blue in
+ * progress, green done. Demo data has no Jira status, so it falls back to the app's stage.
+ */
+export function StatusTag({ project }: { project: Pick<Project, "stage" | "statusName" | "statusCategory"> }) {
+  if (!project.statusName) return <StageTag stage={project.stage} />;
+  const c = CATEGORY[project.statusCategory ?? "indeterminate"];
+  return <Tag tone={c.tone} icon={c.icon}>{project.statusName}</Tag>;
 }
 
 /** Notification-style callout: tint surface, icon, text. */

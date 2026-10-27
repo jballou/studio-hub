@@ -156,6 +156,8 @@ export type Project = {
   flag?: ProjectFlag;
   /** Jira's own status name (real data only), e.g. "In Progress" */
   statusName?: string;
+  /** Jira's category for that status: to do / in progress / done */
+  statusCategory?: "new" | "indeterminate" | "done";
   /** YYYY-MM-DD Jira resolved the ticket (real data, closed tickets only) */
   resolvedAt?: string;
   /** brief as labelled sections, from the wizard */

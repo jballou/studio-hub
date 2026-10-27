@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Callout, Tag } from "@/components/ui/Tag";
-import { StageTag } from "@/components/ui/Tag";
+import { StatusTag } from "@/components/ui/Tag";
 import { blocksRepo, type MyBlock } from "@/lib/data/blocks";
 import { daysSince } from "./BlockedTag";
 
@@ -61,7 +61,7 @@ export function BlockingYou() {
             <li key={b.key} className="rounded-xl border border-line bg-white p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-xs text-muted">{b.key}</span>
-                {b.project && <StageTag stage={b.project.stage} />}
+                {b.project && <StatusTag project={b.project} />}
                 <Tag tone={days >= 5 ? "bad" : days >= 2 ? "warn" : "neutral"} icon="alert">Waiting {days === 0 ? "since today" : `${days} ${days === 1 ? "day" : "days"}`}</Tag>
               </div>
               <h2 className="mt-1 text-lg font-semibold">{b.project?.title ?? b.key}</h2>

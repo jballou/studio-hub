@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/review/Avatar";
 import { Icon } from "@/components/ui/Icon";
-import { StageTag, Tag } from "@/components/ui/Tag";
+import { StatusTag, Tag } from "@/components/ui/Tag";
 import { TYPE_TONE, TYPE_SHORT } from "@/components/calendar/meta";
 import { dayLabel } from "@/lib/calendar/dates";
 import { formatDue } from "@/lib/time";
@@ -113,7 +113,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <StarButton starred={favs.isStarred(project.jiraKey)} onToggle={() => favs.toggle(project.jiraKey, project.title)} label={project.title} />
         <h1 className="text-2xl font-bold">{project.title}</h1>
-        <StageTag stage={project.stage} />
+        <StatusTag project={project} />
         <FlagTags flag={project.flag} block={block} />
         <div className="ml-auto flex items-center gap-3">
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>

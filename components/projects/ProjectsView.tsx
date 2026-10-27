@@ -6,7 +6,7 @@ import { blocksRepo, isJira, projectsRepo, repo } from "@/lib/data";
 import { FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
-import { Callout, StageTag, Tag } from "@/components/ui/Tag";
+import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { Icon } from "@/components/ui/Icon";
 import type { Block, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
 
@@ -82,6 +82,7 @@ function Board({ projects, blocks, isStarred, toggleStar }: { projects: Project[
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       <FlagTags flag={p.flag} block={blocks[p.jiraKey]} />
                       {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
+                      {p.statusName && <StatusTag project={p} />}
                     </div>
                     <div className="mt-2 text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</div>
                   </li>
@@ -242,7 +243,7 @@ export function ProjectsView() {
                           </div>
                           <div className="text-xs text-muted">{p.jiraKey} · {p.type} · {p.requesterName ?? name(p.requesterId)}</div>
                         </div>
-                        <StageTag stage={p.stage} />
+                        <StatusTag project={p} />
                         <span className="w-24 text-right text-xs text-muted">{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>
                       </Link>
                     </li>

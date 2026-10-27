@@ -417,7 +417,7 @@ function FocusRow({ f, today, slot, planned, onDone }: { f: FocusItem; today: st
             : <span className="font-semibold">{f.title}</span>}
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <Tag tone={hot ? "bad" : f.reason.includes("Blocked") ? "warn" : "info"}>{f.reason}</Tag>
-            {f.kind === "ticket" ? <span className="text-xs text-muted">{f.key} · {f.project.stage} ({stageIdx}/{STAGES_ORDER.length})</span> : <Tag tone="progress">Task</Tag>}
+            {f.kind === "ticket" ? <span className="text-xs text-muted">{f.key} · {f.project.statusName ?? f.project.stage}{f.project.statusName ? "" : ` (${stageIdx}/${STAGES_ORDER.length})`}</span> : <Tag tone="progress">Task</Tag>}
           </div>
           {f.kind === "ticket" && <div className="mt-2"><TimelineMeter t={timeline(f.project, today)} label={`Time used on ${f.title}`} /></div>}
           {planned && slot && <p className="mt-2 text-xs text-muted">Suggested: {clock(slot.start)} – {clock(Math.min(slot.end, slot.start + 90 * 6e4))} ({hm(Math.min(90, minutes(slot.end - slot.start)))})</p>}
