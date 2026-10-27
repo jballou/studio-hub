@@ -1,4 +1,5 @@
 import { activeBlocks, resolveBlock } from "@/lib/store/blocks";
+import { invalidateUser } from "@/lib/jira/cache";
 import { transitionToStatus } from "@/lib/jira/client";
 import { jiraSyncFailure } from "@/lib/jira/sync";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
@@ -36,6 +37,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/blocks/[key]/re
     } catch (e) {
       jira = await jiraSyncFailure(e, s.auth);
     }
+    invalidateUser(s.accountId);
     return Response.json({ block, jira });
   } catch (e) {
     return errorResponse(e);

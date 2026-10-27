@@ -2,7 +2,12 @@ import type { Project, Relations } from "@/lib/types";
 import type { ProjectsRepo } from "./projects";
 
 /** Browser-side adapter: talks to our own /api/jira routes, which call Jira with the user's token. */
-async function get<T>(url: string): Promise<T> {
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** Tells the page "this is an older copy because Jira is busy", so it can say so. */
+export const STALE_EVENT = "jira-stale";
+
+async function get<T>(url: string, tries = 0): Promise<T> {
   const res = await fetch(url, { cache: "no-store" });
   if (res.status === 401) {
     // Hard navigation on purpose: a full page load sends the user through the server-side sign-in.
@@ -11,7 +16,16 @@ async function get<T>(url: string): Promise<T> {
     throw new Error("Not signed in.");
   }
   const body = await res.json().catch(() => ({}));
+  if (res.status === 429) {
+    // Jira said slow down. Wait as long as it asked (at most 8 seconds), try again twice, then give a plain message.
+    if (tries < 2) {
+      await sleep(Math.min(Math.max(Number(body.retryAfter) || 3, 1), 8) * 1000);
+      return get<T>(url, tries + 1);
+    }
+    throw new Error("Jira is busy right now. Give it a minute and try again.");
+  }
   if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
+  if (body.stale && typeof window !== "undefined") window.dispatchEvent(new Event(STALE_EVENT));
   return body as T;
 }
 

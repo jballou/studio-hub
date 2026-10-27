@@ -1,4 +1,5 @@
-import { JiraError, jqlString, searchIssues } from "@/lib/jira/client";
+import { cached } from "@/lib/jira/cache";
+import { JiraError, jqlString, LIST_FIELDS, searchIssues } from "@/lib/jira/client";
 import { PROJECT_KEY, toProject } from "@/lib/jira/map";
 import { errorResponse, jiraSession, visibilityClause } from "@/lib/jira/session";
 import { lookbackClause } from "@/lib/settings";
@@ -29,15 +30,19 @@ export async function GET(req: Request) {
       return `${parts.join(" AND ")} ORDER BY updated DESC`;
     };
 
-    let issues;
-    try {
-      issues = await searchIssues(s.auth, build(true), undefined, limit);
-    } catch (e) {
-      // The Cc field may not be searchable by JQL; retry without it rather than failing the page.
-      if (!(e instanceof JiraError) || e.status !== 400) throw e;
-      issues = await searchIssues(s.auth, build(false), undefined, limit);
-    }
-    return Response.json({ projects: issues.map(toProject) });
+    // Repeat loads inside 30 seconds come from memory; if Jira is rate-limiting, an older copy is shown rather than an error.
+    const { value: projects, stale } = await cached(s.accountId, `list|${s.role}|${mineOnly}|${q}|${limit}|${projectLookbackDays}`, 30_000, async () => {
+      let issues;
+      try {
+        issues = await searchIssues(s.auth, build(true), LIST_FIELDS, limit);
+      } catch (e) {
+        // The Cc field may not be searchable by JQL; retry without it rather than failing the page.
+        if (!(e instanceof JiraError) || e.status !== 400) throw e;
+        issues = await searchIssues(s.auth, build(false), LIST_FIELDS, limit);
+      }
+      return issues.map(toProject);
+    });
+    return Response.json({ projects, stale });
   } catch (e) {
     return errorResponse(e);
   }

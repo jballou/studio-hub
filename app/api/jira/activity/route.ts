@@ -1,4 +1,5 @@
-import { JiraError } from "@/lib/jira/client";
+import { cached } from "@/lib/jira/cache";
+import { searchWithChangelog } from "@/lib/jira/client";
 import { PROJECT_KEY } from "@/lib/jira/map";
 import { errorResponse, jiraSession, visibilityClause } from "@/lib/jira/session";
 
@@ -17,7 +18,7 @@ function sentence(h: History): string {
 }
 
 /**
- * GET /api/jira/activity  The latest change on each of the 8 most recently updated tickets I'm on.
+ * GET /api/jira/activity  The latest change on each of the 5 most recently updated tickets I'm on (change history is costly, so it's capped and cached).
  * Runs as the signed-in user, so Jira only returns tickets they can see.
  */
 export async function GET(req: Request) {
@@ -26,27 +27,24 @@ export async function GET(req: Request) {
     const mine = "(assignee = currentUser() OR reporter = currentUser() OR watcher = currentUser())";
     const vis = visibilityClause(s.role, false);
     const jql = `project = ${PROJECT_KEY} AND ${mine}${vis ? ` AND ${vis}` : ""} ORDER BY updated DESC`;
-    const qs = new URLSearchParams({ jql, fields: "summary,updated", expand: "changelog", maxResults: "8" });
-    const res = await fetch(`https://api.atlassian.com/ex/jira/${s.auth.cloudId}/rest/api/3/search/jql?${qs}`, {
-      headers: { Authorization: `Bearer ${s.auth.accessToken}`, Accept: "application/json" },
-      cache: "no-store",
+    const { value: items, stale } = await cached(s.accountId, "activity", 60_000, async () => {
+      const issues = await searchWithChangelog(s.auth, jql, 5);
+      const items = issues.flatMap((i) => {
+        const latest = [...(i.changelog?.histories ?? [])].sort((a, b) => b.created.localeCompare(a.created))[0];
+        if (!latest) return [];
+        return [{
+          id: `${i.key}-${latest.id}`,
+          key: i.key,
+          title: i.fields.summary,
+          who: latest.author?.displayName ?? "Someone",
+          mine: !!latest.author?.accountId && latest.author.accountId === s.accountId,
+          what: sentence(latest),
+          at: latest.created,
+        }];
+      });
+      return items;
     });
-    if (!res.ok) throw new JiraError(res.status, `Jira returned HTTP ${res.status}`);
-    const data = (await res.json()) as { issues: { key: string; fields: { summary: string; updated: string }; changelog?: { histories?: History[] } }[] };
-    const items = data.issues.flatMap((i) => {
-      const latest = [...(i.changelog?.histories ?? [])].sort((a, b) => b.created.localeCompare(a.created))[0];
-      if (!latest) return [];
-      return [{
-        id: `${i.key}-${latest.id}`,
-        key: i.key,
-        title: i.fields.summary,
-        who: latest.author?.displayName ?? "Someone",
-        mine: !!latest.author?.accountId && latest.author.accountId === s.accountId,
-        what: sentence(latest),
-        at: latest.created,
-      }];
-    });
-    return Response.json({ items });
+    return Response.json({ items, stale });
   } catch (e) {
     return errorResponse(e);
   }

@@ -1,3 +1,4 @@
+import { invalidateUser } from "@/lib/jira/cache";
 import { getIssue, JiraError, listTargetStatuses, transitionToStatus } from "@/lib/jira/client";
 import { jiraSyncFailure } from "@/lib/jira/sync";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
@@ -31,6 +32,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/jira/projects/[
     try {
       const r = await transitionToStatus(s.auth, key, status);
       if (r === "no-transition") return Response.json({ ok: false, reason: `Jira's workflow doesn't allow moving this ticket to ${status} from ${issue.fields.status.name}.` }, { status: 409 });
+      invalidateUser(s.accountId);
       return Response.json({ ok: true, status });
     } catch (e) {
       return Response.json(await jiraSyncFailure(e, s.auth), { status: 409 });

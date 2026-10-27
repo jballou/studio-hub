@@ -59,6 +59,14 @@ export function visibilityClause(role: "creative" | "requester", withCc: boolean
 
 export function errorResponse(e: unknown): Response {
   if (e instanceof AdminError) return Response.json({ error: e.message }, { status: e.status });
+  if (e instanceof JiraError && e.status === 429) {
+    // Say what happened and how long to wait, so the page can retry on its own.
+    const wait = e.retryAfter ?? 30;
+    return Response.json(
+      { error: "Jira is busy right now. Give it a minute and try again.", code: "rate-limited", retryAfter: wait, reason: e.reason },
+      { status: 429, headers: { "Retry-After": String(wait) } },
+    );
+  }
   if (e instanceof JiraError) {
     const status = e.status === 401 || e.status === 403 || e.status === 404 || e.status === 400 ? e.status : 502;
     return Response.json({ error: e.message }, { status });

@@ -10,6 +10,7 @@ import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { Icon } from "@/components/ui/Icon";
 import { IssueIcon } from "@/components/ui/IssueIcon";
 import { Board } from "./Board";
+import { StaleNotice } from "@/components/ui/StaleNotice";
 import { NoStartTag, PlanWork } from "./PlanWork";
 import { needsStartDate } from "@/lib/startdate";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
@@ -220,7 +221,13 @@ export function ProjectsView() {
         </div>
       )}
 
-      {loadError && <div className="mb-4"><Callout tone="bad" icon="alert">Couldn&apos;t load projects: {loadError}</Callout></div>}
+      <StaleNotice />
+      {loadError && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1"><Callout tone="bad" icon="alert">Couldn&apos;t load projects: {loadError}</Callout></div>
+          <button onClick={() => setTick((t) => t + 1)} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Try again</button>
+        </div>
+      )}
 
       {(actionCount > 0 || newTotal > 0) && (
         <div className="mb-6 grid gap-3 sm:grid-cols-2">

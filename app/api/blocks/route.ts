@@ -1,4 +1,5 @@
 import { activeBlocks, blocksHeldBy, createBlock } from "@/lib/store/blocks";
+import { invalidateUser } from "@/lib/jira/cache";
 import { getIssue, searchIssues, transitionToStatus } from "@/lib/jira/client";
 import { jiraSyncFailure } from "@/lib/jira/sync";
 import { toProject } from "@/lib/jira/map";
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     } catch (e) {
       jira = await jiraSyncFailure(e, s.auth);
     }
+    invalidateUser(s.accountId);
     return Response.json({ block, jira }, { status: 201 });
   } catch (e) {
     return errorResponse(e);

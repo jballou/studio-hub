@@ -1,33 +1,81 @@
+import { readDoc, updateDoc } from "@/lib/store/doc";
+
 // Server-side Jira REST client. Always called with the signed-in user's token, so Jira's own
 // Browse permissions decide what comes back. Never import this from a client component.
 
 export class JiraError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public extra: { retryAfter?: number; reason?: string } = {}) {
     super(message);
   }
+  /** Seconds Jira asked us to wait (429 only). */
+  get retryAfter() { return this.extra.retryAfter; }
+  /** Which of Atlassian's limits fired, when it says (429 only). */
+  get reason() { return this.extra.reason; }
 }
 
 export type JiraAuth = { accessToken: string; cloudId: string };
 
 const api = (a: JiraAuth, path: string) => `https://api.atlassian.com/ex/jira/${a.cloudId}/rest/api/3${path}`;
 
-async function request<T>(a: JiraAuth, path: string, init?: { method: string; body?: unknown }): Promise<T> {
-  const res = await fetch(api(a, path), {
-    method: init?.method,
-    headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
-    body: init?.body ? JSON.stringify(init.body) : undefined,
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const body = await res.json();
-      detail = (body.errorMessages ?? []).join("; ") || body.message || "";
-    } catch { /* non-JSON error body */ }
-    throw new JiraError(res.status, detail || `Jira returned HTTP ${res.status}`);
+// ---- Staying inside Jira's rate limits ----
+// Atlassian limits an app by points per hour and by bursts. We keep bursts small (at most 4 calls in flight per server
+// instance) and, when Jira says 429, wait as long as it asks (capped) and try again. A 429 means "not processed", so
+// retrying even a write is safe. 503 is retried for reads only.
+const MAX_IN_FLIGHT = 4;
+const MAX_RETRIES = 2;
+const MAX_WAIT_MS = 4000;
+/** Swappable so tests don't have to wait. */
+export const retry = { sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)) };
+
+let inFlight = 0;
+const waiting: (() => void)[] = [];
+async function slot<T>(fn: () => Promise<T>): Promise<T> {
+  if (inFlight >= MAX_IN_FLIGHT) await new Promise<void>((r) => waiting.push(r));
+  inFlight++;
+  try {
+    return await fn();
+  } finally {
+    inFlight--;
+    waiting.shift()?.();
   }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+}
+
+/** Retry-After in seconds. Atlassian sends whole seconds; anything else is ignored. */
+export function parseRetryAfter(v: string | null): number | undefined {
+  if (!v || !/^\d+(\.\d+)?$/.test(v.trim())) return undefined;
+  return Math.max(0, Math.ceil(Number(v)));
+}
+
+async function request<T>(a: JiraAuth, path: string, init?: { method: string; body?: unknown }): Promise<T> {
+  const method = init?.method ?? "GET";
+  for (let attempt = 0; ; attempt++) {
+    const res = await slot(() => fetch(api(a, path), {
+      method: init?.method,
+      headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
+      body: init?.body ? JSON.stringify(init.body) : undefined,
+      cache: "no-store",
+    }));
+    const limited = res.status === 429 || (res.status === 503 && method === "GET");
+    if (limited) {
+      const retryAfter = parseRetryAfter(res.headers.get("retry-after"));
+      if (attempt < MAX_RETRIES) {
+        const wait = Math.min(retryAfter !== undefined ? retryAfter * 1000 : 1000 * 2 ** attempt, MAX_WAIT_MS);
+        await retry.sleep(wait + Math.random() * 250);
+        continue;
+      }
+      throw new JiraError(res.status === 429 ? 429 : 503, "Jira is busy right now.", { retryAfter, reason: res.headers.get("ratelimit-reason") ?? res.headers.get("x-ratelimit-reason") ?? undefined });
+    }
+    if (!res.ok) {
+      let detail = "";
+      try {
+        const body = await res.json();
+        detail = (body.errorMessages ?? []).join("; ") || body.message || "";
+      } catch { /* non-JSON error body */ }
+      throw new JiraError(res.status, detail || `Jira returned HTTP ${res.status}`);
+    }
+    if (res.status === 204) return undefined as T;
+    return res.json() as Promise<T>;
+  }
 }
 
 export type JiraUser = { accountId: string; displayName: string; emailAddress?: string };
@@ -51,6 +99,9 @@ export type JiraIssue = {
   };
 };
 
+/** What a list needs. Left out on purpose: the description (rich text, by far the heaviest field), which only the ticket page shows. */
+export const LIST_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "customfield_10142", "resolutiondate", "parent"];
+
 export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent"];
 
 // Jira calls its date field "Start date" but the id differs per site, so it is found by name once and remembered.
@@ -61,10 +112,14 @@ export async function startDateField(a: JiraAuth): Promise<string | null> {
   if (process.env.JIRA_START_DATE_FIELD) return process.env.JIRA_START_DATE_FIELD;
   // A found field is kept for the life of the server; "not found" is rechecked every 10 minutes.
   if (startField && (startField.id || Date.now() - startField.at < 600_000)) return startField.id;
+  // A found id is also saved in our own store, so a fresh server instance doesn't spend a Jira call on it.
+  const saved = await readDoc<{ startDateField?: string }>("jira-fields", () => ({})).then((d) => d.data.startDateField ?? null).catch(() => null);
+  if (saved) { startField = { id: saved, at: Date.now() }; return saved; }
   try {
     const all = await request<{ id: string; name: string; custom?: boolean; schema?: { type?: string } }[]>(a, "/field");
     const hit = all.find((f) => f.name.toLowerCase() === "start date" && f.custom !== false && (f.schema?.type === "date" || f.schema?.type === "datetime")) ?? all.find((f) => f.name.toLowerCase() === "start date");
     startField = { id: hit?.id ?? null, at: Date.now() };
+    if (hit) await updateDoc("jira-fields", () => ({}), (d) => ({ data: { ...d, startDateField: hit.id }, result: undefined })).catch(() => {});
   } catch {
     return null; // can't tell right now; try again next request
   }
@@ -78,7 +133,7 @@ function withStartDate(issue: JiraIssue, id: string | null): JiraIssue {
 }
 
 export async function searchIssues(a: JiraAuth, jql: string, fields: string[] = ISSUE_FIELDS, maxResults = 50): Promise<JiraIssue[]> {
-  const sf = fields === ISSUE_FIELDS ? await startDateField(a) : null;
+  const sf = fields === ISSUE_FIELDS || fields === LIST_FIELDS ? await startDateField(a) : null;
   const qs = new URLSearchParams({ jql, fields: (sf ? [...fields, sf] : fields).join(","), maxResults: String(maxResults) });
   const data = await request<{ issues: JiraIssue[] }>(a, `/search/jql?${qs}`);
   return data.issues.map((i) => withStartDate(i, sf));
@@ -195,4 +250,13 @@ export async function tokenScopes(a: JiraAuth): Promise<string[] | null> {
   } catch {
     return null;
   }
+}
+
+export type ChangeHistory = { id: string; created: string; author?: { displayName?: string; accountId?: string }; items: { field: string; fromString?: string | null; toString?: string | null }[] };
+
+/** A search that also returns each ticket's change history. Costly, so callers keep it small and cached. */
+export async function searchWithChangelog(a: JiraAuth, jql: string, maxResults: number): Promise<{ key: string; fields: { summary: string; updated: string }; changelog?: { histories?: ChangeHistory[] } }[]> {
+  const qs = new URLSearchParams({ jql, fields: "summary,updated", expand: "changelog", maxResults: String(maxResults) });
+  const data = await request<{ issues: { key: string; fields: { summary: string; updated: string }; changelog?: { histories?: ChangeHistory[] } }[] }>(a, `/search/jql?${qs}`);
+  return data.issues;
 }

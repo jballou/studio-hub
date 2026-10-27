@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { IssueIcon } from "@/components/ui/IssueIcon";
+import { StaleNotice } from "@/components/ui/StaleNotice";
 import { activityRepo, googleRepo, GoogleUnavailable, isJira, projectsRepo, tasksRepo, type ActivityItem, type GoogleStatus } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
 import { celebrate } from "@/lib/celebrate";
@@ -69,6 +70,8 @@ export function MyDay() {
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [showAllBars, setShowAllBars] = useState(false);
   const [dueOpen, setDueOpen] = useState(false);
+  const [jiraErr, setJiraErr] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     // The date is read in the browser so "today" is the person's own day, not the server's.
@@ -82,7 +85,7 @@ export function MyDay() {
   useEffect(() => {
     if (!me || !today) return;
     let live = true;
-    projectsRepo.myWork(me.id).then((p) => live && setProjects(p)).catch(() => live && setProjects([]));
+    projectsRepo.myWork(me.id).then((p) => { if (live) { setProjects(p); setJiraErr(null); } }).catch((e) => { if (live) { setProjects([]); setJiraErr(e instanceof Error ? e.message : "Couldn't load your tickets."); } });
     tasksRepo.list().then((s) => live && applyTasks(s)).catch((e) => { if (live) { setTasks([]); setTaskErr(e.message); } });
     googleRepo.status().then((s) => live && setGoogle(s)).catch(() => live && setGoogle({ configured: false, connected: false }));
     activityRepo.recent().then((a) => live && setActivity(a)).catch(() => live && setActivity([]));
@@ -91,7 +94,7 @@ export function MyDay() {
       .then((e) => { if (live) { setEvents(e); setEventsErr(null); } })
       .catch((e) => { if (live) { setEvents([]); setEventsErr({ message: e.message, code: e instanceof GoogleUnavailable ? e.code : undefined }); } });
     return () => { live = false; };
-  }, [me, today, applyTasks]);
+  }, [me, today, applyTasks, reload]);
 
   const slots = useMemo(() => (today && events ? openSlots(events, tasks ?? [], today, now, tz) : []), [events, tasks, today, now, tz]);
   const focus = useMemo(() => (today && projects ? focusList(projects, tasks ?? [], today) : []), [projects, tasks, today]);
@@ -152,6 +155,13 @@ export function MyDay() {
         </div>
         <button onClick={() => setAdding(true)} className="ml-auto flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Add new task</button>
       </div>
+      <div className="mt-3"><StaleNotice /></div>
+      {jiraErr && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1"><Callout tone="bad" icon="alert">Couldn&apos;t load your Jira tickets: {jiraErr}</Callout></div>
+          <button onClick={() => setReload((n) => n + 1)} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Try again</button>
+        </div>
+      )}
       {!isJira && <div className="mt-3"><Callout tone="info" icon="alert">Demo data. Real tickets, calendar and Google Tasks show up after sign-in.</Callout></div>}
       {flash && <div className="mt-3"><Callout tone={flash.tone} icon={flash.tone === "ok" ? "check" : "alert"}>{flash.text}</Callout></div>}
 

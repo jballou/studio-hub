@@ -1,3 +1,4 @@
+import { invalidateUser } from "@/lib/jira/cache";
 import { getIssue, JiraError, setStartDate } from "@/lib/jira/client";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
 import { startDateProblem } from "@/lib/startdate";
@@ -16,6 +17,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/jira/projects/[
     const problem = startDateProblem(date, issue.fields.duedate ?? "");
     if (problem) throw new JiraError(400, problem);
     await setStartDate(s.auth, key, date);
+    invalidateUser(s.accountId);
     return Response.json({ ok: true, date });
   } catch (e) {
     return errorResponse(e);
