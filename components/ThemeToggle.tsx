@@ -6,7 +6,7 @@ import { playSfx, setSounds, soundsOn } from "@/lib/sfx";
 
 const KEY = "hub-theme";
 
-/** Light/dark switch and a mute button for the sound effects. Going dark plays the good-night sound. */
+/** Light/dark switch and a mute button for the sound effects. Going dark plays the good-night sound; going light plays the mischievous one. */
 export function ThemeToggle({ vertical = false }: { vertical?: boolean }) {
   const [dark, setDark] = useState(false);
   const [sound, setSound] = useState(true);
@@ -27,7 +27,7 @@ export function ThemeToggle({ vertical = false }: { vertical?: boolean }) {
     if (next) document.documentElement.setAttribute("data-theme", "dark");
     else document.documentElement.removeAttribute("data-theme");
     try { localStorage.setItem(KEY, next ? "dark" : "light"); } catch { /* storage unavailable */ }
-    if (next) playSfx("night");
+    playSfx(next ? "night" : "day");
   };
 
   const btn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150";

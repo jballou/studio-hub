@@ -1,8 +1,9 @@
-// Sound effects, used sparingly: a celebration when work is finished and a good-night when dark mode turns on.
+// Sound effects, used sparingly: a celebration when work is finished, a good-night when dark mode turns on,
+// and a mischievous one when light mode comes back.
 // People can mute them with the speaker button; the choice is remembered in this browser.
-export type Sfx = "celebrate" | "night";
+export type Sfx = "celebrate" | "night" | "day";
 
-const FILES: Record<Sfx, string> = { celebrate: "/sounds/celebrate.wav", night: "/sounds/night-night.wav" };
+const FILES: Record<Sfx, string> = { celebrate: "/sounds/celebrate.wav", night: "/sounds/night-night.mp3", day: "/sounds/light-mode.wav" };
 const KEY = "hub-sounds";
 
 export function soundsOn(): boolean {
