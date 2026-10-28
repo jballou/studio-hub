@@ -44,7 +44,7 @@ let downUntil = 0;
 const sha = (k: string) => createHash("sha256").update(k).digest("hex");
 const fbCache = () => getCache({ namespace: "doc-fallback", keyHashFunction: sha });
 async function fbGet<T>(name: string): Promise<Saved<T> | undefined> {
-  try { return (await fbCache().get(path(name))) as Saved<T> | undefined; } catch { return undefined; }
+  try { return ((await fbCache().get(path(name))) ?? undefined) as Saved<T> | undefined; } catch { return undefined; }
 }
 async function fbSet(name: string, data: unknown, base: "known" | "empty"): Promise<void> {
   await fbCache().set(path(name), { data, at: Date.now(), base } satisfies Saved<unknown>, { ttl: FALLBACK_SECONDS, name: "doc-fallback" });
@@ -52,7 +52,7 @@ async function fbSet(name: string, data: unknown, base: "known" | "empty"): Prom
 // The last copy we saw from the store, kept for a week, so an outage starts from real data instead of nothing.
 const lkCache = () => getCache({ namespace: "doc-last-known", keyHashFunction: sha });
 async function lkGet<T>(name: string): Promise<T | undefined> {
-  try { return (await lkCache().get(path(name))) as T | undefined; } catch { return undefined; }
+  try { return ((await lkCache().get(path(name))) ?? undefined) as T | undefined; } catch { return undefined; }
 }
 function lkSet(name: string, data: unknown) {
   const p = Promise.resolve(lkCache().set(path(name), data, { ttl: FALLBACK_SECONDS, name: "doc-last-known" })).catch(() => {});
@@ -100,7 +100,7 @@ const l2 = () => getCache({ namespace: "doc", keyHashFunction: (k: string) => cr
 const l2Key = (name: string) => path(name);
 
 async function l2Get<T>(name: string): Promise<T | undefined> {
-  try { return (await l2().get(l2Key(name))) as T | undefined; } catch { return undefined; }
+  try { return ((await l2().get(l2Key(name))) ?? undefined) as T | undefined; } catch { return undefined; }
 }
 function remember(name: string, data: unknown) {
   l1.set(name, { at: Date.now(), data });
