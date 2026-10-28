@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Menu } from "@/components/ui/Menu";
 import { Icon } from "@/components/ui/Icon";
 import { Tag, UnreadDot } from "@/components/ui/Tag";
 import { knownPeople, peopleRepo } from "@/lib/data/people";
@@ -135,9 +136,7 @@ function ThreadCard({
           <Icon name="reply" size={13} /> Reply
         </button>
         {canPush && !thread.jira && (
-          <button className="ml-auto font-medium text-brand hover:underline" onClick={onPush}>
-            {thread.pushError ? "Retry push to Jira" : "Push to Jira"}
-          </button>
+          <div className="ml-auto"><Menu label="Comment options" size={24} items={[{ label: thread.pushError ? "Retry push to Jira" : "Push to Jira", icon: "link", onSelect: onPush }]} /></div>
         )}
       </div>
 
@@ -169,7 +168,7 @@ function ThreadCard({
 
 export function CommentList({
   threads, counts, users, me, selectedId, unreadIds, tab, mine, unpushed, canResolve, canPush,
-  onTab, onMine, onUnpushed, onSelect, onReply, onStatus, onPush, onPushAll,
+  onTab, onMine, onUnpushed, onSelect, onReply, onStatus, onPush, onPushAll, request, onJumpUnread,
 }: {
   threads: Thread[];
   counts: Record<Tab, number>;
@@ -190,6 +189,9 @@ export function CommentList({
   onStatus: (id: string, s: Thread["status"]) => void;
   onPush: (id: string) => void;
   onPushAll: () => void;
+  /** the feedback request this design was sent with, shown at the top of the panel */
+  request?: { from: string; due?: string; instructions?: string; approvers: string[] } | null;
+  onJumpUnread?: () => void;
 }) {
   const anyPushable = threads.some((t) => !t.jira && canPush(t));
   const pill = (t: Tab, label: string) => (
@@ -205,18 +207,40 @@ export function CommentList({
 
   return (
     <aside className="flex w-[420px] shrink-0 flex-col">
-      <div className="space-y-2 p-4 pb-2">
-        <div className="flex gap-2">{pill("all", "All")}{pill("open", "Open")}{pill("resolved", "Resolved")}</div>
-        <div className="flex items-center gap-4 text-xs text-muted">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={mine} onChange={(e) => onMine(e.target.checked)} /> Only mine</label>
-          {me.role === "creative" && (
-            <>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={unpushed} onChange={(e) => onUnpushed(e.target.checked)} /> Not in Jira</label>
-              <button disabled={!anyPushable} onClick={onPushAll} className="ml-auto font-medium text-brand enabled:hover:underline disabled:opacity-40">
-                Push all to Jira
+      <div className="space-y-4 p-4 pb-2">
+        {request && (
+          <details open className="group rounded-xl border border-line bg-brand-soft/60 text-sm">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2 font-medium">
+              <Icon name="feedback" size={16} />
+              <span className="min-w-0 flex-1 truncate">{request.from} asked for your feedback{request.due ? ` by ${request.due}` : ""}</span>
+              <span className="transition-transform group-open:rotate-90"><Icon name="chevronRight" size={14} /></span>
+            </summary>
+            <div className="space-y-2 px-4 pb-4 text-n-800">
+              {request.instructions && <p className="whitespace-pre-wrap">{request.instructions}</p>}
+              {request.approvers.length > 0 && <p className="text-xs text-muted">Approver{request.approvers.length === 1 ? "" : "s"}: {request.approvers.join(", ")}</p>}
+            </div>
+          </details>
+        )}
+        <div className="flex items-center gap-2">
+          {pill("all", "All")}{pill("open", "Open")}{pill("resolved", "Resolved")}
+          <div className="ml-auto flex items-center gap-2">
+            {unreadIds.size > 0 && onJumpUnread && (
+              <button onClick={onJumpUnread} className="flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-xs font-medium text-n-50 hover:bg-brand-dark">
+                {unreadIds.size} new <Icon name="chevronRight" size={12} />
               </button>
-            </>
-          )}
+            )}
+            <Menu
+              label="Comment options"
+              items={[
+                { label: "Only my comments", checked: mine, onSelect: () => onMine(!mine) },
+                ...(me.role === "creative" ? [
+                  { label: "Only comments not in Jira", checked: unpushed, onSelect: () => onUnpushed(!unpushed) },
+                  { kind: "divider" as const },
+                  { label: "Push all to Jira", icon: "link" as const, disabled: !anyPushable, onSelect: onPushAll },
+                ] : []),
+              ]}
+            />
+          </div>
         </div>
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto p-4 pt-2">
