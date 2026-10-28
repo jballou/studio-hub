@@ -180,3 +180,28 @@ export async function deleteGTask(email: string, listId: string, id: string): Pr
     if (!(e instanceof GoogleError && e.status === 404)) throw e; // already gone
   }
 }
+
+/** The app's list if it exists; never creates one. */
+export async function findTaskList(email: string): Promise<string | null> {
+  const lists = await gfetch<{ items?: { id: string; title: string }[] }>(email, "https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100");
+  return lists.items?.find((l) => l.title === LIST_TITLE)?.id ?? null;
+}
+
+export type GTask = { id: string; title: string; notes?: string; /** YYYY-MM-DD */ due?: string; done: boolean; completedAt?: string; updatedAt?: string };
+
+/** Every task in a list, finished ones included (up to 500). */
+export async function listGTasks(email: string, listId: string): Promise<GTask[]> {
+  const out: GTask[] = [];
+  let pageToken = "";
+  for (let page = 0; page < 5; page++) {
+    const qs = new URLSearchParams({ showCompleted: "true", showHidden: "true", showDeleted: "false", maxResults: "100", ...(pageToken ? { pageToken } : {}) });
+    const data = await gfetch<{ items?: { id: string; title?: string; notes?: string; due?: string; status?: string; completed?: string; updated?: string; deleted?: boolean }[]; nextPageToken?: string }>(email, `https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks?${qs}`);
+    for (const t of data.items ?? []) {
+      if (t.deleted || !t.title?.trim()) continue;
+      out.push({ id: t.id, title: t.title.trim(), notes: t.notes, due: t.due?.slice(0, 10), done: t.status === "completed", completedAt: t.completed, updatedAt: t.updated });
+    }
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
+  }
+  return out;
+}

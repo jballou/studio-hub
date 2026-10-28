@@ -7,7 +7,7 @@ import { AdminError } from "./users";
 // Personal tasks, one small document per person. `g` is the link to the Google Tasks copy; tombstones
 // (deleted: true) stay until the Google copy is gone, then are dropped.
 type Stored = PersonalTask & { g?: { listId: string; taskId: string }; deleted?: boolean };
-type TasksDoc = { tasks: Stored[] };
+type TasksDoc = { tasks: Stored[]; /** set once Google Tasks has been checked for tasks this app doesn't have yet */ restoredFromGoogle?: string };
 const empty = (): TasksDoc => ({ tasks: [] });
 const name = (email: string) => `tasks/${userDocId(email)}`;
 const now = () => new Date().toISOString();
@@ -108,5 +108,32 @@ export async function recordSync(
       if (r.backup !== "synced" || t.updatedAt <= r.at) t.backup = r.backup;
     }
     return { data: d, result: undefined };
+  });
+}
+
+export type RestoredTask = { title: string; notes?: string; date?: string; time?: string; tz?: string; done: boolean; doneAt?: string; at?: string; g: { listId: string; taskId: string } };
+
+/** True once the one-time check of Google Tasks has been done for this person. */
+export async function restoreDone(email: string): Promise<boolean> {
+  return !!(await readDoc(name(email), empty)).data.restoredFromGoogle;
+}
+
+/**
+ * Adds tasks that exist in Google Tasks but not here (after the app's own data was lost), already marked as backed up.
+ * Anything already linked to a Google task, including tasks deleted here, is skipped. Marks the check as done.
+ */
+export async function importTasks(email: string, items: RestoredTask[]): Promise<number> {
+  return updateDoc(name(email), empty, (d) => {
+    const linked = new Set(d.tasks.map((t) => t.g?.taskId).filter(Boolean));
+    let added = 0;
+    for (const r of items) {
+      if (linked.has(r.g.taskId) || d.tasks.filter((t) => !t.deleted).length >= 500) continue;
+      const at = now();
+      d.tasks.push({ id: randomUUID(), title: r.title, notes: r.notes, date: r.date, time: r.time, tz: r.tz, done: r.done, doneAt: r.done ? r.doneAt ?? r.at ?? at : undefined, createdAt: r.at ?? at, updatedAt: at, backup: "synced", g: r.g });
+      linked.add(r.g.taskId);
+      added++;
+    }
+    d.restoredFromGoogle = now();
+    return { data: d, result: added };
   });
 }

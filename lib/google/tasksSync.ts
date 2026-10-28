@@ -1,7 +1,7 @@
 import type { PersonalTask } from "@/lib/types";
-import { listTasks, recordSync, visible } from "@/lib/store/tasks";
+import { importTasks, listTasks, recordSync, restoreDone, visible, type RestoredTask } from "@/lib/store/tasks";
 import { getConnection } from "@/lib/store/google";
-import { createGTask, deleteGTask, ensureTaskList, GoogleError, updateGTask, type GTaskInput } from "./client";
+import { createGTask, deleteGTask, ensureTaskList, findTaskList, GoogleError, listGTasks, updateGTask, type GTask, type GTaskInput } from "./client";
 
 const fmtTime = (t: PersonalTask) => {
   if (!t.time) return "";
@@ -13,6 +13,32 @@ const fmtTime = (t: PersonalTask) => {
 function toG(t: PersonalTask): GTaskInput {
   const lines = [t.time ? `Due ${fmtTime(t)}` : "", t.notes ?? "", "Added from Brand Creative Hub"].filter(Boolean);
   return { title: t.title, notes: lines.join("\n\n"), dueDate: t.date, done: t.done };
+}
+
+const FOOTER = "Added from Brand Creative Hub";
+
+/** Undoes toG: pulls "Due 3:30 PM (America/Los_Angeles)" and the footer back out of Google's notes. */
+export function fromG(g: GTask, listId: string): RestoredTask {
+  const blocks = (g.notes ?? "").split(/\n\n/).map((b) => b.trim()).filter((b) => b && b !== FOOTER);
+  let time: string | undefined;
+  let tz: string | undefined;
+  const m = /^Due (\d{1,2}):(\d{2}) (AM|PM)(?: \(([^)]+)\))?$/.exec(blocks[0] ?? "");
+  if (m) {
+    time = `${String(((Number(m[1]) % 12) + (m[3] === "PM" ? 12 : 0))).padStart(2, "0")}:${m[2]}`;
+    tz = m[4];
+    blocks.shift();
+  }
+  const notes = blocks.join("\n\n").trim();
+  return { title: g.title, notes: notes || undefined, date: g.due, time: g.due ? time : undefined, tz: g.due && time ? tz : undefined, done: g.done, doneAt: g.completedAt, at: g.updatedAt, g: { listId, taskId: g.id } };
+}
+
+/** One time per person: brings in tasks that live in the Google Tasks list but not in the app (e.g. after the app's data was lost). */
+export async function restoreFromGoogle(email: string): Promise<number> {
+  if (await restoreDone(email)) return 0;
+  const listId = await findTaskList(email);
+  if (!listId) return importTasks(email, []);
+  const items = (await listGTasks(email, listId)).map((g) => fromG(g, listId));
+  return importTasks(email, items);
 }
 
 /**
@@ -66,6 +92,7 @@ export async function syncTasks(email: string, limit = 15): Promise<{ connected:
 /** Current tasks as the client sees them, after trying to catch Google up. */
 export async function tasksForClient(email: string, sync: boolean): Promise<{ tasks: PersonalTask[]; googleConnected: boolean; syncError?: string }> {
   let status: { connected: boolean; error?: string } = { connected: !!(await getConnection(email).catch(() => null)) };
+  if (sync && status.connected) await restoreFromGoogle(email).catch(() => 0); // never blocks the page
   if (sync) status = await syncTasks(email);
   const { tasks } = await listTasks(email);
   const out = visible(tasks).map((t) => (status.connected ? t : { ...t, backup: "off" as const }));
