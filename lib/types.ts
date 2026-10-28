@@ -270,3 +270,20 @@ export type PersonalTask = {
   /** "synced" = copy is in Google Tasks; "pending" = last attempt failed, will retry; "off" = Google not connected */
   backup: "synced" | "pending" | "off";
 };
+
+/** Something that happened that a person should know about. Shown in the bell. */
+export type AppNotification = {
+  id: string;
+  kind: "review-request" | "new-version" | "added" | "approved" | "changes";
+  /** same key again (e.g. more items of one batch) updates this one instead of adding another */
+  key: string;
+  assetId: string;
+  /** the design's name, or the batch title */
+  assetName: string;
+  projectKey: string;
+  fromName: string;
+  /** more than one design in a batch */
+  count?: number;
+  createdAt: string;
+  readAt: string | null;
+};

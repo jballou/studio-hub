@@ -118,6 +118,11 @@ export function ReviewIndex() {
   const groups = groupBatches(assets ?? []);
   const mine = groups.filter((g) => !!me && g.items[0].submittedBy === me.id);
   const others = groups.filter((g) => !mine.includes(g));
+  // The creative team can open everything; "needs your review" is only what you were asked about.
+  const named = (g: Group) => !!me && g.items.some((a) => [...(a.reviewers ?? []), ...(a.approvers ?? [])].some((p) => p.id === me.id));
+  const asked = others.filter(named);
+  const rest = others.filter((g) => !named(g));
+  const teamWide = me?.role === "creative";
   const count = (s: ReviewState) => mine.filter((g) => stateOf(g) === s).length;
 
   return (
@@ -154,10 +159,17 @@ export function ReviewIndex() {
             )}
           </section>
 
-          {others.length > 0 && (
+          {(teamWide ? asked : others).length > 0 && (
             <section aria-labelledby="others-h" className="mt-8">
-              <h2 id="others-h" className="mb-2 text-lg font-bold">Sent to you</h2>
-              <ul className="space-y-2">{others.map((g) => <Row key={g.id} g={g} users={users} showState={false} />)}</ul>
+              <h2 id="others-h" className="mb-2 text-lg font-bold">{teamWide ? "Needs your review" : "Sent to you"}</h2>
+              <ul className="space-y-2">{(teamWide ? asked : others).map((g) => <Row key={g.id} g={g} users={users} showState={false} />)}</ul>
+            </section>
+          )}
+          {teamWide && rest.length > 0 && (
+            <section aria-labelledby="rest-h" className="mt-8">
+              <h2 id="rest-h" className="text-lg font-bold">Everyone else&apos;s</h2>
+              <p className="mb-2 text-sm text-muted">Designs from the rest of the team. You can open all of them, but you weren&apos;t asked to review these.</p>
+              <ul className="space-y-2">{rest.map((g) => <Row key={g.id} g={g} users={users} showState={false} />)}</ul>
             </section>
           )}
         </>

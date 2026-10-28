@@ -29,3 +29,5 @@ export type { ActivityItem } from "./activity";
 export { figmaRepo } from "./figma";
 export type { FramesResult } from "./figma";
 export { settingsRepo } from "./settings";
+export { notificationsRepo } from "./notifications";
+export type { Inbox } from "./notifications";

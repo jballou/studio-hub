@@ -7,6 +7,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { blocksRepo, isJira } from "@/lib/data";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useMe } from "@/hooks/useMe";
+import { NotificationBell } from "./NotificationBell";
 import type { User } from "@/lib/types";
 import { Avatar } from "@/components/review/Avatar";
 import { SearchDialog } from "./SearchDialog";
@@ -224,15 +225,7 @@ export function Sidebar() {
                 <span className="block text-xs capitalize text-muted">{me ? (me.isAdmin ? "Admin" : me.role) : ""}</span>
               </span>
             )}
-            <Link
-              href={waiting > 0 ? "/blocking" : "/projects"}
-              aria-label={waiting > 0 ? `Notifications: ${waiting} ${waiting === 1 ? "project is" : "projects are"} waiting on you` : "Notifications"}
-              title={waiting > 0 ? `${waiting} waiting on you` : "Notifications"}
-              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
-            >
-              <Icon name="bell" size={18} />
-              {waiting > 0 && <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-bad-fg px-1 text-[10px] font-bold leading-none text-n-50 ring-2 ring-n-50">{waiting}</span>}
-            </Link>
+            <NotificationBell waiting={waiting} collapsed={collapsed} ready={!isJira || !!me} />
             {/* Real sign-in only; the demo has no account to sign out of. */}
             {isJira && (
               <button

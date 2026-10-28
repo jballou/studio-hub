@@ -1,6 +1,7 @@
 import { AdminError } from "@/lib/store/users";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
 import { audit } from "@/lib/store/users";
+import { notify } from "@/lib/store/notifications";
 import { actorOf } from "@/lib/store/reviewSession";
 import { getAsset, moveToTrash, setReviewState, updateSharing } from "@/lib/store/review";
 import type { ReviewState, ShareChange } from "@/lib/types";
@@ -23,8 +24,23 @@ export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const s = await jiraSession(req);
     const body = await req.json().catch(() => ({}));
-    if (body.share) return Response.json({ asset: await updateSharing(actorOf(s), (await params).id, body.share as ShareChange) });
-    return Response.json({ asset: await setReviewState(actorOf(s), (await params).id, body.review as ReviewState) });
+    const id = (await params).id;
+    const who = actorOf(s);
+    if (body.share) {
+      const change = body.share as ShareChange;
+      const before = await getAsset(who, id).catch(() => null);
+      const asset = await updateSharing(who, id, change);
+      // Only people who weren't already on it hear about being added.
+      const had = new Set([...(before?.asset.reviewers ?? []), ...(before?.asset.approvers ?? [])].map((p) => p.id));
+      const added = (Array.isArray(change.add) ? change.add : []).map((x) => String(x?.person?.id ?? "")).filter((pid) => pid && pid !== s.accountId && !had.has(pid));
+      await notify(added, { kind: "added", key: `added:${asset.id}`, assetId: asset.id, assetName: asset.name, projectKey: asset.projectKey, fromName: s.name });
+      return Response.json({ asset });
+    }
+    const asset = await setReviewState(who, id, body.review as ReviewState);
+    if ((asset.review === "approved" || asset.review === "changes") && asset.submittedBy && asset.submittedBy !== s.accountId) {
+      await notify([asset.submittedBy], { kind: asset.review, key: `${asset.review}:${asset.id}`, assetId: asset.id, assetName: asset.name, projectKey: asset.projectKey, fromName: s.name });
+    }
+    return Response.json({ asset });
   } catch (e) {
     return errorResponse(e);
   }
