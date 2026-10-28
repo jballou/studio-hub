@@ -1,4 +1,4 @@
-import type { Anchor, Asset, AssetVersion, NewThread, ReviewState, SubmitInput, Thread, User } from "@/lib/types";
+import type { Anchor, Asset, AssetVersion, NewThread, ReviewState, ShareChange, SubmitInput, Thread, User } from "@/lib/types";
 import type { ReviewRepo } from "./repo";
 
 /** Review data saved on the server (Blob store). Used in real mode; demo mode keeps the in-memory mock. */
@@ -55,6 +55,9 @@ export const apiRepo: ReviewRepo = {
   submitForReview: (input: SubmitInput) => post("/api/review/assets", input),
   async setReviewState(assetId, state: ReviewState) {
     return (await call<{ asset: Asset }>(`/api/review/assets/${encodeURIComponent(assetId)}`, { method: "PATCH", body: JSON.stringify({ review: state }) })).asset;
+  },
+  async share(assetId, change: ShareChange) {
+    return (await call<{ asset: Asset }>(`/api/review/assets/${encodeURIComponent(assetId)}`, { method: "PATCH", body: JSON.stringify({ share: change }) })).asset;
   },
   async pushToJira(threadId) {
     return remember((await post<{ thread: Thread }>("/api/review/threads", { op: "push", versionId: versionOf(threadId), threadId })).thread);

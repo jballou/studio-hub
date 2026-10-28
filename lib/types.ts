@@ -43,6 +43,8 @@ export type Asset = {
   /** what the creative wants feedback on */
   instructions?: string;
   submittedBy?: string;
+  /** anyone at the company who is signed in can open it with the link (they can comment) */
+  linkAccess?: boolean;
   /** where this stands with reviewers; absent means awaiting feedback */
   review?: ReviewState;
   /** set when this was sent together with other items; items of one batch share an id */
@@ -61,6 +63,9 @@ export type AssetVersion = {
   /** natural width in px that zoom percentages are relative to (link-based assets) */
   baseWidth?: number;
 };
+
+/** Who a design is shared with: people to add (as reviewers, or approvers too), people to remove, and the link setting. */
+export type ShareChange = { add?: { person: Person; role: "reviewer" | "approver" }[]; remove?: string[]; linkAccess?: boolean };
 
 export type SubmitInput = {
   source: AssetSource;

@@ -15,6 +15,7 @@ import { PdfViewer } from "./PdfViewer";
 import type { Zoom } from "./Stage";
 import { ZoomControl } from "./ZoomControl";
 import { celebrate } from "@/lib/celebrate";
+import { copyText, reviewLink, ShareDialog } from "./ShareDialog";
 import { VideoViewer, type Marker, type VideoHandle } from "./VideoViewer";
 
 const initialsOf = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -50,6 +51,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [localSrc, setLocalSrc] = useState<string | null>(null);
   const [simFail, setSimFail] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareMenu, setShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
   const video = useRef<VideoHandle>(null);
 
   useEffect(() => {
@@ -132,6 +136,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const closed = stage === "Delivered";
   // Only people named as approvers on the feedback request see the approve button.
   const canApprove = !!asset.approvers?.some((p) => p.id === me.id);
+  const canShare = me.role === "creative" || asset.submittedBy === me.id || canApprove;
 
   const markSeen = (id: string) => setSeen((s) => new Set(s).add(id));
 
@@ -231,7 +236,27 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           </button>
         )}
 
-        <div className="relative ml-auto">
+        <div className="relative ml-auto flex items-center">
+          <div className="flex items-stretch rounded-full bg-brand-soft text-ink">
+            <button onClick={() => setShareOpen(true)} className="flex items-center gap-2 rounded-l-full py-1.5 pl-4 pr-3 text-sm font-medium hover:bg-brand-fill/20">
+              <Icon name="users" size={16} /> Share
+            </button>
+            <span className="my-1.5 w-px bg-brand-fill/40" />
+            <button onClick={() => setShareMenu((o) => !o)} aria-label="Quick share options" aria-expanded={shareMenu} className="flex items-center rounded-r-full pl-2 pr-3 hover:bg-brand-fill/20">
+              <Icon name="chevronDown" size={14} />
+            </button>
+          </div>
+          {shareMenu && (
+            <div className="absolute right-12 top-full z-30 mt-1 w-64 rounded-xl border border-line bg-white p-1 text-sm shadow-lg">
+              <button
+                onClick={async () => { setCopied(await copyText(reviewLink(asset))); setTimeout(() => { setCopied(false); setShareMenu(false); }, 1200); }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-medium hover:bg-n-150"
+              >
+                <Icon name={copied ? "check" : "link"} size={16} /> {copied ? "Link copied" : "Copy link"}
+              </button>
+              <p className="px-3 pb-2 pt-1 text-xs text-muted">{asset.linkAccess ? "Anyone at SurveyMonkey with the link can open it." : "Only people with access can open it. Use Share to add people."}</p>
+            </div>
+          )}
           <button onClick={() => setMenuOpen((o) => !o)} aria-label="More options" aria-expanded={menuOpen} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-brand-soft">
             <Icon name="more" size={18} />
           </button>
@@ -419,6 +444,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           onPushAll={pushAll}
         />
       </div>
+      {shareOpen && <ShareDialog asset={asset} users={users} canManage={canShare} onClose={() => setShareOpen(false)} onChange={setAsset} />}
     </div>
   );
 }

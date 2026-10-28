@@ -1,4 +1,4 @@
-import type { Asset, ReviewState, AssetVersion, Anchor, NewThread, SubmitInput, Thread, User } from "@/lib/types";
+import type { Asset, ReviewState, ShareChange, AssetVersion, Anchor, NewThread, SubmitInput, Thread, User } from "@/lib/types";
 
 /**
  * Data boundary for the review feature. The mock adapter implements this now;
@@ -17,6 +17,8 @@ export interface ReviewRepo {
   updateAnchor(threadId: string, anchor: Anchor): Promise<Thread>;
   /** Creates an asset (or a new version of one) and the feedback request for it. */
   submitForReview(input: SubmitInput): Promise<{ assetId: string; versionId: string }>;
+  /** Adds or removes people and sets whether anyone with the link can open it. */
+  share(assetId: string, change: ShareChange): Promise<Asset>;
   /** Records the outcome of a review: changes requested or approved. */
   setReviewState(assetId: string, state: ReviewState): Promise<Asset>;
   /** Idempotent: a thread that already has a jira comment id is returned unchanged. */

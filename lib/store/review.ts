@@ -2,7 +2,7 @@
 // Assets and versions share one small document; threads get one document per version so a busy review
 // doesn't make everyone rewrite the same file. Every write is conditional (see doc.ts), so two people
 // commenting at once both land.
-import type { Anchor, Asset, AssetKind, AssetVersion, Person, ReviewState, SourceKind, SubmitInput, Thread } from "@/lib/types";
+import type { Anchor, Asset, ShareChange, AssetKind, AssetVersion, Person, ReviewState, SourceKind, SubmitInput, Thread } from "@/lib/types";
 import { readDoc, updateDoc } from "./doc";
 import { AdminError } from "./users";
 
@@ -37,7 +37,7 @@ const people = (v: unknown): Person[] =>
 
 /** A person can open an asset if they sent it, are named on it, or are on the creative team. */
 export function canSee(a: Asset, who: Actor): boolean {
-  return who.role === "creative" || a.submittedBy === who.accountId || !!a.reviewers?.some((p) => p.id === who.accountId) || !!a.approvers?.some((p) => p.id === who.accountId);
+  return who.role === "creative" || !!a.linkAccess || a.submittedBy === who.accountId || !!a.reviewers?.some((p) => p.id === who.accountId) || !!a.approvers?.some((p) => p.id === who.accountId);
 }
 
 export async function listAssets(who: Actor, projectKey?: string): Promise<Asset[]> {
@@ -110,6 +110,33 @@ export async function submit(who: Actor, input: Omit<SubmitInput, "submittedBy">
     return { data: d, result: asset.id };
   });
   return { assetId, versionId };
+}
+
+/** Adding people, removing people and the link setting: the sender, the creative team or a named approver. */
+export async function updateSharing(who: Actor, assetId: string, change: ShareChange): Promise<Asset> {
+  const add = (Array.isArray(change.add) ? change.add : []).slice(0, 30).map((x) => ({ person: people([x?.person])[0], role: x?.role === "approver" ? ("approver" as const) : ("reviewer" as const) })).filter((x) => x.person);
+  const remove = (Array.isArray(change.remove) ? change.remove : []).slice(0, 60).map((x) => str(x, 80));
+  return updateDoc("review-assets", emptyAssets, (d) => {
+    const a = d.assets.find((x) => x.id === assetId);
+    if (!a || !canSee(a, who)) throw new AdminError(404, "That design doesn't exist.");
+    const mayShare = who.role === "creative" || a.submittedBy === who.accountId || !!a.approvers?.some((p) => p.id === who.accountId);
+    if (!mayShare) throw new AdminError(403, "Only the person who sent this, an approver or the creative team can change who has access.");
+    const reviewers = a.reviewers ?? [];
+    const approvers = a.approvers ?? [];
+    for (const { person, role } of add) {
+      if (!reviewers.some((p) => p.id === person.id)) reviewers.push(person);
+      if (role === "approver" && !approvers.some((p) => p.id === person.id)) approvers.push(person);
+    }
+    if (remove.length) {
+      // The last approver stays: someone has to be able to sign off.
+      const keepApprovers = approvers.filter((p) => !remove.includes(p.id));
+      if (!keepApprovers.length) throw bad("Keep at least one approver.");
+      a.approvers = keepApprovers;
+      a.reviewers = reviewers.filter((p) => !remove.includes(p.id));
+    } else { a.reviewers = reviewers; a.approvers = approvers; }
+    if (typeof change.linkAccess === "boolean") a.linkAccess = change.linkAccess;
+    return { data: d, result: a };
+  });
 }
 
 /** Asking for changes: the submitter, reviewers or creative team. Approving: only the named approvers. */

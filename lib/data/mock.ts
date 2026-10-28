@@ -1,6 +1,6 @@
 import type { ReviewRepo } from "./repo";
 import { isJira } from "./mode";
-import type { Anchor, Asset, ReviewState, AssetVersion, NewThread, SubmitInput, Thread, User } from "@/lib/types";
+import type { Anchor, Asset, ReviewState, ShareChange, AssetVersion, NewThread, SubmitInput, Thread, User } from "@/lib/types";
 
 const users: User[] = [
   { id: "u-avery", name: "Avery Chen", initials: "AC", role: "creative" },
@@ -135,6 +135,22 @@ export const mockRepo: ReviewRepo = {
     }
     versions[versions.length - 1].assetId = asset.id;
     return delay({ assetId: asset.id, versionId });
+  },
+
+  share(assetId: string, change: ShareChange) {
+    const a = assets.find((x) => x.id === assetId);
+    if (!a) throw new Error(`asset ${assetId} not found`);
+    const reviewers = a.reviewers ?? [];
+    const approvers = a.approvers ?? [];
+    for (const { person, role } of change.add ?? []) {
+      if (!reviewers.some((p) => p.id === person.id)) reviewers.push(person);
+      if (role === "approver" && !approvers.some((p) => p.id === person.id)) approvers.push(person);
+    }
+    const gone = change.remove ?? [];
+    a.reviewers = reviewers.filter((p) => !gone.includes(p.id));
+    a.approvers = approvers.filter((p) => !gone.includes(p.id));
+    if (typeof change.linkAccess === "boolean") a.linkAccess = change.linkAccess;
+    return delay(a);
   },
 
   setReviewState(assetId: string, state: ReviewState) {
