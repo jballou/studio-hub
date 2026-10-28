@@ -1,4 +1,4 @@
-import { readDoc } from "@/lib/store/doc";
+import { probeStore } from "@/lib/store/doc";
 import { activeBlocks } from "@/lib/store/blocks";
 import { listUsers } from "@/lib/store/users";
 import { adminSession, errorResponse } from "@/lib/jira/session";
@@ -26,26 +26,18 @@ export async function GET(req: Request) {
     }
 
     {
-      // One retry: a store that is only briefly busy shouldn't read as broken.
-      let failure: unknown = null;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          const t0 = Date.now();
-          await readDoc("users", () => ({}), { fresh: true }); // a real read of the store, not a cached copy
-          const [users, blocks] = await Promise.all([listUsers(), activeBlocks()]);
-          checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: true, detail: `Reachable in ${Date.now() - t0} ms. ${users.length} people, ${blocks.length} active blocks.` });
-          failure = null;
-          break;
-        } catch (e) {
-          failure = e;
-          await new Promise((r) => setTimeout(r, 400));
-        }
-      }
-      if (failure) {
-        console.error("[system] blob check failed", failure);
-        // The error's name and message come from the Blob SDK and never contain the token. They say whether it is a bad token, a suspended store, a quota limit or a busy store.
-        const why = failure instanceof Error ? `${failure.name}: ${failure.message}`.slice(0, 300) : "unknown error";
-        checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: false, detail: `Couldn't read the store (${why}). If this says token or access, check BLOB_READ_WRITE_TOKEN; if it says limit or suspended, check the store in the Vercel dashboard.` });
+      const probe = await probeStore();
+      if (!probe.ok) {
+        console.error("[system] blob check failed", probe.why);
+        // The error's name and message come from the Blob SDK and never contain the token.
+        checks.push({
+          id: "blob", label: "Data store (Vercel Blob)", ok: false,
+          detail: `Can't reach the store (${probe.why}). The Hub is running on a temporary copy in Vercel's cache: it works, but changes made now may be lost. Unsuspend or fix the store in the Vercel dashboard (check BLOB_READ_WRITE_TOKEN only if it says token or unauthorized).`,
+        });
+      } else {
+        const t0 = Date.now();
+        const [users, blocks] = await Promise.all([listUsers(), activeBlocks()]);
+        checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: true, detail: `Reachable. ${users.length} people, ${blocks.length} active blocks (${Date.now() - t0} ms).` });
       }
     }
 
