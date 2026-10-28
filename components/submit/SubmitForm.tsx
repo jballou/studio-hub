@@ -24,7 +24,7 @@ const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; pl
   { id: "staging", label: "Landing page", hint: "Staging link", icon: "link", placeholder: "https://staging.example.com/landing" },
   { id: "drive", label: "Google Drive", hint: "Video, audio (MP3, M4A, WAV…), image or PDF", icon: "link", placeholder: "https://drive.google.com/file/d/…/view" },
   { id: "slides", label: "Google Slides", hint: "Deck link", icon: "link", placeholder: "https://docs.google.com/presentation/d/…/edit" },
-  { id: "wistia", label: "Wistia", hint: "Video link", icon: "link", placeholder: "https://yourcompany.wistia.com/medias/…" },
+  { id: "wistia", label: "Wistia", hint: "Video link", icon: "link", placeholder: "https://yourcompany.wistia.com/medias/… or a /s/… share link" },
   { id: "lottie", label: "LottieFiles", hint: "Animation link", icon: "link", placeholder: "https://lottiefiles.com/animations/… or a lottie.host embed link" },
   { id: "upload", label: "Upload files", hint: "Image, video, audio (MP3, M4A, WAV…), PDF. Pick several.", icon: "upload" },
 ];
@@ -48,6 +48,7 @@ export function SubmitForm() {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [uploadFailed, setUploadFailed] = useState<string[]>([]);
   const cancels = useRef(new Map<string, () => void>());
+  const [wistia, setWistia] = useState<{ url: string; state: "loading" | "done" | "failed"; id?: string; resolved?: { name: string; streamUrl: string; width: number; height: number } | null; error?: string } | null>(null);
   const [versionOf, setVersionOf] = useState<Asset | null>(null);
   const [picker, setPicker] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -109,9 +110,45 @@ export function SubmitForm() {
   );
   const figmaLink = source === "figma" && parsed?.ok ? parseFigmaLink(url) : null;
 
+  // Wistia: ask the server for the video file behind the link, so it can play in the Hub's own player (with automatic timestamps).
+  const wistiaOk = source === "wistia" && !!parsed?.ok;
+  useEffect(() => {
+    if (!wistiaOk || !isJira) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setWistia(null);
+      return;
+    }
+    const target = url.trim();
+    let live = true;
+    setWistia({ url: target, state: "loading" });
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/wistia/resolve?url=${encodeURIComponent(target)}`, { cache: "no-store" });
+        const b = await res.json().catch(() => ({}));
+        if (!live) return;
+        setWistia(res.ok ? { url: target, state: "done", id: b.id, resolved: b.resolved } : { url: target, state: "failed", error: b.error ?? "Couldn't read that Wistia link." });
+      } catch {
+        if (live) setWistia({ url: target, state: "failed", error: "Couldn't look that video up. Try again." });
+      }
+    }, 400);
+    return () => { live = false; clearTimeout(t); };
+  }, [wistiaOk, url]);
+
   // The link in the box counts as the next item without needing a click, so one link and one Send still works.
   const pending: BatchItem | null = useMemo(() => {
     if (source === "upload" || !parsed?.ok) return null;
+    if (source === "wistia" && isJira) {
+      // Use the video file the server found; if there is none, Wistia's own player stands in.
+      const w = wistia && wistia.url === url.trim() && wistia.state === "done" ? wistia : null;
+      if (!w?.id) return null;
+      const embedUrl = `https://fast.wistia.net/embed/iframe/${w.id}?videoFoam=true&playerColor=089b5e`;
+      const r = w.resolved;
+      return {
+        key: `pending-wistia-${url.trim()}`, title: r?.name ?? parsed.suggestedTitle, source: { kind: "wistia", url: url.trim(), label: "Wistia video" },
+        assetKind: "video", src: r?.streamUrl ?? "", embedUrl, aspect: r ? r.width / r.height : parsed.aspect, baseWidth: r?.width ?? parsed.baseWidth,
+      };
+    }
+    if (parsed.needsLookup) return null;
     const media = parsed.media;
     return {
       key: `pending-${source}-${url.trim()}`,
@@ -123,7 +160,7 @@ export function SubmitForm() {
       aspect: parsed.aspect,
       baseWidth: parsed.baseWidth,
     };
-  }, [source, parsed, url]);
+  }, [source, parsed, url, wistia]);
 
   const all = useMemo(() => [...items, ...(pending && !items.some((i) => i.source.url && i.source.url === pending.source.url) ? [pending] : [])], [items, pending]);
   const isBatch = all.length > 1;
@@ -318,6 +355,12 @@ export function SubmitForm() {
             {parsed?.ok && (
               <div className="mt-2 space-y-2 rounded-xl border border-ok-line bg-ok-bg p-4 text-sm text-ok-fg">
                 <p className="flex items-center gap-2 font-medium"><Icon name="check" size={16} /> {parsed.summary}</p>
+                {source === "wistia" && wistia && wistia.url === url.trim() && (
+                  wistia.state === "loading" ? <p className="flex items-center gap-2 text-xs">Looking up the video…</p>
+                  : wistia.state === "failed" ? <p role="alert" className="flex items-start gap-2 text-xs text-bad-fg"><Icon name="alert" size={14} /> {wistia.error}</p>
+                  : wistia.resolved ? <p className="flex items-center gap-2 text-xs"><Icon name="check" size={14} /> Found the video file. It plays in the Hub&apos;s own player, and comments are timestamped automatically.</p>
+                  : <p className="flex items-start gap-2 text-xs text-warn-fg"><Icon name="alert" size={14} /> Wistia wouldn&apos;t share the file for this video, so it plays in Wistia&apos;s player and reviewers type the time when they comment.</p>
+                )}
                 {parsed.warnings.map((w) => (
                   <p key={w} className="flex items-start gap-2 text-xs text-warn-fg"><Icon name="alert" size={14} /> {w}</p>
                 ))}

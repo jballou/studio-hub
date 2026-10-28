@@ -1,4 +1,5 @@
 import type { Device, SourceKind } from "./types";
+import { allowedWistiaHost, idFromUrl, isShareLink } from "./wistia";
 
 export type ParsedSource =
   | {
@@ -11,6 +12,8 @@ export type ParsedSource =
       /** natural width in px; zoom percentages are relative to it */
       baseWidth: number;
       warnings: string[];
+      /** the video id isn't in the link (a share link); the server has to look it up before this can be used */
+      needsLookup?: boolean;
       /** Drive files the person says are video or audio: a direct stream for a real player with timestamps (the embed is the fallback). */
       media?: { kind: "audio" | "video"; streamUrl: string };
     }
@@ -141,20 +144,16 @@ function parseLottie(u: URL): ParsedSource {
 /** Wistia: a link to one video, from the Wistia app (…wistia.com/medias/<id>) or an embed link. Plays in Wistia's own player. */
 function parseWistia(u: URL, shape: Shape): ParsedSource {
   const host = u.hostname.replace(/^www\./, "");
-  if (!/(^|\.)wistia\.(com|net)$/.test(host) && host !== "wi.st") return fail("That isn't a Wistia link.");
-  if (host === "wi.st") return fail("Short wi.st links can't be read. Open the video in Wistia and copy its full link.");
-  const id = /\/(?:medias|iframe)\/([a-z0-9]{6,12})(?![a-z0-9])/i.exec(u.pathname)?.[1];
-  if (!id) return fail("Paste a link to one Wistia video. Open it in Wistia and copy the address (…/medias/…).");
+  if (!allowedWistiaHost(host)) return host === "wi.st" ? fail("Short wi.st links can't be read. Open the video in Wistia and copy its full link.") : fail("That isn't a Wistia link.");
+  const id = idFromUrl(u);
+  const share = isShareLink(u);
+  if (!id && !share) return fail("Paste a link to one Wistia video: its page address (…/medias/…) or a share link (…/s/…).");
   return {
     ok: true, kind: "wistia", summary: "Wistia video", suggestedTitle: "Wistia video",
-    embedUrl: `https://fast.wistia.net/embed/iframe/${id}?videoFoam=true&playerColor=089b5e`,
-    aspect: shapeAspect(shape), baseWidth: 1280,
-    // The player is Wistia's, so there is no playback clock to read: reviewers type the time they are at.
+    embedUrl: id ? `https://fast.wistia.net/embed/iframe/${id}?videoFoam=true&playerColor=089b5e` : "",
+    aspect: shapeAspect(shape), baseWidth: 1280, needsLookup: !id,
     media: { kind: "video", streamUrl: "" },
-    warnings: [
-      "Reviewers play it in Wistia's own player. When they comment, they type the time they're at (for example 0:42).",
-      "The video must be viewable by your reviewers in Wistia (public, or shared with them).",
-    ],
+    warnings: ["The video must be viewable by your reviewers in Wistia (public, or shared with them)."],
   };
 }
 
