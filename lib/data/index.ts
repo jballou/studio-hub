@@ -31,3 +31,4 @@ export type { FramesResult } from "./figma";
 export { settingsRepo } from "./settings";
 export { notificationsRepo } from "./notifications";
 export type { Inbox } from "./notifications";
+export { teamRepo } from "./team";

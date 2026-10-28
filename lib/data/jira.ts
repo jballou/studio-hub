@@ -31,8 +31,13 @@ async function get<T>(url: string, tries = 0): Promise<T> {
 
 export const jiraProjects: ProjectsRepo = {
   // viewerId is ignored: the server knows who is signed in.
-  async listProjects(_viewerId, scope = "all", group = "all") {
-    return (await get<{ projects: Project[] }>(`/api/jira/projects?scope=${scope}&group=${group}`)).projects;
+  async listProjects(_viewerId, scope = "all", group = "all", limit) {
+    return (await get<{ projects: Project[] }>(`/api/jira/projects?scope=${scope}&group=${group}${limit ? `&limit=${limit}` : ""}`)).projects;
+  },
+  async assign(jiraKey, accountId) {
+    const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/assignee`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ accountId }) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? `Couldn't assign it (${res.status}).`);
   },
   async searchProjects(_viewerId, query, limit = 8) {
     const qs = new URLSearchParams({ q: query, limit: String(limit) });

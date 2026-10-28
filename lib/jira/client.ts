@@ -314,3 +314,10 @@ export async function addIssueComment(a: JiraAuth, key: string, lines: string[])
   const res = await request<{ id: string }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment`, { method: "POST", body: { body } });
   return res.id;
 }
+
+/** Assigns the ticket to someone, or to nobody when accountId is null. Needs write:jira-work and the Assign issues permission. */
+export async function assignIssue(a: JiraAuth, key: string, accountId: string | null): Promise<void> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  if (accountId !== null && !/^[A-Za-z0-9:_-]{1,128}$/.test(accountId)) throw new JiraError(400, "That person doesn't look right.");
+  await request<void>(a, `/issue/${key}/assignee`, { method: "PUT", body: { accountId } });
+}

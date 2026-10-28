@@ -70,6 +70,8 @@ export function toProject(issue: JiraIssue): Project {
     requesterId: (f.requestor ?? f.reporter)?.accountId ?? "",
     requesterName: (f.requestor ?? f.reporter)?.displayName,
     viaHub: Array.isArray(f.labels) ? f.labels.includes(HUB_LABEL) : undefined,
+    assigneeId: f.assignee?.accountId,
+    assigneeName: f.assignee?.displayName,
     collaboratorIds: unique.map((u) => u.accountId),
     collaboratorNames: unique.map((u) => u.displayName),
     deadline: f.duedate ?? "",

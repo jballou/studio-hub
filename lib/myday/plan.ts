@@ -273,9 +273,9 @@ export function dueTodayItems(projects: Project[], tasks: PersonalTask[], today:
   };
 }
 
-// ---- The five status tiles on My Day. Each tile's number and its list come from the same function. ----
+// ---- The six status tiles on My Day. Each tile's number and its list come from the same function. ----
 
-export type TileKind = "open" | "due" | "progress" | "overdue" | "done";
+export type TileKind = "open" | "due" | "progress" | "blocked" | "overdue" | "done";
 
 /** Done tasks only count for 14 days, matching the "Last 14 days" label. A task with no recorded time counts. */
 const recentlyDone = (t: PersonalTask, today: string) => t.done && (!t.doneAt || daysBetween(localDay(new Date(t.doneAt)), today) <= 14);
@@ -293,6 +293,8 @@ export function tileItems(kind: TileKind, projects: Project[], tasks: PersonalTa
         tickets: open.filter((p) => p.stage === "In progress" || p.stage === "In review" || p.stage === "In feedback").sort(byTitle),
         tasks: tasks.filter((t) => !t.done && (t.lane === "progress" || t.lane === "review")),
       };
+    case "blocked":
+      return { tickets: open.filter((p) => p.flag === "blocked").sort((a, b) => (a.deadline || "9999").localeCompare(b.deadline || "9999")), tasks: [] };
     case "overdue":
       return {
         tickets: open.filter((p) => p.deadline && p.deadline < today).sort((a, b) => a.deadline.localeCompare(b.deadline)),

@@ -141,7 +141,7 @@ export function MyDay() {
   const tiles = useMemo(() => {
     const at = (k: TileKind) => (today ? tileItems(k, projects ?? [], tasks ?? [], today) : { tickets: [], tasks: [] });
     const n = (k: TileKind) => { const i = at(k); return { items: i, count: i.tickets.length + i.tasks.length }; };
-    return { open: n("open"), due: n("due"), progress: n("progress"), overdue: n("overdue"), done: n("done") };
+    return { open: n("open"), due: n("due"), progress: n("progress"), blocked: n("blocked"), overdue: n("overdue"), done: n("done") };
   }, [projects, tasks, today]);
   const dueToday = tiles.due.count;
   const overdue = tiles.overdue.count;
@@ -181,10 +181,11 @@ export function MyDay() {
 
       {loading ? <p className="mt-6 text-sm text-muted">Loading…</p> : (
         <>
-          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <Tile label="Open work" n={tiles.open.count} onClick={() => setTileOpen("open")} note="Tickets and tasks" />
             <Tile label="Due today" n={dueToday} onClick={() => setTileOpen("due")} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
             <Tile label="In progress" n={tiles.progress.count} onClick={() => setTileOpen("progress")} note="Being worked on" />
+            <Tile label="Blocked" n={tiles.blocked.count} onClick={() => setTileOpen("blocked")} note="Waiting on someone" tone={tiles.blocked.count ? "bad" : undefined} />
             <Tile label="Overdue" n={overdue} onClick={() => setTileOpen("overdue")} note="Missed deadline" tone={overdue ? "bad" : undefined} />
             <Tile label="Completed" n={tiles.done.count} onClick={() => setTileOpen("done")} note="Last 14 days" />
           </div>
@@ -390,6 +391,7 @@ const TILE_COPY: Record<TileKind, { title: string; empty: string }> = {
   open: { title: "Open work", empty: "No open tickets or tasks." },
   due: { title: "Due today", empty: "Nothing is due today." },
   progress: { title: "In progress", empty: "Nothing is in progress." },
+  blocked: { title: "Blocked", empty: "Nothing is blocked." },
   overdue: { title: "Overdue", empty: "Nothing is overdue. Nice." },
   done: { title: "Completed in the last 14 days", empty: "Nothing finished in the last 14 days yet." },
 };

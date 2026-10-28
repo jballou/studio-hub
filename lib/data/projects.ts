@@ -4,7 +4,9 @@ import type { BriefSubmission, Project, Relations } from "@/lib/types";
 /** Data boundary for projects/briefs; the Jira-backed adapter replaces the mock later. */
 export interface ProjectsRepo {
   /** scope "mine" (default for the Projects page) is work assigned to the viewer; "all" is everything they may see. */
-  listProjects(viewerId: string, scope?: "mine" | "all", group?: "open" | "closed" | "all"): Promise<Project[]>;
+  listProjects(viewerId: string, scope?: "mine" | "all", group?: "open" | "closed" | "all", limit?: number): Promise<Project[]>;
+  /** Assigns a ticket to a person, or to nobody (null). Creative team only. */
+  assign(jiraKey: string, accountId: string | null): Promise<void>;
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
   /** Live ticket search by key, number or title. The real adapter runs a Jira search as the viewer. */
   searchProjects(viewerId: string, query: string, limit?: number): Promise<Project[]>;
@@ -22,12 +24,15 @@ export interface ProjectsRepo {
 }
 
 const projects: Project[] = [
-  { id: "p95", jiraKey: "MKTGCRTV-95", issueType: { name: "Epic", level: 1 }, title: "Spring campaign", startDate: "2026-10-01", group: "open", stage: "In progress", type: "Campaign", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-11-20", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-09-28" },
-  { id: "p1", jiraKey: "MKTGCRTV-101", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Spring campaign: social ad", startDate: "2026-10-06", group: "open", stage: "In feedback", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-10-30", actionRequired: true, newComments: 3, assetIds: ["a-ad"], submittedAt: "2026-10-05", brief: { problem: "Our spring offer is not getting noticed on mobile feeds.", opportunity: "A clear, bold social ad can lift sign-ups during the spring push.", scope: "One static social ad, two sizes (1:1 and 4:5).", requirements: "Use spring brand palette. Include the 20% offer and a Get started CTA.", antiGoals: "No stock photography. No competitor mentions.", deliverables: "PNG exports for LinkedIn and Instagram.", northStar: "Click-through rate above 1.2%.", openQuestions: "Do we need a Spanish version?" } },
-  { id: "p2", jiraKey: "MKTGCRTV-102", viaHub: true, parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Product teaser (15s)", startDate: "2026-10-14", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
-  { id: "p3", jiraKey: "MKTGCRTV-103", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Brand one-pager", startDate: "", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-10-20", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
+  { id: "p95", jiraKey: "MKTGCRTV-95", assigneeId: "u-avery", issueType: { name: "Epic", level: 1 }, title: "Spring campaign", startDate: "2026-10-01", group: "open", stage: "In progress", type: "Campaign", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-11-20", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-09-28" },
+  { id: "p1", jiraKey: "MKTGCRTV-101", assigneeId: "u-avery", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Spring campaign: social ad", startDate: "2026-10-06", group: "open", stage: "In feedback", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-10-30", actionRequired: true, newComments: 3, assetIds: ["a-ad"], submittedAt: "2026-10-05", brief: { problem: "Our spring offer is not getting noticed on mobile feeds.", opportunity: "A clear, bold social ad can lift sign-ups during the spring push.", scope: "One static social ad, two sizes (1:1 and 4:5).", requirements: "Use spring brand palette. Include the 20% offer and a Get started CTA.", antiGoals: "No stock photography. No competitor mentions.", deliverables: "PNG exports for LinkedIn and Instagram.", northStar: "Click-through rate above 1.2%.", openQuestions: "Do we need a Spanish version?" } },
+  { id: "p2", jiraKey: "MKTGCRTV-102", assigneeId: "u-sam", viaHub: true, parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Product teaser (15s)", startDate: "2026-10-14", group: "open", stage: "In progress", flag: "blocked", type: "Video", requesterId: "u-riley", collaboratorIds: ["u-sam"], deadline: "2026-11-06", actionRequired: false, newComments: 0, assetIds: ["a-video"], submittedAt: "2026-10-12", brief: { problem: "The AI analysis launch needs a short teaser for social.", scope: "A 15 second teaser cut for LinkedIn and Instagram Reels.", deliverables: "MP4, 16:9 and 9:16.", northStar: "Teaser views above 20k in week one." } },
+  { id: "p3", jiraKey: "MKTGCRTV-103", assigneeId: "u-sam", parentKey: "MKTGCRTV-95", parentTitle: "Spring campaign", issueType: { name: "Task", level: 0 }, title: "Brand one-pager", startDate: "", group: "open", stage: "In review", type: "Print", requesterId: "u-jordan", collaboratorIds: ["u-sam", "u-riley"], deadline: "2026-10-20", actionRequired: true, newComments: 1, assetIds: ["a-pdf"], submittedAt: "2026-10-14", brief: { problem: "Sales needs a refreshed brand one-pager.", scope: "Two-page PDF, print and digital.", deliverables: "PDF and editable source." } },
   { id: "p4", jiraKey: "MKTGCRTV-110", title: "Webinar landing page refresh", startDate: "", group: "ideas", stage: "Submitted", flag: "at-risk", type: "Web", requesterId: "u-jordan", collaboratorIds: [], deadline: "2026-12-01", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-20" },
-  { id: "p5", jiraKey: "MKTGCRTV-090", title: "Summer promo banner set", group: "closed", stage: "Delivered", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-09-15", actionRequired: false, newComments: 0, assetIds: ["a-ad"], submittedAt: "2026-08-20" },
+  { id: "p6", jiraKey: "MKTGCRTV-111", issueType: { name: "Task", level: 0 }, title: "Event signage for fall summit", startDate: "", group: "open", stage: "Submitted", type: "Print", requesterId: "u-jordan", collaboratorIds: [], deadline: "2026-11-05", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-26" },
+  { id: "p7", jiraKey: "MKTGCRTV-112", issueType: { name: "Task", level: 0 }, title: "Customer story video edit", startDate: "2026-11-02", group: "open", stage: "In progress", type: "Video", requesterId: "u-riley", assigneeId: "u-sam", collaboratorIds: ["u-sam"], deadline: "2026-11-12", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-22" },
+  { id: "p8", jiraKey: "MKTGCRTV-113", issueType: { name: "Task", level: 0 }, title: "Pricing page hero art", startDate: "2026-10-28", group: "open", stage: "In review", type: "Graphic", requesterId: "u-jordan", assigneeId: "u-avery", collaboratorIds: ["u-avery"], deadline: "2026-11-03", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-21" },
+  { id: "p5", jiraKey: "MKTGCRTV-090", assigneeId: "u-avery", title: "Summer promo banner set", group: "closed", stage: "Delivered", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-09-15", actionRequired: false, newComments: 0, assetIds: ["a-ad"], submittedAt: "2026-08-20" },
 ];
 
 const ref = (key: string, title: string, typeName: string, level: number, status: string, statusCategory: "new" | "indeterminate" | "done", inHub = true) => ({ key, title, typeName, level, status, statusCategory, inHub });
@@ -103,6 +108,13 @@ export const mockProjects: ProjectsRepo = {
     const problem = startDateProblem(date, p.deadline);
     if (problem) throw new Error(problem);
     p.startDate = date;
+  },
+  async assign(jiraKey, accountId) {
+    const p = projects.find((x) => x.jiraKey === jiraKey);
+    if (!p) throw new Error("That ticket doesn't exist.");
+    p.assigneeId = accountId ?? undefined;
+    p.assigneeName = undefined;
+    p.collaboratorIds = [...new Set([...(accountId ? [accountId] : []), ...p.collaboratorIds.filter((id) => id !== accountId)])];
   },
   async moveTo(jiraKey, status) {
     const p = projects.find((x) => x.jiraKey === jiraKey);

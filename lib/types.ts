@@ -220,6 +220,9 @@ export type Project = {
   descriptionAdf?: unknown;
   requesterName?: string;
   collaboratorNames?: string[];
+  /** who the ticket is assigned to; absent means nobody (it sits in the unassigned queue) */
+  assigneeId?: string;
+  assigneeName?: string;
 };
 
 /** What the conversational wizard produces. Questions are data, so this carries labelled sections rather than fixed fields. */

@@ -18,12 +18,13 @@ import { Logo } from "@/components/ui/Logo";
 const PREF_KEY = "sidebar-pref-v1";
 const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
 
-type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean };
+type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean; /** shown to the creative team only */ forCreatives?: boolean };
 
 const ITEMS: Item[] = [
   { href: "/my-day", label: "My Day", icon: "dashboardAdd", match: (p) => p.startsWith("/my-day") },
   { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
   { href: "/projects", label: "Projects", icon: "folderFilled", match: (p) => p === "/projects" || p === "/projects/new" },
+  { href: "/team", label: "Team", icon: "users", match: (p) => p.startsWith("/team"), forCreatives: true },
   { href: "/calendar", label: "Calendar", icon: "calendarEdit", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "chat", match: (p) => p.startsWith("/review") },
   { href: "/blocking", label: "Waiting on you", icon: "danger", match: (p) => p.startsWith("/blocking") },
@@ -146,15 +147,6 @@ export function Sidebar() {
         </button>
 
         <Link
-          href="/projects/new"
-          title="New brief"
-          aria-label="New brief"
-          className={`mb-3 flex items-center justify-center gap-2 rounded-lg bg-brand py-2 text-sm font-medium text-n-50 hover:bg-brand-dark ${collapsed ? "px-2" : "px-3"}`}
-        >
-          <Icon name="plus" size={16} />
-          {!collapsed && "New brief"}
-        </Link>
-        <Link
           href="/my-day?new=task"
           title="New task"
           aria-label="New task"
@@ -174,7 +166,7 @@ export function Sidebar() {
           {!collapsed && "Submit for feedback"}
         </Link>
 
-        <div className="flex flex-col gap-1">{ITEMS.filter((i) => !i.forRequesters || !isJira || me?.role === "requester").map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
+        <div className="flex flex-col gap-1">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
 
         {/* Favorites folder */}
         <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
@@ -212,6 +204,16 @@ export function Sidebar() {
             </section>
           )}
         </div>
+
+        <Link
+          href="/projects/new"
+          title="New brief"
+          aria-label="New brief"
+          className={`mb-3 flex items-center justify-center gap-2 rounded-lg bg-brand py-2 text-sm font-medium text-n-50 hover:bg-brand-dark ${collapsed ? "px-2" : "px-3"}`}
+        >
+          <Icon name="plus" size={16} />
+          {!collapsed && "New brief"}
+        </Link>
 
         {/* Bottom: Admin, then you */}
         <div className="border-t border-line pt-2">
