@@ -12,7 +12,8 @@ const changed = () => typeof window !== "undefined" && window.dispatchEvent(new 
 const jiraFavorites: FavoritesRepo = {
   async list() {
     const res = await fetch("/api/favorites", { cache: "no-store" });
-    if (!res.ok) return [];
+    // A failed load must not look like "no favorites": the caller keeps what it had and tries again.
+    if (!res.ok) throw new Error(`Couldn't load favorites (${res.status}).`);
     return (await res.json()).favorites as Favorite[];
   },
   async set(key, title, on) {

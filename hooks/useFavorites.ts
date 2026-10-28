@@ -8,10 +8,14 @@ export function useFavorites() {
   const [items, setItems] = useState<Favorite[]>([]);
   useEffect(() => {
     let live = true;
-    const load = () => favoritesRepo.list().then((l) => { if (live) setItems(l); }).catch(() => {});
+    const load = (retry = true): void => { favoritesRepo.list().then((l) => { if (live) setItems(l); }).catch(() => { if (retry && live) setTimeout(() => load(false), 1500); }); };
     load();
-    window.addEventListener("favorites-changed", load);
-    return () => { live = false; window.removeEventListener("favorites-changed", load); };
+    const onChange = () => load();
+    window.addEventListener("favorites-changed", onChange);
+    // Coming back to the tab picks up stars added elsewhere.
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { live = false; window.removeEventListener("favorites-changed", onChange); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
   const toggle = useCallback(async (key: string, title: string) => {
     const on = !items.some((f) => f.key === key);

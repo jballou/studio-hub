@@ -95,7 +95,9 @@ export async function probeStore(): Promise<{ ok: boolean; why?: string }> {
 // ETag), then write the new copy into both, so the next reader sees it.
 //   Staleness: another server instance may serve its memory copy for up to L1_MS after a write; fine for people, roles,
 //   settings and your own lists.
-const L1_MS = 20_000;
+// No per-instance memory copy: another instance could keep serving an old one after you change something (a star you just
+// added not showing on the next page). The shared Runtime Cache is updated by every write, so everyone reads the same copy.
+const L1_MS = 0;
 const L2_SECONDS = 120;
 const l1 = new Map<string, { at: number; data: unknown }>();
 const l2 = () => getCache({ namespace: "doc", keyHashFunction: (k: string) => createHash("sha256").update(k).digest("hex") });
@@ -103,6 +105,11 @@ const l2Key = (name: string) => path(name);
 
 async function l2Get<T>(name: string): Promise<T | undefined> {
   try { return ((await l2().get(l2Key(name))) ?? undefined) as T | undefined; } catch { return undefined; }
+}
+/** Like remember, but waits until the shared copy is stored, so the very next request (maybe on another instance) sees it. */
+async function rememberNow(name: string, data: unknown): Promise<void> {
+  l1.set(name, { at: Date.now(), data });
+  try { await l2().set(l2Key(name), data, { ttl: L2_SECONDS, name: "doc" }); } catch { /* the store has it; a cache miss is fine */ }
 }
 function remember(name: string, data: unknown) {
   l1.set(name, { at: Date.now(), data });
@@ -191,11 +198,11 @@ export async function updateDoc<T, R = void>(
   for (let i = 0; i < attempts; i++) {
     const { data, etag, base } = await readDoc(name, empty, { fresh: true });
     const out = await mutate(structuredClone(data));
-    const toTemporaryCopy = async () => { await fbSet(name, out.data, base ?? "empty"); remember(name, out.data); return out.result; };
+    const toTemporaryCopy = async () => { await fbSet(name, out.data, base ?? "empty"); await rememberNow(name, out.data); return out.result; };
     if (storeKind === "Upstash Redis") {
       const next = JSON.stringify({ rev: (etag ? Number(etag) : 0) + 1, at: Date.now(), data: out.data } satisfies RedisRecord<T>);
       const ok = await redis().eval(CAS, [redisKey(name)], [etag ?? "0", next]);
-      if (ok === 1) { lkSet(name, out.data); remember(name, out.data); return out.result; }
+      if (ok === 1) { lkSet(name, out.data); await rememberNow(name, out.data); return out.result; }
       if (i === attempts - 1) throw new Error("Someone else changed this at the same time. Try again.");
       await new Promise((r) => setTimeout(r, 40 + Math.random() * 120));
       continue;
@@ -211,7 +218,7 @@ export async function updateDoc<T, R = void>(
       });
       void fbDelete(name); // the store has this change now; drop any temporary copy
       lkSet(name, out.data);
-      remember(name, out.data); // the next reader gets this copy without touching the store
+      await rememberNow(name, out.data); // the next reader gets this copy without touching the store
       return out.result;
     } catch (e) {
       if (storeRefused(e)) { tripBreaker(); return toTemporaryCopy(); }
