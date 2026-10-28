@@ -60,6 +60,8 @@ export function CalendarView() {
   const [projectKeys, setProjectKeys] = useState<Set<string>>(new Set());
   const [menu, setMenu] = useState<"tags" | "filter" | "more" | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [order, setOrder] = useState<"newest" | "oldest">("newest");
+  const [folded, setFolded] = useState<Set<string>>(new Set());
   const barRef = useRef<HTMLDivElement>(null);
 
   // Close any open popover on outside click or Escape.
@@ -135,10 +137,28 @@ export function CalendarView() {
   const week = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(cursor), i));
   const curMonth = fromIso(cursor).getMonth();
 
-  const listDays = useMemo(() => {
-    const days = [...new Set(items.map((i) => i.date))].sort();
-    return days.map((d) => [d, items.filter((i) => i.date === d).sort(byTime)] as const);
-  }, [items]);
+  // List view: months (newest first unless flipped), each with its days in the same direction.
+  const listMonths = useMemo(() => {
+    const dir = order === "newest" ? -1 : 1;
+    const days = [...new Set(items.map((i) => i.date))].sort((a, b) => dir * a.localeCompare(b));
+    const months: { key: string; days: (readonly [string, CalendarItem[]])[]; count: number }[] = [];
+    for (const d of days) {
+      const key = d.slice(0, 7);
+      let m = months[months.length - 1];
+      if (m?.key !== key) { m = { key, days: [], count: 0 }; months.push(m); }
+      const list = items.filter((i) => i.date === d).sort(byTime);
+      m.days.push([d, list] as const);
+      m.count += list.length;
+    }
+    return months;
+  }, [items, order]);
+  const toggleMonth = (key: string) => setFolded((cur) => { const n = new Set(cur); if (n.has(key)) n.delete(key); else n.add(key); return n; });
+  const allFolded = listMonths.length > 0 && listMonths.every((m) => folded.has(m.key));
+  useEffect(() => {
+    try { const v = localStorage.getItem("calendar-order"); // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (v === "oldest" || v === "newest") setOrder(v); } catch { /* storage unavailable */ }
+  }, []);
+  const flip = () => { const next = order === "newest" ? "oldest" : "newest"; setOrder(next); try { localStorage.setItem("calendar-order", next); } catch { /* ignore */ } };
 
   return (
     <main className="w-full p-6">
@@ -212,6 +232,15 @@ export function CalendarView() {
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-4 py-2 text-sm capitalize ${view === v ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{v}</button>
             ))}
           </div>
+
+          {view === "list" && (
+            <>
+              <button onClick={flip} aria-label={`Order: ${order} first. Click to reverse.`} className="flex items-center gap-2 rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">
+                <span className={order === "oldest" ? "rotate-180" : ""}><Icon name="chevronDown" size={14} /></span> {order === "newest" ? "Newest first" : "Oldest first"}
+              </button>
+              <button onClick={() => setFolded(allFolded ? new Set() : new Set(listMonths.map((m) => m.key)))} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">{allFolded ? "Expand all" : "Collapse all"}</button>
+            </>
+          )}
 
           <div className="relative">
             <button onClick={() => setMenu(menu === "more" ? null : "more")} aria-label="More options" aria-expanded={menu === "more"} className={iconBtn}><Icon name="more" size={16} /></button>
@@ -295,24 +324,44 @@ export function CalendarView() {
 
       {view === "list" && (
         <div className="space-y-6">
-          {listDays.length === 0 && <p className="rounded-xl border border-dashed border-control bg-white/60 p-8 text-center text-sm text-muted">No items match these filters.</p>}
-          {listDays.map(([d, list]) => (
-            <section key={d}>
-              <h2 className={`mb-2 text-sm font-semibold ${d === today ? "text-brand" : "text-n-800"}`}>{dayLabel(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}{d === today && " · Today"}</h2>
-              <ul className="space-y-2">
-                {list.map((i) => (
-                  <li key={i.id}>
-                    <button onClick={() => open(i.id)} className="flex w-full items-center gap-4 rounded-xl border border-line bg-white px-4 py-2 text-left text-sm hover:border-brand">
-                      <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
-                      <span className="min-w-0 flex-1"><span className="block truncate font-medium">{i.title}</span><span className="block truncate text-xs text-muted">{[i.channel, i.campaign, i.owner].filter(Boolean).join(" · ")}</span></span>
-                      <span className="hidden text-xs text-muted sm:block">{i.sourceName}</span>
-                      <Tag tone={STATUS_TONE[i.status]}>{i.status}</Tag>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          {listMonths.length === 0 && <p className="rounded-xl border border-dashed border-control bg-white/60 p-8 text-center text-sm text-muted">No items match these filters.</p>}
+          {listMonths.map((m) => {
+            const expanded = !folded.has(m.key);
+            const isNow = m.key === today.slice(0, 7);
+            return (
+              <section key={m.key} aria-label={dayLabel(`${m.key}-01`, { month: "long", year: "numeric" })}>
+                <h2>
+                  <button onClick={() => toggleMonth(m.key)} aria-expanded={expanded} className="flex w-full items-center gap-2 border-b border-line pb-2 text-left">
+                    <span className={`transition-transform ${expanded ? "rotate-90" : ""}`}><Icon name="chevronRight" size={16} /></span>
+                    <span className={`text-lg font-bold ${isNow ? "text-brand" : ""}`}>{dayLabel(`${m.key}-01`, { month: "long", year: "numeric" })}</span>
+                    {isNow && <Tag tone="ok">This month</Tag>}
+                    <span className="ml-auto text-sm font-normal text-muted">{m.count} {m.count === 1 ? "item" : "items"}</span>
+                  </button>
+                </h2>
+                {expanded && (
+                  <div className="mt-4 space-y-6">
+                    {m.days.map(([d, list]) => (
+                      <div key={d}>
+                        <h3 className={`mb-2 text-sm font-semibold ${d === today ? "text-brand" : "text-n-800"}`}>{dayLabel(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}{d === today && " · Today"}</h3>
+                        <ul className="space-y-2">
+                          {list.map((i) => (
+                            <li key={i.id}>
+                              <button onClick={() => open(i.id)} className="flex w-full items-center gap-4 rounded-xl border border-line bg-white px-4 py-2 text-left text-sm hover:border-brand">
+                                <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
+                                <span className="min-w-0 flex-1"><span className="block truncate font-medium">{i.title}</span><span className="block truncate text-xs text-muted">{[i.channel, i.campaign, i.owner].filter(Boolean).join(" · ")}</span></span>
+                                <span className="hidden text-xs text-muted sm:block">{i.sourceName}</span>
+                                <Tag tone={STATUS_TONE[i.status]}>{i.status}</Tag>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
 
