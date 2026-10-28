@@ -168,7 +168,7 @@ export function Board({
       </div>
 
       {confirm && confirm.card.kind === "ticket" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[14vh]" onMouseDown={() => setConfirm(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={() => setConfirm(null)}>
           <div role="dialog" aria-modal="true" aria-label="Close ticket" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-xl border border-line bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold">Move to Done?</h2>
             <p className="mb-4 mt-2 text-sm text-muted">{confirm.card.id} · {confirm.card.project.title}. This closes the ticket in Jira.</p>

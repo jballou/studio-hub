@@ -426,7 +426,7 @@ function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKin
     return p.deadline ? <span>Due {new Date(`${p.deadline}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : <span>No deadline</span>;
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[10vh]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
       <div role="dialog" aria-modal="true" aria-label={copy.title} onMouseDown={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-white p-6 shadow-xl">
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
@@ -500,7 +500,7 @@ function AddTaskDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (d: { t
     await onAdd({ title: d.title, date: d.date || undefined, time: d.date && d.time ? d.time : undefined, tz: d.date && d.time ? d.tz : undefined });
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[12vh]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
       <form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Add a task" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md space-y-4 rounded-xl border border-line bg-white p-6 shadow-xl">
         <h2 className="text-lg font-bold">Add a task</h2>
         <p className="text-sm text-muted">Private to you. It shows on your calendar and is backed up to Google Tasks, never added to Jira.</p>

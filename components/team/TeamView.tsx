@@ -256,7 +256,7 @@ export function TeamView() {
     } catch (e) { setError(e instanceof Error ? e.message : "Couldn't assign that."); } finally { setBusy(null); }
   };
 
-  if (me && me.role !== "creative") return <main className="page [&>*]:max-w-3xl"><Callout tone="info" icon="alert">The Team view is for the creative team.</Callout></main>;
+  if (me && me.role !== "creative") return <main className="page [&>*:not(.fixed)]:max-w-3xl"><Callout tone="info" icon="alert">The Team view is for the creative team.</Callout></main>;
   const total = (projects ?? []).filter((p) => p.group !== "closed").length;
 
   return (

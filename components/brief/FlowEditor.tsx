@@ -27,6 +27,12 @@ export function FlowEditor() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    if (!preview) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setPreview(false); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [preview]);
   const [showProblems, setShowProblems] = useState(false);
 
   const load = useCallback(async () => {
@@ -60,7 +66,7 @@ export function FlowEditor() {
   }, [dirty]);
 
   if (me && me.role !== "creative") {
-    return <main className="page [&>*]:max-w-3xl"><h1 className="text-2xl font-bold">Brief builder</h1><p className="mt-2 text-sm text-muted">Only the creative team can edit the brief questions.</p></main>;
+    return <main className="page [&>*:not(.fixed)]:max-w-3xl"><h1 className="text-2xl font-bold">Brief builder</h1><p className="mt-2 text-sm text-muted">Only the creative team can edit the brief questions.</p></main>;
   }
   if (!draft || !saved) return <main className="p-8 text-sm text-muted">{error ?? "Loading…"}</main>;
 
@@ -158,7 +164,7 @@ export function FlowEditor() {
       </div>
 
       {preview && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[6vh]" onMouseDown={() => setPreview(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={() => setPreview(false)}>
           <div role="dialog" aria-modal="true" aria-label="Preview" className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-line bg-paper shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2">
               <p className="text-sm font-semibold">Preview{dirty ? " (with your unsaved changes)" : ""}</p>

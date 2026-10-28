@@ -10,6 +10,8 @@ export interface BlocksRepo {
   list(keys: string[]): Promise<Block[]>;
   /** Tickets waiting on the signed-in person. */
   mine(): Promise<MyBlock[]>;
+  /** How many tickets are waiting on the signed-in person (no ticket details; cheap). */
+  count(): Promise<number>;
   /** The block is always saved; `jira` says whether the ticket's status followed (absent in demo mode). */
   block(key: string, blockedBy: Person, reason: string): Promise<{ block: Block; jira?: JiraSync }>;
   /** Clears the block and moves the ticket to `status` (or back to where it was). */
@@ -34,6 +36,9 @@ const jiraBlocks: BlocksRepo = {
   },
   async mine() {
     return (await call<{ blocks: MyBlock[] }>("/api/blocks?mine=1")).blocks;
+  },
+  async count() {
+    return (await call<{ count: number }>("/api/blocks?count=1")).count;
   },
   async block(key, blockedBy, reason) {
     const out = await call<{ block: Block; jira: JiraSync }>("/api/blocks", { method: "POST", body: JSON.stringify({ key, blockedBy, reason }) });
@@ -67,6 +72,7 @@ function readLocal(): Block[] {
 const writeLocal = (b: Block[]) => { try { localStorage.setItem(LS, JSON.stringify(b)); } catch { /* ignore */ } };
 
 const demoBlocks: BlocksRepo = {
+  async count() { return readLocal().filter((b) => b.status === "active" && b.blockedBy.id === DEMO_ME).length; },
   async list(keys) { return readLocal().filter((b) => b.status === "active" && keys.includes(b.key)); },
   async mine() {
     const { projectsRepo } = await import("./index");

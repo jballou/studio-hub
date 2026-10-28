@@ -62,7 +62,7 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
 
   const today = localDay();
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[14vh]" onMouseDown={(e) => { e.stopPropagation(); onClose(); }} onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={(e) => { e.stopPropagation(); onClose(); }} onClick={(e) => e.stopPropagation()}>
       <div role="dialog" aria-modal="true" aria-label={`Plan work on ${project.jiraKey}`} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-line bg-white p-6 shadow-xl">
         <h2 className="text-lg font-bold">Plan work</h2>
         <p className="mb-4 mt-2 text-sm text-muted">{project.jiraKey} · {project.title}. When does work start?{project.deadline ? ` Due ${project.deadline}.` : ""}</p>

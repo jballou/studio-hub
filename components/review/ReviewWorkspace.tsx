@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useMe } from "@/hooks/useMe";
 import { Icon } from "@/components/ui/Icon";
 import { StageTag } from "@/components/ui/Tag";
 import { formatDue } from "@/lib/time";
@@ -34,7 +35,6 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [versionId, setVersionId] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [meId, setMeId] = useState("u-avery");
-  const [meUser, setMeUser] = useState<User>();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [stage, setStage] = useState<Stage>("In feedback");
   const [commenting, setCommenting] = useState(true);
@@ -96,18 +96,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     return () => { live = false; };
   }, [versionId]);
 
-  // In real mode you are whoever is signed in, not a demo persona.
-  useEffect(() => {
-    if (!isJira) return;
-    fetch("/api/me", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((m) => {
-        if (!m) return;
-        const u: User = { id: m.accountId, name: m.name, initials: initialsOf(m.name), role: m.role };
-        setMeUser(u);
-        setUsers((list) => addUsers(list, [u]));
-      });
-  }, []);
+  // In real mode you are whoever is signed in, not a demo persona. Shares the one "who am I" request with the rest of the page.
+  const who = useMe();
+  const meUser = useMemo<User | undefined>(() => (who ? { id: who.id, name: who.name, initials: initialsOf(who.name), role: who.role } : undefined), [who]);
 
   const me = isJira ? meUser : users.find((u) => u.id === meId);
   const version = versions.find((v) => v.id === versionId);

@@ -74,7 +74,7 @@ export function UnblockDialog({
   const closing = (options ?? []).filter((s) => s.category === "done");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[10vh]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
       <div ref={ref} role="dialog" aria-modal="true" aria-label={`Unblock ${ticketKey}`} className="w-full max-w-lg rounded-xl border border-line bg-white p-6 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold">Mark as unblocked</h2>
         <p className="mb-4 mt-2 text-sm text-muted">{ticketKey}. Choose the Jira status it moves to.</p>

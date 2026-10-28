@@ -70,8 +70,8 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
 
   const rows = rowsOf(asset, users);
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-n-1000/40 p-4 pt-[10vh]" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={`Share ${asset.name}`} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-3xl border border-line bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={`Share ${asset.name}`} onMouseDown={(e) => e.stopPropagation()} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-line bg-white p-6 shadow-xl">
         <h2 className="text-xl font-bold">Share “{asset.name}”</h2>
 
         {canManage && (

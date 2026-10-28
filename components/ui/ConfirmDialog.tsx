@@ -14,7 +14,7 @@ export function ConfirmDialog({ title, body, confirmLabel, danger = false, busy 
     return () => document.removeEventListener("keydown", esc);
   }, [onCancel]);
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[18vh]" onMouseDown={onCancel}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onCancel}>
       <div role="alertdialog" aria-modal="true" aria-label={title} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-line bg-white p-6 shadow-xl">
         <h2 className="text-lg font-bold">{title}</h2>
         <p className="mt-2 text-sm text-muted">{body}</p>

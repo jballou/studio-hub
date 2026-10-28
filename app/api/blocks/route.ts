@@ -17,6 +17,8 @@ export async function GET(req: Request) {
   try {
     const s = await jiraSession(req);
     const p = new URL(req.url).searchParams;
+    // Just the number for the sidebar badge: answered from our own store, with no Jira call.
+    if (p.get("count")) return Response.json({ count: (await blocksHeldBy(s.accountId)).length });
     if (p.get("mine")) {
       const blocks = await blocksHeldBy(s.accountId);
       if (blocks.length === 0) return Response.json({ blocks: [] });

@@ -74,6 +74,9 @@
   @media (min-width: 768px) { padding: 32px; }
 }
 
+/* While a dialog is open the page behind it doesn't scroll. */
+body:has([role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]) { overflow: hidden; }
+
 /* Eyebrow (Figma "Label Eyebrow Small"): small caps-style label above a heading or group. */
 @utility eyebrow {
   font-size: 14px;

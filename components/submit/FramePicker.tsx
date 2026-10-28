@@ -71,7 +71,7 @@ export function FramePicker({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-n-1000/40 p-4" onMouseDown={onCancel}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onCancel}>
       <div role="dialog" aria-modal="true" aria-label="Import frames" onMouseDown={(e) => e.stopPropagation()} className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-3xl bg-white p-6 shadow-xl">
         <h2 className="text-2xl font-bold">Import frames</h2>
 

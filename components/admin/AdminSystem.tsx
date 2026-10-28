@@ -31,7 +31,7 @@ export function AdminSystem() {
     if (isJira) load();
   }, [load]);
 
-  if (!isJira) return <main className="page [&>*]:max-w-3xl"><p className="text-sm text-muted">System status appears once sign-in is turned on.</p></main>;
+  if (!isJira) return <main className="page [&>*:not(.fixed)]:max-w-3xl"><p className="text-sm text-muted">System status appears once sign-in is turned on.</p></main>;
 
   return (
     <main className="page">

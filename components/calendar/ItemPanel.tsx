@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { Tag } from "@/components/ui/Tag";
@@ -35,6 +36,13 @@ export function ItemPanel({
   onPick: (id: string) => void;
   onClose: () => void;
 }) {
+  const open = !!panel;
+  useEffect(() => {
+    if (!open) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [open, onClose]);
   if (!panel) return null;
   const item = panel.kind === "item" ? items.find((i) => i.id === panel.id) : undefined;
   const feedbackHref = item ? `/submit?title=${encodeURIComponent(item.title)}${item.jiraKey ? `&ticket=${item.jiraKey}` : ""}` : "/submit";

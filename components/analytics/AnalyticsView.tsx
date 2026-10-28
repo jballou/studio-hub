@@ -100,7 +100,7 @@ export function AnalyticsView() {
   const rows = useMemo(() => groupStats(closedShown, cut === "issue" ? byIssueType : cut === "project" ? byProjectType : byPerson), [closedShown, cut]);
   const missing = openShown.filter(needsStartDate);
 
-  if (me && me.role !== "creative") return <main className="page [&>*]:max-w-3xl"><Callout tone="info" icon="alert">Analytics is for the creative team.</Callout></main>;
+  if (me && me.role !== "creative") return <main className="page [&>*:not(.fixed)]:max-w-3xl"><Callout tone="info" icon="alert">Analytics is for the creative team.</Callout></main>;
 
   return (
     <main className="page">

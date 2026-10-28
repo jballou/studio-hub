@@ -88,7 +88,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
 
   if (created) {
     return (
-      <main className="page [&>*]:max-w-2xl">
+      <main className="page [&>*:not(.fixed)]:max-w-2xl">
         <h1 className="mb-2 text-2xl font-bold">Brief submitted</h1>
         <p className="mb-4">Created <Link href={`/projects/${created}`} className="rounded bg-line px-2 py-0 font-mono text-sm text-brand hover:underline">{created}</Link>. It&apos;s in <Link href="/briefs" className="text-brand underline">My briefs</Link>, where you can follow it.</p>
         <div className="flex gap-2">
@@ -103,7 +103,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
   const sub = w.current === null ? toSubmission(flow, answers) : null;
 
   return (
-    <main className={`page [&>*]:max-w-2xl ${preview ? "!py-4" : ""}`}>
+    <main className={`page [&>*:not(.fixed)]:max-w-2xl ${preview ? "!py-4" : ""}`}>
       {!preview && (
         <div className="mb-6 flex items-center gap-4">
           <h1 className="text-2xl font-bold">New brief</h1>

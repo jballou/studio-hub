@@ -308,7 +308,7 @@ export function SubmitForm() {
   };
 
   return (
-    <main className="page [&>*]:max-w-2xl">
+    <main className="page [&>*:not(.fixed)]:max-w-2xl">
       <h1 className="text-2xl font-bold">{versionOf ? "Upload a new version" : "Submit for feedback"}</h1>
       {versionOf && (
         <p className="mt-2 rounded-xl border border-info-line bg-info-bg px-4 py-4 text-sm text-info-fg">

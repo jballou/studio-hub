@@ -58,7 +58,7 @@ export function Sidebar() {
 
   // How many projects are waiting on me. Refreshed when blocks change and every two minutes so a new block shows up unprompted.
   const refreshWaiting = useCallback(() => {
-    blocksRepo.mine().then((b) => setWaiting(b.length)).catch(() => {});
+    blocksRepo.count().then(setWaiting).catch(() => {});
   }, []);
   useEffect(() => {
     if (isJira && !me) return;

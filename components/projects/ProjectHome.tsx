@@ -94,7 +94,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   if (project === undefined) return <p className="p-8 text-sm text-muted">Loading…</p>;
   if (project === null) {
     return (
-      <main className="page [&>*]:max-w-2xl">
+      <main className="page [&>*:not(.fixed)]:max-w-2xl">
         <h1 className="text-2xl font-bold">Project not found</h1>
         <p className="mt-2 text-sm text-muted">There&apos;s no project {jiraKey}, or you don&apos;t have access to it in Jira.</p>
         <Link href="/projects" className="mt-4 inline-block font-medium text-brand hover:underline">Back to projects</Link>
