@@ -43,7 +43,7 @@ function stateOf(g: Group): ReviewState {
   return all.includes("changes") ? "changes" : all.every((x) => x === "approved") ? "approved" : "awaiting";
 }
 
-function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showState: boolean; onTrash?: (a: Asset) => void }) {
+function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showState: boolean; onTrash?: (items: Asset[], label: string) => void }) {
   const first = g.items[0];
   const state = STATES.find((x) => x.id === stateOf(g))!;
   const who = users.find((u) => u.id === first.submittedBy)?.name;
@@ -52,8 +52,8 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
   const status = <Tag tone={state.tone} icon={state.icon}>{state.label}</Tag>;
   if (g.items.length > 1) {
     return (
-      <li className="rounded-xl border border-line bg-white p-4">
-        <div className="flex items-center gap-3">
+      <li className="group relative rounded-xl border border-line bg-white p-4">
+        <div className={`flex items-center gap-3 ${onTrash ? "pr-11" : ""}`}>
           <Tag tone="neutral">Batch of {g.items.length}</Tag>
           <span className="min-w-0 flex-1 truncate font-medium">{g.title}</span>
           {status}
@@ -62,9 +62,14 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
         {meta && <p className="mt-1 text-xs text-muted">{meta}</p>}
         <ol className="mt-2 flex flex-wrap gap-1.5">
           {g.items.map((a) => (
-            <li key={a.id}><Link href={`/review/${a.id}`} className="inline-flex max-w-56 items-center gap-1.5 truncate rounded-full border border-control bg-white px-3 py-1 text-sm hover:bg-brand-soft"><span className="font-semibold">{(a.batch?.index ?? 0) + 1}</span> {a.name}</Link></li>
+            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="flex items-center gap-1.5 rounded-full border border-control bg-white px-3 py-1 text-sm hover:bg-brand-soft"><span className="shrink-0 font-semibold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
           ))}
         </ol>
+        {onTrash && (
+          <button onClick={() => onTrash(g.items, g.title)} aria-label={`Move the batch ${g.title} to Trash`} title="Move the whole batch to Trash" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
+            <Icon name="trash" size={16} />
+          </button>
+        )}
       </li>
     );
   }
@@ -80,7 +85,7 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
         <span className="font-mono text-xs text-muted">{first.projectKey}</span>
       </Link>
       {onTrash && (
-        <button onClick={() => onTrash(first)} aria-label={`Move ${first.name} to Trash`} title="Move to Trash" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
+        <button onClick={() => onTrash([first], first.name)} aria-label={`Move ${first.name} to Trash`} title="Move to Trash" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
           <Icon name="trash" size={16} />
         </button>
       )}
@@ -93,13 +98,16 @@ export function ReviewIndex() {
   const [assets, setAssets] = useState<Asset[] | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<ReviewState | "all">("all");
-  const [asking, setAsking] = useState<Asset | null>(null);
+  const [asking, setAsking] = useState<{ items: Asset[]; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const mayTrash = (a: Asset) => !!me && (me.role === "creative" || a.submittedBy === me.id);
   const trash = async () => {
     if (!asking) return;
     setBusy(true);
-    try { await repo.deleteAsset(asking.id); setAssets((cur) => (cur ?? []).filter((x) => x.id !== asking.id)); } finally { setBusy(false); setAsking(null); }
+    try {
+      const done = new Set<string>();
+      try { for (const a of asking.items) { await repo.deleteAsset(a.id); done.add(a.id); } } finally { setAssets((cur) => (cur ?? []).filter((x) => !done.has(x.id))); }
+    } finally { setBusy(false); setAsking(null); }
   };
 
   useEffect(() => {
@@ -138,7 +146,7 @@ export function ReviewIndex() {
                   <div key={s.id} className="mb-5">
                     <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
                     {list.length === 0 ? <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">{s.empty}</p> : (
-                      <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState onTrash={mayTrash(g.items[0]) ? setAsking : undefined} />)}</ul>
+                      <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState onTrash={g.items.every(mayTrash) ? (items, label) => setAsking({ items, label }) : undefined} />)}</ul>
                     )}
                   </div>
                 );
@@ -157,7 +165,7 @@ export function ReviewIndex() {
       {asking && (
         <ConfirmDialog
           title="Move to Trash?" confirmLabel="Move to Trash" danger busy={busy} onCancel={() => setAsking(null)} onConfirm={trash}
-          body={`“${asking.name}” and its comments will be hidden for everyone. The creative team can restore it from Trash for 30 days, then it is removed for good.`}
+          body={`${asking.items.length > 1 ? `The batch “${asking.label}” (${asking.items.length} items)` : `“${asking.label}”`} and its comments will be hidden for everyone. The creative team can restore ${asking.items.length > 1 ? "them" : "it"} from Trash for 30 days, then ${asking.items.length > 1 ? "they are" : "it is"} removed for good.`}
         />
       )}
     </main>
