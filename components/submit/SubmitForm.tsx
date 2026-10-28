@@ -66,7 +66,6 @@ export function SubmitForm() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDueTz(localTimezone());
     repo.listAssets().then(setAssets);
     const want = params.get("ticket");
@@ -115,7 +114,6 @@ export function SubmitForm() {
   const driveId = source === "drive" && parsed?.ok ? parsed.fileId : undefined;
   useEffect(() => {
     if (!driveId || !isJira) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDrive(null);
       return;
     }
@@ -139,7 +137,6 @@ export function SubmitForm() {
   const wistiaOk = source === "wistia" && !!parsed?.ok;
   useEffect(() => {
     if (!wistiaOk || !isJira) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWistia(null);
       return;
     }

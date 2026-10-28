@@ -17,6 +17,7 @@ import { addDay, completion, focusList, ganttBars, hm, localDay, minutes, onTime
 import { Gantt, Gauge, ScoreMeter, TimelineMeter } from "./Charts";
 import { NoStartTag, PlanWork } from "@/components/projects/PlanWork";
 import { needsStartDate } from "@/lib/startdate";
+import { PlanWorkCard } from "./PlanWorkCard";
 import { localTimezone, timezoneOptions, zoneAbbr } from "@/lib/time";
 import type { PersonalTask, Project } from "@/lib/types";
 
@@ -192,6 +193,14 @@ export function MyDay() {
             <Tile label="Overdue" n={overdue} onClick={() => setTileOpen("overdue")} note="Missed deadline" tone={overdue ? "bad" : undefined} />
             <Tile label="Completed" n={tiles.done.count} onClick={() => setTileOpen("done")} note="Last 14 days" />
           </div>
+
+          {me?.role === "creative" && today && (
+            <PlanWorkCard
+              tickets={(projects ?? []).filter(needsStartDate)}
+              today={today}
+              onPlanned={(key, d) => setProjects((ps) => (ps ?? []).map((p) => (p.jiraKey === key ? { ...p, startDate: d } : p)))}
+            />
+          )}
 
           <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
             <Card

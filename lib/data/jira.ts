@@ -39,6 +39,10 @@ export const jiraProjects: ProjectsRepo = {
   async listProjects(_viewerId, scope = "all", group = "all", limit) {
     return (await get<{ projects: Project[] }>(`/api/jira/projects?scope=${scope}&group=${group}${limit ? `&limit=${limit}` : ""}`)).projects;
   },
+  async closedWork(range) {
+    const b = await get<{ projects: Project[]; truncated: boolean }>(`/api/jira/analytics?range=${range}`);
+    return { projects: b.projects, truncated: b.truncated };
+  },
   async assign(jiraKey, accountId) {
     const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/assignee`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ accountId }) });
     const body = await res.json().catch(() => ({}));

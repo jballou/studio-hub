@@ -5,6 +5,8 @@ import type { BriefSubmission, Project, Relations } from "@/lib/types";
 export interface ProjectsRepo {
   /** scope "mine" (default for the Projects page) is work assigned to the viewer; "all" is everything they may see. */
   listProjects(viewerId: string, scope?: "mine" | "all", group?: "open" | "closed" | "all", limit?: number): Promise<Project[]>;
+  /** Tickets resolved in the last `range` days (for Analytics). */
+  closedWork(range: number): Promise<{ projects: Project[]; truncated: boolean }>;
   /** Assigns a ticket to a person, or to nobody (null). Creative team only. */
   assign(jiraKey: string, accountId: string | null): Promise<void>;
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
@@ -34,6 +36,32 @@ const projects: Project[] = [
   { id: "p8", jiraKey: "MKTGCRTV-113", issueType: { name: "Task", level: 0 }, title: "Pricing page hero art", startDate: "2026-10-28", group: "open", stage: "In review", type: "Graphic", requesterId: "u-jordan", assigneeId: "u-avery", collaboratorIds: ["u-avery"], deadline: "2026-11-03", actionRequired: false, newComments: 0, assetIds: [], submittedAt: "2026-10-21" },
   { id: "p5", jiraKey: "MKTGCRTV-090", assigneeId: "u-avery", title: "Summer promo banner set", group: "closed", stage: "Delivered", type: "Social", requesterId: "u-riley", collaboratorIds: ["u-avery"], deadline: "2026-09-15", actionRequired: false, newComments: 0, assetIds: ["a-ad"], submittedAt: "2026-08-20" },
 ];
+
+// Demo history for Analytics: tickets closed over the last few months, some with a start date and some without.
+// [key, title, project type, issue type, assignee, created, start ("" = none), resolved]
+const HISTORY: [number, string, Project["type"], string, string, string, string, string][] = [
+  [60, "Q3 launch video", "Video", "Task", "u-sam", "2026-07-06", "2026-07-13", "2026-08-07"],
+  [61, "Pricing page hero", "Web", "Task", "u-avery", "2026-07-08", "2026-07-15", "2026-07-24"],
+  [62, "Webinar invite set", "Social", "Task", "u-avery", "2026-07-20", "", "2026-07-28"],
+  [63, "Customer story one-pager", "Print", "Task", "u-sam", "2026-07-22", "2026-07-27", "2026-08-05"],
+  [64, "Product update blog art", "Graphic", "Story", "u-avery", "2026-08-03", "2026-08-05", "2026-08-12"],
+  [65, "Event recap video", "Video", "Task", "u-sam", "2026-08-10", "", "2026-09-04"],
+  [66, "Help center banners", "Web", "Story", "u-avery", "2026-08-17", "2026-08-24", "2026-08-31"],
+  [67, "Partner announcement copy", "Copy", "Task", "u-sam", "2026-08-25", "2026-08-26", "2026-08-28"],
+  [68, "Fall campaign social set", "Social", "Task", "u-avery", "2026-09-01", "2026-09-08", "2026-09-18"],
+  [69, "Sales deck refresh", "Print", "Story", "u-sam", "2026-09-07", "", "2026-09-25"],
+  [70, "Homepage seasonal swap", "Web", "Task", "u-avery", "2026-09-14", "2026-09-16", "2026-09-22"],
+  [71, "Tutorial animation", "Video", "Story", "u-sam", "2026-09-15", "2026-09-29", "2026-10-16"],
+  [72, "Newsletter header", "Graphic", "Task", "u-avery", "2026-10-01", "2026-10-02", "2026-10-06"],
+  [73, "Conference booth graphics", "Print", "Task", "u-sam", "2026-10-05", "2026-10-12", "2026-10-21"],
+];
+const history: Project[] = HISTORY.map(([n, title, type, issue, who, created, start, resolved]) => ({
+  id: `p${n}`, jiraKey: `MKTGCRTV-${n}`, title, group: "closed", stage: "Delivered", type, issueType: { name: issue, level: 0 }, requesterId: "u-riley",
+  assigneeId: who, collaboratorIds: [who], deadline: resolved, actionRequired: false, newComments: 0, assetIds: [], submittedAt: created, startDate: start, resolvedAt: resolved,
+}));
+projects.push(...history);
+const DEMO_NAMES: Record<string, string> = { "u-avery": "Avery Chen", "u-sam": "Sam Okafor" };
+for (const p of projects) if (p.assigneeId) p.assigneeName ??= DEMO_NAMES[p.assigneeId];
 
 const ref = (key: string, title: string, typeName: string, level: number, status: string, statusCategory: "new" | "indeterminate" | "done", inHub = true) => ({ key, title, typeName, level, status, statusCategory, inHub });
 const initiative = ref("BRAND-4", "2026 brand refresh", "Initiative", 2, "In Progress", "indeterminate", false);
@@ -108,6 +136,10 @@ export const mockProjects: ProjectsRepo = {
     const problem = startDateProblem(date, p.deadline);
     if (problem) throw new Error(problem);
     p.startDate = date;
+  },
+  async closedWork(range) {
+    const cutoff = new Date(Date.now() - range * 86_400_000).toISOString().slice(0, 10);
+    return { projects: structuredClone(projects.filter((p) => p.group === "closed" && (p.resolvedAt ?? "") >= cutoff)), truncated: false };
   },
   async assign(jiraKey, accountId) {
     const p = projects.find((x) => x.jiraKey === jiraKey);

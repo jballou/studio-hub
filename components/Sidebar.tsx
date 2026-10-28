@@ -30,6 +30,7 @@ const ITEMS: Item[] = [
   { href: "/blocking", label: "Waiting on you", icon: "danger", match: (p) => p.startsWith("/blocking") },
 ];
 
+const ANALYTICS_ITEM: Item = { href: "/analytics", label: "Analytics", icon: "chartColumn", match: (p) => p.startsWith("/analytics") };
 const ADMIN_ITEM: Item = { href: "/admin", label: "Preferences", icon: "sliders", match: (p) => p.startsWith("/admin") };
 
 /**
@@ -219,6 +220,7 @@ export function Sidebar() {
         {/* Bottom: Admin, then you */}
         <div className="pt-2">
           <div className={`mb-2 flex ${collapsed ? "justify-center" : "justify-start px-2"}`}><ThemeToggle vertical={collapsed} /></div>
+          {(!isJira || me?.role === "creative") && <div>{navLink(ANALYTICS_ITEM)}</div>}
           {(me?.isAdmin || me?.role === "creative") && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
           <div className={`flex rounded-xl bg-white shadow-sm ${collapsed ? "flex-col items-center gap-2 p-2" : "items-center gap-2 p-2"}`}>
             <Avatar user={user} size={32} />

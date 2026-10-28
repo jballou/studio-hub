@@ -329,3 +329,19 @@ export async function assignIssue(a: JiraAuth, key: string, accountId: string | 
   if (accountId !== null && !/^[A-Za-z0-9:_-]{1,128}$/.test(accountId)) throw new JiraError(400, "That person doesn't look right.");
   await request<void>(a, `/issue/${key}/assignee`, { method: "PUT", body: { accountId } });
 }
+
+/** Like searchIssues, but follows the paging token to collect up to `max` results (100 per request). */
+export async function searchIssuesPaged(a: JiraAuth, jql: string, fields: string[] = LIST_FIELDS, max = 500): Promise<JiraIssue[]> {
+  const start = await startDateField(a);
+  const asked = [...fields, ...(start ? [start] : [])];
+  const out: JiraIssue[] = [];
+  let token = "";
+  while (out.length < max) {
+    const qs = new URLSearchParams({ jql, fields: asked.join(","), maxResults: String(Math.min(100, max - out.length)), ...(token ? { nextPageToken: token } : {}) });
+    const data = await request<{ issues: JiraIssue[]; nextPageToken?: string }>(a, `/search/jql?${qs}`);
+    out.push(...data.issues.map((i) => withNamed(i, { start, requestor: null })));
+    if (!data.nextPageToken || data.issues.length === 0) break;
+    token = data.nextPageToken;
+  }
+  return out;
+}
