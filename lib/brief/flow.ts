@@ -9,6 +9,8 @@ export type Option = {
   label: string;
   /** For the question whose field is "type": the Jira issue type to create. */
   jiraIssueTypeId?: string;
+  /** For the "type" question: an extra Jira label added to the ticket (lets a kind of request be found and counted). */
+  jiraLabel?: string;
 };
 
 export type Op = "equals" | "notEquals" | "includes" | "notEmpty" | "empty";

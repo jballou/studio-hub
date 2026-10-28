@@ -31,7 +31,9 @@ export function validateBrief(input: unknown): BriefSubmission {
   if (b.deadline && !DATE_RE.test(String(b.deadline))) throw new JiraError(400, "That deadline doesn't look right.");
   const sections = Array.isArray(b.sections) ? b.sections.slice(0, MAX_SECTIONS).map((s) => ({ label: String(s?.label ?? "").slice(0, 200), value: String(s?.value ?? "").slice(0, 8000) })).filter((s) => s.label && s.value.trim()) : [];
   const stakeholders = Array.isArray(b.stakeholders) ? b.stakeholders.filter((p) => p?.id && p?.name).slice(0, 30).map((p) => ({ id: String(p.id), name: String(p.name), email: p.email ? String(p.email) : undefined })) : [];
-  return { issueTypeId: String(b.issueTypeId), typeLabel: String(b.typeLabel ?? "").slice(0, 80), title, deadline: b.deadline || undefined, stakeholders, sections };
+  // Extra labels may only be simple words, so nothing odd reaches Jira.
+  const labels = Array.isArray(b.labels) ? [...new Set(b.labels.map((l) => String(l).toLowerCase()).filter((l) => /^[a-z0-9][a-z0-9_-]{0,39}$/.test(l)))].slice(0, 3) : [];
+  return { issueTypeId: String(b.issueTypeId), typeLabel: String(b.typeLabel ?? "").slice(0, 80), ...(labels.length ? { labels } : {}), title, deadline: b.deadline || undefined, stakeholders, sections };
 }
 
 /**
@@ -45,7 +47,7 @@ export async function createBriefIssue(a: JiraAuth, input: BriefSubmission, who:
     issuetype: { id: input.issueTypeId },
     summary: input.title,
     description: briefToAdf(input, who.name),
-    labels: [HUB_LABEL],
+    labels: [HUB_LABEL, ...(input.labels ?? []).filter((l) => l !== HUB_LABEL)],
     ...(input.deadline ? { duedate: input.deadline } : {}),
     ...(requestor && who.accountId ? { [requestor]: { accountId: who.accountId } } : {}),
     ...(input.stakeholders.length ? { customfield_10142: input.stakeholders.map((p) => ({ accountId: p.id })) } : {}),

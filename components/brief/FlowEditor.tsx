@@ -9,6 +9,7 @@ import { validateFlow, type Flow } from "@/lib/brief/flow";
 import { useMe } from "@/hooks/useMe";
 import { BriefWizard } from "./BriefWizard";
 import { FlowChart } from "./FlowChart";
+import { RouteView } from "./RouteView";
 import { NodeInspector } from "./NodeInspector";
 
 const when = (iso: string) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "built-in");
@@ -22,6 +23,7 @@ export function FlowEditor() {
   const [history, setHistory] = useState<FlowVersion[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [scale, setScale] = useState(0.9);
+  const [view, setView] = useState<"types" | "map">("types");
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export function FlowEditor() {
         </div>
       </div>
 
-      <p className="mb-4 text-sm text-muted">This is the conversation a requester has when they start a brief. Click a question to edit it. Solid lines are the usual next question; dashed lines are rules that send some answers somewhere else.</p>
+      <p className="mb-4 text-sm text-muted">This is the conversation a requester has when they start a brief. Click a question to edit it. &ldquo;By request type&rdquo; shows what each kind of request is asked; the full map shows every question and rule, where dashed lines send some answers somewhere else.</p>
 
       {error && <div className="mb-4 flex flex-wrap items-center gap-2"><Callout tone="bad" icon="alert">{error}</Callout>{conflict && <button onClick={load} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Load the latest version</button>}</div>}
       {notice && <div className="mb-4"><Callout tone="ok" icon="check">{notice}</Callout></div>}
@@ -137,14 +139,32 @@ export function FlowEditor() {
       )}
 
       <div className="flex min-h-[560px] flex-col gap-4 lg:flex-row">
-        <section aria-label="Question map" className="relative min-h-80 flex-1 overflow-auto rounded-xl border border-line bg-white p-2">
-          <div className="sticky left-0 top-0 z-10 mb-2 flex w-fit items-center gap-2 rounded-lg border border-line bg-white/90 p-2 text-xs backdrop-blur">
-            <button aria-label="Zoom out" onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))} className="rounded px-2 py-0 hover:bg-n-150">−</button>
-            <span className="w-10 text-center tabular-nums">{Math.round(scale * 100)}%</span>
-            <button aria-label="Zoom in" onClick={() => setScale((s) => Math.min(1.3, +(s + 0.1).toFixed(1)))} className="rounded px-2 py-0 hover:bg-n-150">+</button>
-            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-2 rounded bg-brand-soft px-2 py-0 font-medium hover:bg-brand-soft/70">+ Question</button>
+        <section aria-label="Question map" className="relative min-h-80 min-w-0 flex-1 overflow-auto rounded-xl border border-line bg-white" onPointerDown={(e) => {
+          if (view !== "map" || (e.target as HTMLElement).closest("button,select")) return;
+          const el = e.currentTarget; const x = e.clientX, y = e.clientY, sl = el.scrollLeft, st = el.scrollTop;
+          const move = (m: PointerEvent) => { el.scrollLeft = sl - (m.clientX - x); el.scrollTop = st - (m.clientY - y); };
+          const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+          window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+        }}>
+          <div className="sticky left-0 top-0 z-10 flex w-full flex-wrap items-center gap-2 border-b border-line bg-white/90 p-2 text-xs backdrop-blur">
+            <div role="tablist" aria-label="Map view" className="flex rounded-lg bg-n-150 p-px">
+              {([["types", "By request type"], ["map", "Full map"]] as const).map(([k, l]) => (
+                <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`rounded-lg px-4 py-2 font-medium ${view === k ? "bg-white shadow-sm" : "text-muted hover:text-n-1000"}`}>{l}</button>
+              ))}
+            </div>
+            {view === "map" && (
+              <>
+                <button aria-label="Zoom out" onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))} className="rounded px-2 py-2 hover:bg-n-150">−</button>
+                <span className="w-10 text-center tabular-nums">{Math.round(scale * 100)}%</span>
+                <button aria-label="Zoom in" onClick={() => setScale((s) => Math.min(1.3, +(s + 0.1).toFixed(1)))} className="rounded px-2 py-2 hover:bg-n-150">+</button>
+                <button onClick={() => setScale(0.6)} className="rounded px-2 py-2 hover:bg-n-150">Fit</button>
+              </>
+            )}
+            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-auto rounded bg-brand-soft px-4 py-2 font-medium hover:bg-brand-soft/70">+ Question</button>
           </div>
-          <FlowChart flow={draft} selectedId={selected} onSelect={setSelected} scale={scale} problemIds={problemIds} />
+          {view === "types"
+            ? <RouteView flow={draft} selectedId={selected} onSelect={setSelected} problemIds={problemIds} />
+            : <div className="cursor-grab p-2 active:cursor-grabbing"><FlowChart flow={draft} selectedId={selected} onSelect={setSelected} scale={scale} problemIds={problemIds} /></div>}
         </section>
 
         <aside aria-label="Question details" className="w-full shrink-0 overflow-y-auto rounded-xl border border-line bg-white p-4 lg:max-h-[calc(100vh-190px)] lg:w-[380px]">

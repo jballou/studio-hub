@@ -21,6 +21,7 @@ export function toSubmission(flow: Flow, answers: Answers): BriefSubmission {
   return {
     issueTypeId: typeOpt?.jiraIssueTypeId,
     typeLabel: typeOpt?.label ?? "Request",
+    ...(typeOpt?.jiraLabel ? { labels: [typeOpt.jiraLabel] } : {}),
     title: titleNode && typeof answers.title === "string" ? answers.title.trim() : "Untitled request",
     deadline: deadlineNode && typeof answers.deadline === "string" && answers.deadline ? answers.deadline : undefined,
     stakeholders: peopleNode && Array.isArray(answers.stakeholders) ? (answers.stakeholders as Person[]) : [],

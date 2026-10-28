@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { OP_LABEL, QTYPE_LABEL, byId, layout, optionsOf, type Flow, type QNode } from "@/lib/brief/flow";
 
-const NODE_W = 232;
-const NODE_H = 68;
+const NODE_W = 256;
+const NODE_H = 88;
 const PAD = 24;
 
 function ruleParts(flow: Flow, n: QNode, i: number): { full: string; short: string } {
@@ -33,7 +33,7 @@ export function FlowChart({
   const H = L.height + PAD * 2;
 
   const edges = useMemo(() => {
-    const out: { key: string; d: string; dashed: boolean; label?: string; full?: string; lx: number; ly: number }[] = [];
+    const out: { key: string; from: string; to: string; d: string; dashed: boolean; label?: string; full?: string; lx: number; ly: number }[] = [];
     for (const n of flow.nodes) {
       const from = L.pos[n.id];
       if (!from) continue;
@@ -43,7 +43,7 @@ export function FlowChart({
         const x1 = from.x + PAD + NODE_W, y1 = from.y + PAD + NODE_H / 2;
         const x2 = t.x + PAD, y2 = t.y + PAD + NODE_H / 2;
         const dx = Math.max(40, (x2 - x1) / 2);
-        out.push({ key: `${n.id}>${to}>${dashed ? "r" : "d"}${idx}`, d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, dashed, label, full, lx: x1 + (x2 - x1) * 0.68, ly: y1 + (y2 - y1) * 0.68 });
+        out.push({ key: `${n.id}>${to}>${dashed ? "r" : "d"}${idx}`, from: n.id, to, d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, dashed, label, full, lx: x1 + (x2 - x1) * 0.68, ly: y1 + (y2 - y1) * 0.68 });
       };
       (n.branches ?? []).forEach((b, i) => { const r = ruleParts(flow, n, i); add(b.goto, true, r.short, r.full, i); });
       if (n.next) add(n.next, false);
@@ -60,9 +60,12 @@ export function FlowChart({
               <path d="M0,0 L10,5 L0,10 z" fill="#686764" />
             </marker>
           </defs>
-          {edges.map((e) => (
-            <g key={e.key}>
-              <path d={e.d} fill="none" stroke="#686764" strokeWidth={1.5} strokeDasharray={e.dashed ? "5 4" : undefined} markerEnd="url(#arrow)" />
+          {edges.map((e) => {
+            const hot = !!selectedId && (e.from === selectedId || e.to === selectedId);
+            const dim = !!selectedId && !hot;
+            return (
+            <g key={e.key} opacity={dim ? 0.3 : 1}>
+              <path d={e.d} fill="none" stroke={hot ? "var(--color-brand)" : "#686764"} strokeWidth={hot ? 2.5 : 1.5} strokeDasharray={e.dashed ? "5 4" : undefined} markerEnd="url(#arrow)" />
               {e.label && (
                 <g>
                   <title>{e.full}</title>
@@ -71,7 +74,8 @@ export function FlowChart({
                 </g>
               )}
             </g>
-          ))}
+            );
+          })}
         </svg>
 
         {flow.nodes.map((n) => {
@@ -86,7 +90,7 @@ export function FlowChart({
               onClick={() => onSelect(n.id)}
               aria-pressed={sel}
               aria-label={`${n.label || n.prompt}. ${QTYPE_LABEL[n.qtype]}${n.id === flow.start ? ". First question" : ""}`}
-              className={`absolute rounded-xl border bg-white px-4 py-2 text-left shadow-sm transition-shadow hover:shadow-md ${sel ? "border-brand ring-2 ring-brand/40" : bad ? "border-bad-fg" : "border-control"}`}
+              className={`absolute flex flex-col justify-between rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${sel ? "border-brand ring-2 ring-brand/40" : bad ? "border-bad-fg" : "border-control"}`}
               style={{ left: p.x + PAD, top: p.y + PAD, width: NODE_W, height: NODE_H }}
             >
               <span className="flex items-center gap-2 text-muted eyebrow">
@@ -95,7 +99,7 @@ export function FlowChart({
                 {!n.required && <span className="font-normal normal-case">· optional</span>}
                 {(n.branches?.length ?? 0) > 0 && <span className="ml-auto rounded-full bg-info-bg px-2 py-px normal-case text-info-fg">{n.branches!.length} {n.branches!.length === 1 ? "rule" : "rules"}</span>}
               </span>
-              <span className="line-clamp-2 text-sm font-medium">{n.prompt || <em className="text-bad-fg">No question text</em>}</span>
+              <span className="line-clamp-2 text-sm font-semibold">{n.prompt || <em className="text-bad-fg">No question text</em>}</span>
             </button>
           );
         })}

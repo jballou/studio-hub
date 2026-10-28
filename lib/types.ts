@@ -231,6 +231,8 @@ export type BriefSubmission = {
   issueTypeId?: string;
   typeLabel: string;
   title: string;
+  /** extra Jira labels from the chosen request type (for example brand-review) */
+  labels?: string[];
   /** YYYY-MM-DD, from the "deadline" question when asked */
   deadline?: string;
   stakeholders: Person[];

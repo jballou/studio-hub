@@ -23,6 +23,8 @@ const TYPES: Option[] = [
   { id: "web", label: "Web design or UX", jiraIssueTypeId: "18867" },
   { id: "copy", label: "Copywriting", jiraIssueTypeId: "18872" },
   { id: "campaign", label: "A campaign or activation", jiraIssueTypeId: "18866" },
+  // There is no "Brand review" issue type in Jira yet, so these land as "Other" with a label that finds them again.
+  { id: "brand_review", label: "A brand review", jiraIssueTypeId: "12117", jiraLabel: "brand-review" },
   { id: "idea", label: "I have an idea", jiraIssueTypeId: "18865" },
   { id: "other", label: "Something else", jiraIssueTypeId: "12117" },
 ];
@@ -36,7 +38,7 @@ export const DEFAULT_FLOW: Flow = {
       id: "title", label: "Title", prompt: "Great. What should we call it?", help: "A short name people will recognize, like “Q1 webinar banner”.", qtype: "text", next: "o_what",
       branches: [
         when("type", "graphic", "g_use"), when("type", "video", "v_format"), when("type", "animation", "a_what"), when("type", "web", "w_kind"),
-        when("type", "copy", "c_kind"), when("type", "campaign", "k_channels"), when("type", "idea", "i_idea"),
+        when("type", "copy", "c_kind"), when("type", "campaign", "k_channels"), when("type", "brand_review", "br_what"), when("type", "idea", "i_idea"),
       ],
     }),
 
@@ -82,6 +84,25 @@ export const DEFAULT_FLOW: Flow = {
     q({ id: "k_goal", label: "Goal", prompt: "What's the goal or key number?", qtype: "text", next: "k_budget" }),
     q({ id: "k_budget", label: "Budget approved", prompt: "Is the budget approved?", qtype: "yesno", next: "k_assets" }),
     q({ id: "k_assets", label: "Assets needed", prompt: "Which assets will you need from us?", qtype: "multichoice", options: opts("Ads", "Landing page", "Email", "Social posts", "Video", "Slides"), next: "problem" }),
+
+    // Brand review: something already made that needs a check that it is on brand (internal assets, swag, gifts and similar).
+    q({
+      id: "br_what", label: "What's being reviewed", prompt: "What would you like us to review?", qtype: "choice",
+      options: opts("Internal document or deck", "Swag or branded item", "Gift or giveaway", "Social post or ad", "Email or web page", "Event materials", "Something else"),
+      next: "br_state", branches: [when("br_what", "swag_or_branded_item", "br_swag"), when("br_what", "gift_or_giveaway", "br_swag")],
+    }),
+    q({ id: "br_swag", label: "Vendor and quantity", prompt: "Who's making it, and how many?", help: "The vendor or printer, the quantity, and whether it's already ordered.", qtype: "longtext", required: false, next: "br_state" }),
+    q({ id: "br_state", label: "How far along it is", prompt: "How far along is it?", qtype: "choice", options: opts("Still a draft or concept", "Final, not yet produced or published", "Already produced, printed or live"), next: "br_link" }),
+    q({ id: "br_link", label: "Files or photos", prompt: "Share a link to the file, or photos of the item.", help: "Google Drive, Figma, Slides or any link we can open.", qtype: "longtext", next: "br_audience" }),
+    q({
+      id: "br_audience", label: "Who will see it", prompt: "Will customers or the public see this?", qtype: "choice",
+      options: [{ id: "customers", label: "Yes, customers or prospects" }, { id: "public", label: "Yes, partners, press or the public" }, { id: "internal", label: "No, internal only" }],
+      next: "br_where", branches: [when("br_audience", "internal", "br_who")],
+    }),
+    q({ id: "br_where", label: "Where it will appear", prompt: "Where will it be seen, and in which regions?", help: "For example a conference booth in Europe, or the website.", qtype: "text", next: "br_legal" }),
+    q({ id: "br_legal", label: "Legal or compliance check", prompt: "Has legal or compliance looked at it?", help: "Claims, partner logos and trademarks usually need a look.", qtype: "yesno", next: "br_focus" }),
+    q({ id: "br_who", label: "Who it's for", prompt: "Which team or event is it for?", qtype: "text", required: false, next: "br_focus" }),
+    q({ id: "br_focus", label: "What to check", prompt: "Is there anything specific you'd like us to check?", qtype: "multichoice", required: false, options: opts("Logo use", "Colors", "Fonts", "Tone and wording", "Photos and imagery", "Overall look"), next: "deadline" }),
 
     // Idea
     q({ id: "i_idea", label: "The idea", prompt: "Tell us the idea.", qtype: "longtext", next: "i_why" }),
