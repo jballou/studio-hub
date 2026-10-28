@@ -69,6 +69,8 @@ export function visibilityClause(role: "creative" | "requester", withCc: boolean
 }
 
 export function errorResponse(e: unknown): Response {
+  // Next signals "this route needs a real request" by throwing; that must reach Next, not become an error response.
+  if (e && typeof e === "object" && ("digest" in e && String((e as { digest?: unknown }).digest).startsWith("DYNAMIC_SERVER_USAGE") || /bail out of prerendering/i.test(String((e as { message?: unknown }).message)))) throw e;
   if (e instanceof AdminError) return Response.json({ error: e.message }, { status: e.status });
   if (e instanceof JiraError && e.status === 429) {
     // Say what happened and how long to wait, so the page can retry on its own.
@@ -82,5 +84,7 @@ export function errorResponse(e: unknown): Response {
     const status = e.status === 401 || e.status === 403 || e.status === 404 || e.status === 400 ? e.status : 502;
     return Response.json({ error: e.message }, { status });
   }
-  return Response.json({ error: "Couldn't reach Jira." }, { status: 502 });
+  // Not a Jira answer at all: a bug or a storage hiccup on our side. Say so, and keep the detail in the server log.
+  console.error("[api] unexpected error", e);
+  return Response.json({ error: "Something went wrong on our side. Try again, and tell the Brand Creative team if it keeps happening." }, { status: 500 });
 }

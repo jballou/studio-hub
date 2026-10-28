@@ -232,7 +232,7 @@ export function MyDay() {
             </Card>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr]">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2 min-[1500px]:grid-cols-[1.3fr_1fr_1fr]">
             <Card
               title={tab === "priority" ? "Task priority" : "My tasks"}
               hint={tab === "priority" ? "Most urgent first" : "Private to you. Not added to Jira."}
@@ -358,7 +358,7 @@ function Card({ title, hint, action, children }: { title: string; hint?: string;
   return (
     <section className="rounded-xl border border-line bg-white p-4">
       <div className="mb-3 flex flex-wrap items-start gap-2">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-[1_1_10rem]">
           <h2 className="text-base font-bold">{title}</h2>
           {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
         </div>

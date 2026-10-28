@@ -52,12 +52,20 @@ export const jiraRequest = <T>(a: JiraAuth, path: string, init?: { method: strin
 async function request<T>(a: JiraAuth, path: string, init?: { method: string; body?: unknown }): Promise<T> {
   const method = init?.method ?? "GET";
   for (let attempt = 0; ; attempt++) {
-    const res = await slot(() => fetch(api(a, path), {
-      method: init?.method,
-      headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
-      body: init?.body ? JSON.stringify(init.body) : undefined,
-      cache: "no-store",
-    }));
+    let res: Response;
+    try {
+      res = await slot(() => fetch(api(a, path), {
+        method: init?.method,
+        headers: { Authorization: `Bearer ${a.accessToken}`, Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
+        body: init?.body ? JSON.stringify(init.body) : undefined,
+        cache: "no-store",
+      }));
+    } catch (e) {
+      // The connection to Atlassian dropped or timed out before any answer. Reads are safe to repeat once; writes are not.
+      console.error("[jira] network error", method, path.split("?")[0], e instanceof Error ? e.message : e);
+      if (method === "GET" && attempt < 1) { await retry.sleep(600 + Math.random() * 400); continue; }
+      throw new JiraError(503, "Jira didn't answer. Try again in a moment.");
+    }
     const limited = res.status === 429 || (res.status === 503 && method === "GET");
     if (limited) {
       const retryAfter = parseRetryAfter(res.headers.get("retry-after"));

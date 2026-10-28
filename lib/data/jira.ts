@@ -24,6 +24,11 @@ async function get<T>(url: string, tries = 0): Promise<T> {
     }
     throw new Error("Jira is busy right now. Give it a minute and try again.");
   }
+  if (res.status >= 500 && tries < 1) {
+    // A passing hiccup on Jira's side or ours: one quiet retry before showing an error.
+    await sleep(1500);
+    return get<T>(url, tries + 1);
+  }
   if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
   if (body.stale && typeof window !== "undefined") window.dispatchEvent(new Event(STALE_EVENT));
   return body as T;
