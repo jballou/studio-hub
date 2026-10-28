@@ -68,7 +68,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       setVersions(vs);
       setVersionId(vs[vs.length - 1]?.id ?? null);
       // Demo users in mock mode; in real mode, just the people named on this request (plus you, below).
-      setUsers(addUsers(await repo.listUsers(), [...(a.reviewers ?? []), ...(a.approvers ?? [])].map(toUser)));
+      const loaded = addUsers(await repo.listUsers(), [...(a.reviewers ?? []), ...(a.approvers ?? [])].map(toUser));
+      // Merge, don't replace: "you" may have arrived from /api/me while this was loading.
+      setUsers((cur) => addUsers(cur, loaded));
       const project = await projectsRepo.getProject(a.projectKey, "u-avery");
       if (a.review === "approved") setStage("Delivered");
       else if (a.review === "changes") setStage("In progress");
@@ -131,6 +133,12 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     return <div className="p-8 text-sm text-muted">{asset === null ? "Loading…" : ""}</div>;
   }
 
+  // Everyone who can appear on screen: the loaded people, you, and anyone whose name is saved on a comment.
+  const people = addUsers(
+    addUsers(users, me ? [me] : []),
+    threads.flatMap((t) => t.comments).filter((c) => c.authorName).map((c) => ({ id: c.authorId, name: c.authorName!, initials: initialsOf(c.authorName!), role: c.authorRole ?? "requester" } as User)),
+  );
+
   const canResolve = (t: Thread) => me.role === "creative" || t.authorId === me.id;
   const canPush = (t: Thread) => me.role === "creative" || t.authorId === me.id;
   const closed = stage === "Delivered";
@@ -191,9 +199,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
     .filter((t) => t.timeMs != null)
     .map((t) => ({
       id: t.id, timeMs: t.timeMs!, number: t.number, resolved: t.status === "resolved",
-      initials: users.find((u) => u.id === t.authorId)?.initials ?? "?",
-      name: users.find((u) => u.id === t.authorId)?.name ?? "Someone",
-      creative: users.find((u) => u.id === t.authorId)?.role === "creative",
+      initials: people.find((u) => u.id === t.authorId)?.initials ?? "?",
+      name: people.find((u) => u.id === t.authorId)?.name ?? "Someone",
+      creative: people.find((u) => u.id === t.authorId)?.role === "creative",
     }));
 
   const counts: Record<Tab, number> = {
@@ -356,7 +364,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-brand-soft px-5 py-2 text-sm">
           <Icon name="feedback" size={16} />
           <span className="font-medium">
-            {users.find((u) => u.id === asset.submittedBy)?.name ?? "A teammate"} asked for your feedback
+            {people.find((u) => u.id === asset.submittedBy)?.name ?? "A teammate"} asked for your feedback
             {asset.dueAt ? ` by ${formatDue(asset.dueAt, asset.dueTz)}` : ""}
           </span>
           {asset.instructions && <span className="min-w-0 flex-1 truncate text-n-800" title={asset.instructions}>{asset.instructions}</span>}
@@ -425,7 +433,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         <CommentList
           threads={listed}
           counts={counts}
-          users={users}
+          users={people}
           me={me}
           selectedId={selectedId}
           unreadIds={unreadIds}
@@ -444,7 +452,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           onPushAll={pushAll}
         />
       </div>
-      {shareOpen && <ShareDialog asset={asset} users={users} canManage={canShare} onClose={() => setShareOpen(false)} onChange={setAsset} />}
+      {shareOpen && <ShareDialog asset={asset} users={people} canManage={canShare} onClose={() => setShareOpen(false)} onChange={setAsset} />}
     </div>
   );
 }
