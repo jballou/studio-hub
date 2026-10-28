@@ -19,7 +19,7 @@ export function Tag({ tone, icon, children, title }: { tone: Tone; icon?: IconNa
   return (
     <span
       title={title}
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${TONES[tone]}`}
+      className={`inline-flex h-6 items-center gap-2 whitespace-nowrap rounded-full border px-2 text-xs font-medium ${TONES[tone]}`}
     >
       {icon && <Icon name={icon} size={12} />}
       {children}
@@ -59,7 +59,7 @@ export function StatusTag({ project }: { project: Pick<Project, "stage" | "statu
 /** Notification-style callout: tint surface, icon, text. */
 export function Callout({ tone, icon, children }: { tone: Tone; icon: IconName; children: ReactNode }) {
   return (
-    <div role="status" className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium ${TONES[tone]}`}>
+    <div role="status" className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${TONES[tone]}`}>
       <Icon name={icon} size={16} />
       {children}
     </div>

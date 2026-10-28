@@ -43,6 +43,36 @@
   --color-focus: #5568bf; /* Periwinkle 600 [CONFIRM] */
 
   --font-sans: "National 2", system-ui, sans-serif;
+
+  /*
+   * Type scale from the Project Catalyst Figma frame (National 2). Sizes and tracking are the Figma values.
+   * Line-heights sit on a 4px grid and are tighter than the frame's (which are tuned for marketing layouts).
+   *   Labels / body-XS .. xs 12, sm 14      Body .. base 16, lg 18, xl 20
+   *   Title SM/MD/LG .. lg 18, xl 20, 2xl 24      Headline SM/MD/LG .. 3xl 28, 4xl 36, headline-lg 42
+   *   Display SM/MD/LG .. 5xl 48, display-md 60, display-lg 76
+   * No other font sizes in the app.
+   */
+  --text-xs: 12px;  --text-xs--line-height: 20px;
+  --text-sm: 14px;  --text-sm--line-height: 24px;
+  --text-base: 16px; --text-base--line-height: 24px;
+  --text-lg: 18px;  --text-lg--line-height: 28px;
+  --text-xl: 20px;  --text-xl--line-height: 28px;
+  --text-2xl: 24px; --text-2xl--line-height: 32px; --text-2xl--letter-spacing: -0.48px;
+  --text-3xl: 28px; --text-3xl--line-height: 32px;
+  --text-4xl: 36px; --text-4xl--line-height: 40px; --text-4xl--letter-spacing: -0.72px;
+  --text-headline-lg: 42px; --text-headline-lg--line-height: 48px; --text-headline-lg--letter-spacing: -0.84px;
+  --text-5xl: 48px; --text-5xl--line-height: 48px; --text-5xl--letter-spacing: -0.96px;
+  --text-display-md: 60px; --text-display-md--line-height: 64px; --text-display-md--letter-spacing: -1.2px;
+  --text-display-lg: 76px; --text-display-lg--line-height: 80px; --text-display-lg--letter-spacing: -1.52px;
+}
+
+/* Eyebrow (Figma "Label Eyebrow Small"): small caps-style label above a heading or group. */
+@utility eyebrow {
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 /* Green 500 is too light for small text on white (3.6:1), so text uses the darker link green. */

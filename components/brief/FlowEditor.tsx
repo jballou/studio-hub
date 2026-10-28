@@ -88,41 +88,41 @@ export function FlowEditor() {
 
   return (
     <main className="w-full p-4 lg:p-6">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-bold">Brief builder</h1>
         <Tag tone={isDefault ? "neutral" : "ok"}>{isDefault ? "Built-in questions" : `Version ${saved.version}`}</Tag>
         {dirty && <Tag tone="warn" icon="alert">Unsaved changes</Tag>}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <button onClick={() => setPreview(true)} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Preview as a requester</button>
+          <button onClick={() => setPreview(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Preview as a requester</button>
           {history.length > 0 && (
             <label className="text-sm">
               <span className="sr-only">Restore an earlier version</span>
-              <select value="" disabled={busy} onChange={(e) => { const v = Number(e.target.value); if (v && confirm(`Publish version ${v} again as the current questions?`)) guard(() => act(() => flowRepo.restore(v), `Restored version ${v}.`)); }} className="rounded-lg border border-control bg-white px-2 py-1.5 text-sm">
+              <select value="" disabled={busy} onChange={(e) => { const v = Number(e.target.value); if (v && confirm(`Publish version ${v} again as the current questions?`)) guard(() => act(() => flowRepo.restore(v), `Restored version ${v}.`)); }} className="rounded-lg border border-control bg-white px-2 py-2 text-sm">
                 <option value="">Earlier versions…</option>
                 {history.map((h) => <option key={h.version} value={h.version}>v{h.version} · {when(h.updatedAt)} · {h.updatedBy}</option>)}
               </select>
             </label>
           )}
-          {me?.isAdmin && !isDefault && <button disabled={busy} onClick={() => { if (confirm("Go back to the built-in questions? Your version stays in history.")) guard(() => act(() => flowRepo.reset(), "Back to the built-in questions.")); }} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium text-bad-fg hover:bg-bad-bg">Reset to built-in</button>}
-          <button disabled={!dirty || busy} onClick={() => { setDraft(saved); setNotice(null); setError(null); }} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium enabled:hover:bg-brand-soft disabled:opacity-40">Discard</button>
-          <button disabled={!dirty || busy || problems.errors.length > 0} onClick={() => act(() => flowRepo.save(draft, saved.version), "Saved. New briefs use these questions now.")} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save changes"}</button>
+          {me?.isAdmin && !isDefault && <button disabled={busy} onClick={() => { if (confirm("Go back to the built-in questions? Your version stays in history.")) guard(() => act(() => flowRepo.reset(), "Back to the built-in questions.")); }} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium text-bad-fg hover:bg-bad-bg">Reset to built-in</button>}
+          <button disabled={!dirty || busy} onClick={() => { setDraft(saved); setNotice(null); setError(null); }} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium enabled:hover:bg-brand-soft disabled:opacity-40">Discard</button>
+          <button disabled={!dirty || busy || problems.errors.length > 0} onClick={() => act(() => flowRepo.save(draft, saved.version), "Saved. New briefs use these questions now.")} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save changes"}</button>
         </div>
       </div>
 
-      <p className="mb-3 text-sm text-muted">This is the conversation a requester has when they start a brief. Click a question to edit it. Solid lines are the usual next question; dashed lines are rules that send some answers somewhere else.</p>
+      <p className="mb-4 text-sm text-muted">This is the conversation a requester has when they start a brief. Click a question to edit it. Solid lines are the usual next question; dashed lines are rules that send some answers somewhere else.</p>
 
-      {error && <div className="mb-3 flex flex-wrap items-center gap-2"><Callout tone="bad" icon="alert">{error}</Callout>{conflict && <button onClick={load} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Load the latest version</button>}</div>}
-      {notice && <div className="mb-3"><Callout tone="ok" icon="check">{notice}</Callout></div>}
+      {error && <div className="mb-4 flex flex-wrap items-center gap-2"><Callout tone="bad" icon="alert">{error}</Callout>{conflict && <button onClick={load} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Load the latest version</button>}</div>}
+      {notice && <div className="mb-4"><Callout tone="ok" icon="check">{notice}</Callout></div>}
 
       {(problems.errors.length > 0 || problems.warnings.length > 0) && (
-        <div className="mb-3 rounded-xl border border-line bg-white">
-          <button onClick={() => setShowProblems((s) => !s)} aria-expanded={showProblems} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm">
+        <div className="mb-4 rounded-xl border border-line bg-white">
+          <button onClick={() => setShowProblems((s) => !s)} aria-expanded={showProblems} className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm">
             {problems.errors.length > 0 && <Tag tone="bad" icon="close">{problems.errors.length} {problems.errors.length === 1 ? "problem" : "problems"} to fix before saving</Tag>}
             {problems.warnings.length > 0 && <Tag tone="warn" icon="alert">{problems.warnings.length} to check</Tag>}
             <span className={`ml-auto ${showProblems ? "rotate-180" : ""}`}><Icon name="chevronDown" size={14} /></span>
           </button>
           {(showProblems || problems.errors.length > 0) && (
-            <ul className="space-y-1 border-t border-line px-3 py-2 text-sm">
+            <ul className="space-y-2 border-t border-line px-4 py-2 text-sm">
               {problems.errors.map((e) => <li key={e} className="text-bad-fg">• {e}</li>)}
               {problems.warnings.map((w) => <li key={w} className="text-warn-fg">• {w}</li>)}
             </ul>
@@ -132,11 +132,11 @@ export function FlowEditor() {
 
       <div className="flex min-h-[560px] flex-col gap-4 lg:flex-row">
         <section aria-label="Question map" className="relative min-h-80 flex-1 overflow-auto rounded-xl border border-line bg-white p-2">
-          <div className="sticky left-0 top-0 z-10 mb-1 flex w-fit items-center gap-1 rounded-lg border border-line bg-white/90 p-1 text-xs backdrop-blur">
-            <button aria-label="Zoom out" onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))} className="rounded px-2 py-0.5 hover:bg-n-150">−</button>
+          <div className="sticky left-0 top-0 z-10 mb-2 flex w-fit items-center gap-2 rounded-lg border border-line bg-white/90 p-2 text-xs backdrop-blur">
+            <button aria-label="Zoom out" onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))} className="rounded px-2 py-0 hover:bg-n-150">−</button>
             <span className="w-10 text-center tabular-nums">{Math.round(scale * 100)}%</span>
-            <button aria-label="Zoom in" onClick={() => setScale((s) => Math.min(1.3, +(s + 0.1).toFixed(1)))} className="rounded px-2 py-0.5 hover:bg-n-150">+</button>
-            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-1 rounded bg-brand-soft px-2 py-0.5 font-medium hover:bg-brand-soft/70">+ Question</button>
+            <button aria-label="Zoom in" onClick={() => setScale((s) => Math.min(1.3, +(s + 0.1).toFixed(1)))} className="rounded px-2 py-0 hover:bg-n-150">+</button>
+            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-2 rounded bg-brand-soft px-2 py-0 font-medium hover:bg-brand-soft/70">+ Question</button>
           </div>
           <FlowChart flow={draft} selectedId={selected} onSelect={setSelected} scale={scale} problemIds={problemIds} />
         </section>
@@ -160,7 +160,7 @@ export function FlowEditor() {
       {preview && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[6vh]" onMouseDown={() => setPreview(false)}>
           <div role="dialog" aria-modal="true" aria-label="Preview" className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-line bg-paper shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2.5">
+            <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2">
               <p className="text-sm font-semibold">Preview{dirty ? " (with your unsaved changes)" : ""}</p>
               <button onClick={() => setPreview(false)} aria-label="Close preview" className="ml-auto flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Icon name="x" size={16} /></button>
             </div>

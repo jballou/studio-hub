@@ -58,11 +58,11 @@ export function UnblockDialog({
   };
 
   const group = (title: string, items: TargetStatus[]) => items.length > 0 && (
-    <fieldset className="mb-3">
-      <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">{title}</legend>
-      <div className="grid gap-1.5 sm:grid-cols-2">
+    <fieldset className="mb-4">
+      <legend className="mb-2 text-muted eyebrow">{title}</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
         {items.map((s) => (
-          <label key={s.name} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${picked === s.name ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-brand-soft"}`}>
+          <label key={s.name} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm ${picked === s.name ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-brand-soft"}`}>
             <input type="radio" name="status" checked={picked === s.name} onChange={() => setPicked(s.name)} className="accent-brand" />
             {s.name}
           </label>
@@ -75,22 +75,22 @@ export function UnblockDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[10vh]" onMouseDown={onClose}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label={`Unblock ${ticketKey}`} className="w-full max-w-lg rounded-xl border border-line bg-white p-5 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={`Unblock ${ticketKey}`} className="w-full max-w-lg rounded-xl border border-line bg-white p-6 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold">Mark as unblocked</h2>
-        <p className="mb-4 mt-1 text-sm text-muted">{ticketKey}. Choose the Jira status it moves to.</p>
+        <p className="mb-4 mt-2 text-sm text-muted">{ticketKey}. Choose the Jira status it moves to.</p>
         {options === null && !error && <p className="text-sm text-muted">Loading statuses from Jira…</p>}
         {options && options.length === 0 && <Callout tone="warn" icon="alert">Jira doesn&apos;t offer any other status for this ticket right now.</Callout>}
         {options && (
           <>
             {group("Keep working", options.filter((s) => s.category !== "done"))}
             {group("Close it out", closing)}
-            {closing.some((s) => s.name === picked) && <div className="mb-3"><Callout tone="warn" icon="alert">This closes the ticket in Jira.</Callout></div>}
-            <label className="mb-3 block text-sm font-semibold">Note <span className="font-normal text-muted">(optional)</span>
-              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Approved in Slack" className="mt-1 w-full rounded-lg border border-control bg-white px-3 py-2 text-sm font-normal" />
+            {closing.some((s) => s.name === picked) && <div className="mb-4"><Callout tone="warn" icon="alert">This closes the ticket in Jira.</Callout></div>}
+            <label className="mb-4 block text-sm font-semibold">Note <span className="font-normal text-muted">(optional)</span>
+              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Approved in Slack" className="mt-2 w-full rounded-lg border border-control bg-white px-4 py-2 text-sm font-normal" />
             </label>
           </>
         )}
-        {error && <div className="mb-3"><Callout tone="bad" icon="alert">{error}</Callout></div>}
+        {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
         <div className="flex gap-2">
           <button onClick={go} disabled={busy || !picked} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Updating…" : `Move to ${picked || "…"}`}</button>
           <button onClick={onClose} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>

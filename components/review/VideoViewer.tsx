@@ -170,8 +170,8 @@ export function VideoViewer({
   );
 
   const bar = (
-  <div className="flex flex-wrap items-start gap-x-1.5 gap-y-1 text-ink">
-    <span className="flex h-8 items-center gap-0.5">
+  <div className="flex flex-wrap items-start gap-x-2 gap-y-2 text-ink">
+    <span className="flex h-8 items-center gap-0">
       <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Skip dir={-1} /></button>
       <button onClick={toggle} aria-label={playing ? "Pause" : "Play"} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150">
         <span className={playing ? "" : "translate-x-px"}><Icon name={playing ? "pause" : "play"} size={20} fill /></span>
@@ -179,8 +179,8 @@ export function VideoViewer({
       <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Skip dir={1} /></button>
       {!audio && (
         <>
-          <button onClick={() => step(-1)} className="h-8 rounded-md px-1.5 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Back one frame">‹1f</button>
-          <button onClick={() => step(1)} className="h-8 rounded-md px-1.5 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Forward one frame">1f›</button>
+          <button onClick={() => step(-1)} className="h-8 rounded-md px-2 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Back one frame">‹1f</button>
+          <button onClick={() => step(1)} className="h-8 rounded-md px-2 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Forward one frame">1f›</button>
         </>
       )}
     </span>
@@ -238,7 +238,7 @@ export function VideoViewer({
       <button
         onClick={() => { const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length]; setRate(next); if (videoRef.current) videoRef.current.playbackRate = next; }}
         aria-label={`Playback speed ${rate}x. Click to change.`}
-        className="h-7 min-w-9 rounded-md px-1.5 text-xs font-semibold hover:bg-n-150"
+        className="h-7 min-w-9 rounded-md px-2 text-xs font-semibold hover:bg-n-150"
       >{rate}x</button>
     </span>
   </div>
@@ -261,7 +261,7 @@ export function VideoViewer({
             )}
           </div>
           {videoEl}
-          <div className="px-4 pb-3 pt-2.5">{bar}</div>
+          <div className="px-4 pb-4 pt-2">{bar}</div>
         </div>
       </div>
     );
@@ -281,10 +281,10 @@ export function VideoViewer({
       </Stage>
 
       {usingFallback ? (
-        <p className="border-t border-line bg-white px-4 py-3 text-sm">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
+        <p className="border-t border-line bg-white px-4 py-4 text-sm">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
       ) : (
       <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-4">
-        <div className="pointer-events-auto w-full max-w-3xl rounded-2xl border border-line bg-white px-4 pb-3 pt-2.5 shadow-lg">
+        <div className="pointer-events-auto w-full max-w-3xl rounded-2xl border border-line bg-white px-4 pb-4 pt-2 shadow-lg">
           {bar}
         </div>
       </div>
@@ -319,7 +319,7 @@ function MapPin({ initials, creative, resolved, selected }: { initials: string; 
       >
         <span className="h-0 w-0 border-x-[5px] border-b-[6px] border-x-transparent" style={{ borderBottomColor: fill }} />
         <span
-          className="-mt-px flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-n-50 shadow-md ring-2 ring-white"
+          className="-mt-px flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-n-50 shadow-md ring-2 ring-white"
           style={{ background: fill, outline: selected ? "2px solid var(--color-ink)" : "none", outlineOffset: 1 }}
         >
           {initials.slice(0, 2)}

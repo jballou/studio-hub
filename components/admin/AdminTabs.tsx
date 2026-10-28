@@ -19,11 +19,11 @@ export function AdminTabs() {
   const pathname = usePathname();
   const me = useMe();
   return (
-    <nav aria-label="Admin sections" className="mt-1 flex gap-6">
+    <nav aria-label="Admin sections" className="mt-2 flex gap-6">
       {TABS.filter((t) => !t.adminOnly || me?.isAdmin).map((t) => {
         const active = pathname.startsWith(t.href);
         return (
-          <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined} className={`-mb-px flex items-center gap-1.5 border-b-2 pb-2 text-sm font-medium ${active ? "border-brand text-brand" : "border-transparent text-n-800 hover:text-ink"}`}>
+          <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined} className={`-mb-px flex items-center gap-2 border-b-2 pb-2 text-sm font-medium ${active ? "border-brand text-brand" : "border-transparent text-n-800 hover:text-ink"}`}>
             {t.icon && <Icon name="trash" size={14} />}{t.label}
           </Link>
         );

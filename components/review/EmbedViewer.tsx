@@ -33,9 +33,9 @@ export function EmbedViewer({
         />
         {overlay}
       </Stage>
-      <div className="flex items-center justify-center gap-3 pb-1 text-xs text-muted">
+      <div className="flex items-center justify-center gap-4 pb-2 text-xs text-muted">
         <span>{commenting ? "Commenting is on. Turn it off to scroll or click inside the design." : "Commenting is off. Turn it on to add a pin."}</span>
-        <a href={openUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-medium text-brand hover:underline">
+        <a href={openUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 font-medium text-brand hover:underline">
           Blank or blocked? Open in new tab <Icon name="chevronRight" size={12} />
         </a>
       </div>

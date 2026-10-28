@@ -31,9 +31,9 @@ export function AdminActivity() {
 
   return (
     <main className="mx-auto w-full max-w-4xl p-6">
-      <div className="mb-3 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-4">
         <h1 className="text-2xl font-bold">Activity</h1>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search activity" className="ml-auto w-56 rounded-lg border border-control bg-white px-3 py-1.5 text-sm" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search activity" className="ml-auto w-56 rounded-lg border border-control bg-white px-4 py-2 text-sm" />
       </div>
       <p className="mb-4 text-sm text-muted">Who changed access or blocked work, newest first. The last 500 changes are kept.</p>
       {error && <Callout tone="bad" icon="alert">{error}</Callout>}
@@ -41,7 +41,7 @@ export function AdminActivity() {
       {rows && shown.length > 0 && (
         <ul className="divide-y divide-line rounded-xl border border-line bg-white text-sm">
           {shown.map((a, i) => (
-            <li key={i} className="flex flex-wrap gap-x-3 px-3 py-2">
+            <li key={i} className="flex flex-wrap gap-x-4 px-4 py-2">
               <span className="w-44 shrink-0 text-xs text-muted">{when(a.at)}</span>
               <span><b>{a.actor}</b> {LABEL[a.action] ?? a.action} <b>{a.target}</b>{a.detail ? ` (${a.detail})` : ""}</span>
             </li>

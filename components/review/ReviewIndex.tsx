@@ -53,16 +53,16 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
   if (g.items.length > 1) {
     return (
       <li className="group relative rounded-xl border border-line bg-white p-4">
-        <div className={`flex items-center gap-3 ${onTrash ? "pr-11" : ""}`}>
+        <div className={`flex items-center gap-4 ${onTrash ? "pr-12" : ""}`}>
           <Tag tone="neutral">Batch of {g.items.length}</Tag>
           <span className="min-w-0 flex-1 truncate font-medium">{g.title}</span>
           {status}
           <span className="font-mono text-xs text-muted">{first.projectKey}</span>
         </div>
-        {meta && <p className="mt-1 text-xs text-muted">{meta}</p>}
-        <ol className="mt-2 flex flex-wrap gap-1.5">
+        {meta && <p className="mt-2 text-xs text-muted">{meta}</p>}
+        <ol className="mt-2 flex flex-wrap gap-2">
           {g.items.map((a) => (
-            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="flex items-center gap-1.5 rounded-full border border-control bg-white px-3 py-1 text-sm hover:bg-brand-soft"><span className="shrink-0 font-semibold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
+            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="flex items-center gap-2 rounded-full border border-control bg-white px-4 py-2 text-sm hover:bg-brand-soft"><span className="shrink-0 font-semibold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
           ))}
         </ol>
         {onTrash && (
@@ -75,7 +75,7 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
   }
   return (
     <li className="group relative">
-      <Link href={`/review/${first.id}`} className={`flex items-center gap-3 rounded-xl border border-line bg-white p-4 hover:border-brand ${onTrash ? "pr-14" : ""}`}>
+      <Link href={`/review/${first.id}`} className={`flex items-center gap-4 rounded-xl border border-line bg-white p-4 hover:border-brand ${onTrash ? "pr-14" : ""}`}>
         <Tag tone="neutral">{first.source ? SOURCE_LABEL[first.source.kind] : first.kind}</Tag>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{first.name}</span>
@@ -137,7 +137,7 @@ export function ReviewIndex() {
             <h2 id="mine-h" className="text-lg font-bold">Submitted by you</h2>
             <div role="tablist" aria-label="Filter by status" className="mb-4 mt-2 flex flex-wrap gap-2">
               {([{ id: "all", label: "All", n: mine.length }, ...STATES.map((s) => ({ id: s.id, label: s.label, n: count(s.id) }))] as const).map((f) => (
-                <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className={`rounded-full border px-4 py-1.5 text-sm ${filter === f.id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+                <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className={`rounded-full border px-4 py-2 text-sm ${filter === f.id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
                   {f.label} <span className="text-muted">{f.n}</span>
                 </button>
               ))}
@@ -148,7 +148,7 @@ export function ReviewIndex() {
               STATES.filter((s) => filter === "all" || filter === s.id).map((s) => {
                 const list = mine.filter((g) => stateOf(g) === s.id);
                 return (
-                  <div key={s.id} className="mb-5">
+                  <div key={s.id} className="mb-6">
                     <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
                     {list.length === 0 ? <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">{s.empty}</p> : (
                       <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState onTrash={g.items.every(mayTrash) ? (items, label) => setAsking({ items, label }) : undefined} />)}</ul>

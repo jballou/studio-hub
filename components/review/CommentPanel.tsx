@@ -25,7 +25,7 @@ function Mentions({ text, users }: { text: string; users: User[] }) {
     <>
       {parts.map((p, i) =>
         p.startsWith("@") && all.some((u) => `@${u.name}` === p)
-          ? <span key={i} className="rounded bg-brand-soft px-0.5 font-medium text-ink">{p}</span>
+          ? <span key={i} className="rounded bg-brand-soft px-0 font-medium text-ink">{p}</span>
           : <span key={i}>{p}</span>,
       )}
     </>
@@ -97,7 +97,7 @@ function ThreadCard({
 
       <div className="mt-2 flex items-center gap-2 text-xs text-muted">
         {thread.anchor && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 font-bold text-n-50" title="Pin number on the design">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-2 font-bold text-n-50" title="Pin number on the design">
             {thread.number}
           </span>
         )}
@@ -106,32 +106,32 @@ function ThreadCard({
         {thread.jira && <span className="ml-auto"><Tag tone="ok" icon="check" title={`Pushed ${ago(thread.jira.pushedAt)}`}>In Jira</Tag></span>}
       </div>
 
-      <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-snug"><Mentions text={first.body} users={users} /></p>
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm"><Mentions text={first.body} users={users} /></p>
 
       {replies.length > 0 && (
-        <ul className="mt-3 space-y-3 border-l-2 border-line pl-3">
+        <ul className="mt-4 space-y-4 border-l-2 border-line pl-4">
           {replies.map((c) => (
             <li key={c.id}>
               <div className="flex items-center gap-2 text-xs text-muted">
-                <Avatar user={byId(c.authorId)} size={20} />
+                <Avatar user={byId(c.authorId)} size={24} />
                 <span className="font-semibold text-ink">{byId(c.authorId)?.name ?? "Unknown"}</span>
                 <span>{ago(c.createdAt)}</span>
               </div>
-              <p className="mt-1 whitespace-pre-wrap break-words"><Mentions text={c.body} users={users} /></p>
+              <p className="mt-2 whitespace-pre-wrap break-words"><Mentions text={c.body} users={users} /></p>
             </li>
           ))}
         </ul>
       )}
 
       {thread.pushError && (
-        <div role="alert" className="mt-3 flex items-start gap-1.5 rounded-lg border border-bad-line bg-bad-bg px-2 py-1.5 text-xs text-bad-fg">
+        <div role="alert" className="mt-4 flex items-start gap-2 rounded-lg border border-bad-line bg-bad-bg px-2 py-2 text-xs text-bad-fg">
           <Icon name="close" size={14} />
           <span><strong>Not pushed to Jira.</strong> {thread.pushError}</span>
         </div>
       )}
 
-      <div className="mt-3 flex items-center gap-3 text-xs" onClick={(e) => e.stopPropagation()}>
-        <button className="flex items-center gap-1 font-medium text-ink hover:underline" onClick={() => setReplying((r) => !r)}>
+      <div className="mt-4 flex items-center gap-4 text-xs" onClick={(e) => e.stopPropagation()}>
+        <button className="flex items-center gap-2 font-medium text-ink hover:underline" onClick={() => setReplying((r) => !r)}>
           <Icon name="reply" size={13} /> Reply
         </button>
         {canPush && !thread.jira && (
@@ -143,7 +143,7 @@ function ThreadCard({
 
       {replying && (
         <form
-          className="mt-3 flex gap-2"
+          className="mt-4 flex gap-2"
           onClick={(e) => e.stopPropagation()}
           onSubmit={(e) => {
             e.preventDefault();
@@ -158,9 +158,9 @@ function ThreadCard({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={`Reply as ${me.name}`}
-            className="min-w-0 flex-1 rounded-lg border border-control px-3 py-1.5 text-sm"
+            className="min-w-0 flex-1 rounded-lg border border-control px-4 py-2 text-sm"
           />
-          <button className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">Post</button>
+          <button className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Post</button>
         </form>
       )}
     </div>
@@ -197,7 +197,7 @@ export function CommentList({
       key={t}
       onClick={() => onTab(t)}
       aria-pressed={tab === t}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === t ? "bg-brand-soft text-ink" : "bg-n-150 text-n-800 hover:bg-n-200"}`}
+      className={`rounded-full px-4 py-2 text-sm font-medium ${tab === t ? "bg-brand-soft text-ink" : "bg-n-150 text-n-800 hover:bg-n-200"}`}
     >
       {label} <span className="text-xs text-muted">{counts[t]}</span>
     </button>
@@ -207,11 +207,11 @@ export function CommentList({
     <aside className="flex w-[420px] shrink-0 flex-col">
       <div className="space-y-2 p-4 pb-2">
         <div className="flex gap-2">{pill("all", "All")}{pill("open", "Open")}{pill("resolved", "Resolved")}</div>
-        <div className="flex items-center gap-3 text-xs text-muted">
-          <label className="flex items-center gap-1"><input type="checkbox" checked={mine} onChange={(e) => onMine(e.target.checked)} /> Only mine</label>
+        <div className="flex items-center gap-4 text-xs text-muted">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={mine} onChange={(e) => onMine(e.target.checked)} /> Only mine</label>
           {me.role === "creative" && (
             <>
-              <label className="flex items-center gap-1"><input type="checkbox" checked={unpushed} onChange={(e) => onUnpushed(e.target.checked)} /> Not in Jira</label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={unpushed} onChange={(e) => onUnpushed(e.target.checked)} /> Not in Jira</label>
               <button disabled={!anyPushable} onClick={onPushAll} className="ml-auto font-medium text-brand enabled:hover:underline disabled:opacity-40">
                 Push all to Jira
               </button>
@@ -219,7 +219,7 @@ export function CommentList({
           )}
         </div>
       </div>
-      <div className="flex-1 space-y-3 overflow-y-auto p-4 pt-2">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4 pt-2">
         {threads.length === 0 && (
           <p className="rounded-xl border border-dashed border-control bg-white/60 p-6 text-center text-sm text-muted">
             No comments yet. Click anywhere on the design, then type your comment.
@@ -307,16 +307,16 @@ export function Composer({
 
   return (
     <div
-      className="relative mx-auto w-full max-w-2xl rounded-xl border border-line bg-white p-3 shadow-md"
+      className="relative mx-auto w-full max-w-2xl rounded-xl border border-line bg-white p-4 shadow-md"
       onFocusCapture={() => setFocused(true)}
       onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false); }}
     >
       {suggestions.length > 0 && (
-        <ul className="absolute bottom-full left-3 right-3 mb-1 rounded-lg border border-line bg-white shadow">
+        <ul className="absolute bottom-full left-3 right-3 mb-2 rounded-lg border border-line bg-white shadow">
           {suggestions.map((u) => (
             <li key={u.id}>
-              <button className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-brand-soft" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
-                <Avatar user={{ id: u.id, name: u.name, initials: u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase(), role: "requester" }} size={20} /> {u.name}
+              <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-brand-soft" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
+                <Avatar user={{ id: u.id, name: u.name, initials: u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase(), role: "requester" }} size={24} /> {u.name}
               </button>
             </li>
           ))}
@@ -331,9 +331,9 @@ export function Composer({
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
         placeholder={audio ? "Write a comment… (it's stamped with the time you're listening to)" : isVideo ? "Write a comment… (click the video to pin a spot)" : "Write a comment… (click the design to pin a spot)"}
         aria-label="Write a comment"
-        className="w-full resize-none bg-transparent px-1 text-[15px] outline-none placeholder:text-n-650"
+        className="w-full resize-none bg-transparent px-2 text-sm outline-none placeholder:text-n-650"
       />
-      <div className={`mt-2 flex-wrap items-center gap-3 text-xs ${expanded ? "flex" : "hidden"}`}>
+      <div className={`mt-2 flex-wrap items-center gap-4 text-xs ${expanded ? "flex" : "hidden"}`}>
         <button
           type="button"
           onClick={() => { setBody((b) => `${b}@`); area.current?.focus(); }}
@@ -346,7 +346,7 @@ export function Composer({
         {audio ? (
           <span className="text-muted">Tip: play to the moment, then comment</span>
         ) : draft?.hasPin ? (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-2">
             <Tag tone="ok" icon="check">Pinned on design</Tag>
             <button onClick={onClearPin} className="text-muted hover:underline">Remove</button>
           </span>
@@ -356,7 +356,7 @@ export function Composer({
           </span>
         )}
         {isVideo && (
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-2">
             <input type="checkbox" checked={withTime} onChange={(e) => setWithTime(e.target.checked)} aria-label="Attach a timestamp" />
             At{" "}
             {manualTime ? (
@@ -368,7 +368,7 @@ export function Composer({
                 placeholder="1:23"
                 aria-label="Time in the file, like 1:23"
                 aria-invalid={needsTime && typed.trim() !== ""}
-                className="w-16 rounded border border-control px-1.5 py-0.5 font-mono disabled:opacity-40"
+                className="w-16 rounded border border-control px-2 py-0 font-mono disabled:opacity-40"
               />
             ) : (
               <span className="font-mono">{formatTime(draft?.capturedMs ?? 0)}</span>
@@ -379,7 +379,7 @@ export function Composer({
         <button
           onClick={submit}
           disabled={!body.trim() || needsTime}
-          className="ml-auto rounded-lg bg-brand px-5 py-1.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650"
+          className="ml-auto rounded-lg bg-brand px-6 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650"
         >
           Post
         </button>

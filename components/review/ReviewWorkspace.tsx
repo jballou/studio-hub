@@ -230,11 +230,11 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   );
 
   const src = localSrc ?? version.src;
-  const btn = "rounded-full border border-control px-4 py-1.5 text-sm font-medium hover:bg-brand-soft disabled:opacity-40";
+  const btn = "rounded-full border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-40";
 
   return (
     <div className="paper flex h-screen flex-col">
-      <header className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-5 py-2.5 text-sm">
+      <header className="flex flex-wrap items-center gap-4 border-b border-line bg-white px-6 py-2 text-sm">
         <h1 className="truncate font-semibold"><Link href={`/projects/${asset.projectKey}`} className="font-mono text-brand hover:underline" title="Open project">{asset.projectKey}</Link> · {asset.name}</h1>
         <StageTag stage={stage} />
         <span className="h-5 w-px bg-line" />
@@ -243,7 +243,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           <button
             disabled={closed}
             onClick={() => { setStage("Delivered"); void repo.setReviewState(asset.id, "approved"); celebrate(); }}
-            className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
+            className="flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-60"
           >
             <Icon name="delivered" size={16} /> {closed ? "Approved" : "Mark as approved"}
           </button>
@@ -251,49 +251,49 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
 
         <div className="relative ml-auto flex items-center">
           <div className="flex items-stretch rounded-full bg-brand-soft text-ink">
-            <button onClick={() => setShareOpen(true)} className="flex items-center gap-2 rounded-l-full py-1.5 pl-4 pr-3 text-sm font-medium hover:bg-brand-fill/20">
+            <button onClick={() => setShareOpen(true)} className="flex items-center gap-2 rounded-l-full py-2 pl-4 pr-4 text-sm font-medium hover:bg-brand-fill/20">
               <Icon name="users" size={16} /> Share
             </button>
-            <span className="my-1.5 w-px bg-brand-fill/40" />
-            <button onClick={() => setShareMenu((o) => !o)} aria-label="Quick share options" aria-expanded={shareMenu} className="flex items-center rounded-r-full pl-2 pr-3 hover:bg-brand-fill/20">
+            <span className="my-2 w-px bg-brand-fill/40" />
+            <button onClick={() => setShareMenu((o) => !o)} aria-label="Quick share options" aria-expanded={shareMenu} className="flex items-center rounded-r-full pl-2 pr-4 hover:bg-brand-fill/20">
               <Icon name="chevronDown" size={14} />
             </button>
           </div>
           {shareMenu && (
-            <div className="absolute right-12 top-full z-30 mt-1 w-64 rounded-xl border border-line bg-white p-1 text-sm shadow-lg">
+            <div className="absolute right-12 top-full z-30 mt-2 w-64 rounded-xl border border-line bg-white p-2 text-sm shadow-lg">
               <button
                 onClick={async () => { setCopied(await copyText(reviewLink(asset))); setTimeout(() => { setCopied(false); setShareMenu(false); }, 1200); }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-medium hover:bg-n-150"
+                className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left font-medium hover:bg-n-150"
               >
                 <Icon name={copied ? "check" : "link"} size={16} /> {copied ? "Link copied" : "Copy link"}
               </button>
-              <p className="px-3 pb-2 pt-1 text-xs text-muted">{asset.linkAccess ? "Anyone at SurveyMonkey with the link can open it." : "Only people with access can open it. Use Share to add people."}</p>
+              <p className="px-4 pb-2 pt-2 text-xs text-muted">{asset.linkAccess ? "Anyone at SurveyMonkey with the link can open it." : "Only people with access can open it. Use Share to add people."}</p>
             </div>
           )}
           <button onClick={() => setMenuOpen((o) => !o)} aria-label="More options" aria-expanded={menuOpen} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-brand-soft">
             <Icon name="more" size={18} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-full z-20 mt-1 w-72 space-y-3 rounded-xl border border-line bg-white p-3 text-xs shadow-lg">
+            <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-4 rounded-xl border border-line bg-white p-4 text-xs shadow-lg">
               {canShare && (
-                <button onClick={() => { setMenuOpen(false); setTrashAsk(true); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-medium text-bad-fg hover:bg-bad-bg">
+                <button onClick={() => { setMenuOpen(false); setTrashAsk(true); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-medium text-bad-fg hover:bg-bad-bg">
                   <Icon name="trash" size={16} /> Move to Trash
                 </button>
               )}
-              {!isJira && <p className="font-semibold uppercase tracking-wide text-muted">Demo controls (mock data)</p>}
+              {!isJira && <p className="text-muted eyebrow">Demo controls (mock data)</p>}
               {!isJira && (
                 <label className="flex items-center justify-between gap-2">Viewing as
-                  <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
+                  <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-2 py-2">
                     {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
                   </select>
                 </label>
               )}
-              {!isJira && <label className="flex items-center gap-1.5">
+              {!isJira && <label className="flex items-center gap-2">
                 <input type="checkbox" checked={simFail} onChange={(e) => { setSimFail(e.target.checked); mockControls.simulatePushFailure = e.target.checked; }} />
                 Make the next Jira push fail
               </label>}
               {!isJira && kind === "video" && (
-                <label className="block cursor-pointer rounded border border-control px-2 py-1.5 text-center hover:bg-brand-soft">
+                <label className="block cursor-pointer rounded border border-control px-2 py-2 text-center hover:bg-brand-soft">
                   Load a local video file
                   <input type="file" accept="video/*" className="hidden" onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -309,12 +309,12 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       {asset.batch && siblings.length > 1 && (() => {
         const i = siblings.findIndex((s) => s.id === asset.id);
         const prev = siblings[i - 1], next = siblings[i + 1];
-        const link = "rounded-full border border-control px-3 py-1 text-sm font-medium hover:bg-brand-soft";
+        const link = "rounded-full border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft";
         return (
-          <nav aria-label="Items in this batch" className="flex items-center gap-3 border-b border-line bg-n-100 px-5 py-2 text-sm">
+          <nav aria-label="Items in this batch" className="flex items-center gap-4 border-b border-line bg-n-100 px-6 py-2 text-sm">
             <span className="font-semibold">{asset.batch.title}</span>
             <span className="text-muted">Item {i + 1} of {siblings.length}</span>
-            <ol className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
+            <ol className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
               {siblings.map((s, n) => (
                 <li key={s.id}>
                   <Link href={`/review/${s.id}`} title={s.name} aria-current={s.id === asset.id ? "page" : undefined} className={`flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold ${s.id === asset.id ? "bg-brand text-n-50" : "border border-control bg-white hover:bg-brand-soft"}`}>{n + 1}</Link>
@@ -327,20 +327,20 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         );
       })()}
 
-      <div className="flex items-center gap-3 border-b border-line bg-white px-5 py-2">
+      <div className="flex items-center gap-4 border-b border-line bg-white px-6 py-2">
         <label className="relative">
           <span className="sr-only">Version</span>
           <select
             value={version.id}
             onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); setZoom("fit"); }}
-            className="appearance-none rounded-full border border-control bg-white py-1.5 pl-4 pr-9 text-sm"
+            className="appearance-none rounded-full border border-control bg-white py-2 pl-4 pr-10 text-sm"
           >
             {versions.map((v) => <option key={v.id} value={v.id}>Version {v.number}</option>)}
           </select>
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevronDown" size={14} /></span>
         </label>
         {canShare && (
-          <Link href={`/submit?version=${asset.id}`} className="flex items-center gap-1.5 rounded-full border border-brand px-4 py-1.5 text-sm font-medium text-brand hover:bg-brand-soft" title="Upload a new version of this design for re-review">
+          <Link href={`/submit?version=${asset.id}`} className="flex items-center gap-2 rounded-full border border-brand px-4 py-2 text-sm font-medium text-brand hover:bg-brand-soft" title="Upload a new version of this design for re-review">
             <Icon name="upload" size={14} /> New version
           </Link>
         )}
@@ -349,14 +349,14 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           onClick={() => setCommenting((c) => !c)}
           aria-pressed={commenting}
           title={commenting ? "Commenting is on. Click the design to add a pin" : "Turn commenting on"}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${commenting ? "bg-brand-soft text-ink" : "border border-control"}`}
+          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${commenting ? "bg-brand-soft text-ink" : "border border-control"}`}
         >
           <Icon name="comment" size={16} /> Comment
         </button>
 
         <div className="ml-auto flex items-center gap-2">
           {firstUnread && (
-            <button onClick={() => select(firstUnread)} className="flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-medium text-n-50 hover:bg-brand-dark">
+            <button onClick={() => select(firstUnread)} className="flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-xs font-medium text-n-50 hover:bg-brand-dark">
               {unreadIds.size} unread <Icon name="chevronRight" size={12} />
             </button>
           )}
@@ -376,7 +376,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       </div>
 
       {(asset.instructions || asset.dueAt) && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-brand-soft px-5 py-2 text-sm">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-brand-soft px-6 py-2 text-sm">
           <Icon name="feedback" size={16} />
           <span className="font-medium">
             {people.find((u) => u.id === asset.submittedBy)?.name ?? "A teammate"} asked for your feedback
@@ -406,10 +406,10 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           {kind === "pdf" && (
             <>
               <PdfViewer src={src} page={page} zoom={zoom} onPageCount={setPageCount} overlay={overlay} />
-              <div className="flex items-center justify-center gap-3 pb-1 text-sm">
-                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page" className="rounded-full border border-control px-3 py-0.5 disabled:opacity-40">‹</button>
+              <div className="flex items-center justify-center gap-4 pb-2 text-sm">
+                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page" className="rounded-full border border-control px-4 py-0 disabled:opacity-40">‹</button>
                 <span>Page {page} of {pageCount}</span>
-                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} aria-label="Next page" className="rounded-full border border-control px-3 py-0.5 disabled:opacity-40">›</button>
+                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} aria-label="Next page" className="rounded-full border border-control px-4 py-0 disabled:opacity-40">›</button>
               </div>
             </>
           )}
@@ -430,7 +430,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
               handleRef={video}
             />
           )}
-          <div className="px-4 pb-3 pt-1">
+          <div className="px-4 pb-4 pt-2">
             <Composer
               me={me}
               isVideo={timed}

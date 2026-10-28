@@ -5,9 +5,9 @@ import { PeoplePicker } from "@/components/ui/PeoplePicker";
 import { optionsOf, type AnswerValue, type QNode } from "@/lib/brief/flow";
 import type { Person } from "@/lib/types";
 
-const field = "w-full rounded-xl border border-control bg-white px-4 py-3 text-[15px]";
-const primary = "rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40";
-const ghost = "rounded-xl border border-control bg-white px-4 py-2.5 text-sm font-medium hover:bg-brand-soft";
+const field = "w-full rounded-xl border border-control bg-white px-4 py-4 text-sm";
+const primary = "rounded-xl bg-brand px-6 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40";
+const ghost = "rounded-xl border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft";
 
 /** One answer control, chosen by question type. Calls onSubmit with the finished answer. */
 export function QuestionInput({
@@ -36,7 +36,7 @@ export function QuestionInput({
     return (
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
-          <button key={o.id} type="button" onClick={() => onSubmit(o.id)} className={`rounded-xl border px-4 py-2.5 text-sm font-medium hover:bg-brand-soft ${initial === o.id ? "border-brand bg-brand-soft" : "border-control bg-white"}`}>
+          <button key={o.id} type="button" onClick={() => onSubmit(o.id)} className={`rounded-xl border px-4 py-2 text-sm font-medium hover:bg-brand-soft ${initial === o.id ? "border-brand bg-brand-soft" : "border-control bg-white"}`}>
             {o.label}
           </button>
         ))}
@@ -48,18 +48,18 @@ export function QuestionInput({
 
   if (node.qtype === "multichoice") {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {options.map((o) => {
             const on = multi.includes(o.id);
             return (
-              <button key={o.id} type="button" aria-pressed={on} onClick={() => setMulti(on ? multi.filter((x) => x !== o.id) : [...multi, o.id])} className={`rounded-xl border px-4 py-2.5 text-sm font-medium ${on ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-n-150"}`}>
+              <button key={o.id} type="button" aria-pressed={on} onClick={() => setMulti(on ? multi.filter((x) => x !== o.id) : [...multi, o.id])} className={`rounded-xl border px-4 py-2 text-sm font-medium ${on ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-n-150"}`}>
                 {on && "✓ "}{o.label}
               </button>
             );
           })}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button type="button" disabled={node.required && multi.length === 0} onClick={() => onSubmit(multi)} className={primary}>{submitLabel}</button>
           {skip}
           {onCancel && <button type="button" onClick={onCancel} className={ghost}>Cancel</button>}
@@ -70,9 +70,9 @@ export function QuestionInput({
 
   if (node.qtype === "people") {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <PeoplePicker label="" value={people} onChange={setPeople} placeholder="Search by name" />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button type="button" disabled={node.required && people.length === 0} onClick={() => onSubmit(people)} className={primary}>{submitLabel}</button>
           {skip}
           {onCancel && <button type="button" onClick={onCancel} className={ghost}>Cancel</button>}
@@ -83,7 +83,7 @@ export function QuestionInput({
 
   const done = () => { if (!linkBad && (text.trim() || !node.required)) onSubmit(text.trim()); };
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {node.qtype === "longtext" ? (
         <textarea
           ref={ref}
@@ -109,7 +109,7 @@ export function QuestionInput({
         />
       )}
       {linkBad && <p role="alert" className="text-sm text-bad-fg">That doesn&apos;t look like a link. It should start with https://</p>}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <button type="button" disabled={linkBad || (node.required && !text.trim())} onClick={done} className={primary}>{submitLabel}</button>
         {skip}
         {onCancel && <button type="button" onClick={onCancel} className={ghost}>Cancel</button>}

@@ -63,20 +63,20 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
         aria-haspopup="dialog" aria-expanded={open}
         aria-label={badge > 0 ? `Notifications: ${badge} new` : "Notifications"}
         title={badge > 0 ? `${badge} new` : "Notifications"}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-100"
       >
         <Icon name="bell" size={18} />
-        {badge > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-bad-fg px-1 text-[10px] font-bold leading-none text-n-50 ring-2 ring-n-50">{badge > 99 ? "99+" : badge}</span>}
+        {badge > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-bad-fg px-0 text-xs font-bold leading-none text-n-50 ring-2 ring-white">{badge > 99 ? "99+" : badge}</span>}
       </button>
 
       {open && (
-        <div role="dialog" aria-label="Notifications" className={`absolute z-50 w-80 rounded-2xl border border-line bg-white shadow-xl ${collapsed ? "bottom-0 left-full ml-3" : "bottom-full left-0 mb-2"}`}>
-          <div className="flex items-center border-b border-line px-4 py-3">
+        <div role="dialog" aria-label="Notifications" className={`absolute z-50 w-80 rounded-2xl border border-line bg-white shadow-xl ${collapsed ? "bottom-0 left-full ml-4" : "bottom-full left-0 mb-2"}`}>
+          <div className="flex items-center border-b border-line px-4 py-4">
             <h2 className="text-sm font-bold">Notifications</h2>
             {inbox.unread > 0 && <button onClick={() => { void notificationsRepo.markRead().then(setInbox).catch(() => {}); }} className="ml-auto text-xs font-medium text-brand hover:underline">Mark all read</button>}
           </div>
           {waiting > 0 && (
-            <Link href="/blocking" onClick={() => setOpen(false)} className="flex items-center gap-3 border-b border-line bg-bad-bg px-4 py-3 text-sm hover:opacity-90">
+            <Link href="/blocking" onClick={() => setOpen(false)} className="flex items-center gap-4 border-b border-line bg-bad-bg px-4 py-4 text-sm hover:opacity-90">
               <Icon name="danger" size={16} />
               <span className="flex-1 font-medium text-bad-fg">{waiting} {waiting === 1 ? "project is" : "projects are"} waiting on you</span>
               <Icon name="chevronRight" size={14} />
@@ -90,11 +90,11 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
                 const m = message(n);
                 return (
                   <li key={n.id}>
-                    <button onClick={() => go(n)} className={`flex w-full items-start gap-3 border-b border-line px-4 py-3 text-left last:border-b-0 hover:bg-n-100 ${n.readAt ? "" : "bg-brand-soft/40"}`}>
-                      <span aria-hidden="true" className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.readAt ? "bg-transparent" : "bg-brand"}`} />
-                      <span className="min-w-0 flex-1 text-sm leading-snug">
+                    <button onClick={() => go(n)} className={`flex w-full items-start gap-4 border-b border-line px-4 py-4 text-left last:border-b-0 hover:bg-n-100 ${n.readAt ? "" : "bg-brand-soft/40"}`}>
+                      <span aria-hidden="true" className={`mt-2 h-2 w-2 shrink-0 rounded-full ${n.readAt ? "bg-transparent" : "bg-brand"}`} />
+                      <span className="min-w-0 flex-1 text-sm">
                         <span className="font-semibold">{m.who}</span> {m.what}
-                        <span className="mt-0.5 block text-xs text-muted">{n.projectKey} · {relativeTime(n.createdAt)}{n.readAt ? "" : " · New"}</span>
+                        <span className="mt-0 block text-xs text-muted">{n.projectKey} · {relativeTime(n.createdAt)}{n.readAt ? "" : " · New"}</span>
                       </span>
                     </button>
                   </li>

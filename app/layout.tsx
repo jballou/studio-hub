@@ -18,7 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://prod.smassets.net/assets/static/fonts/national2/bold.woff2" />
       </head>
       <body className="paper flex min-h-full flex-row">
-        <Suspense fallback={<div className="w-16 shrink-0 border-r border-line bg-white" />}>
+        <Suspense fallback={<div className="w-16 shrink-0" />}>
           <Sidebar />
         </Suspense>
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>

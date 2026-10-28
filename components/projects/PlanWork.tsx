@@ -25,7 +25,7 @@ export function PlanWork({ project, onPlanned, size = "sm" }: { project: Pick<Pr
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
-        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-brand font-medium text-brand hover:bg-brand-soft ${size === "md" ? "px-3 py-1.5 text-sm" : "px-2.5 py-1 text-xs"}`}
+        className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-brand font-medium text-brand hover:bg-brand-soft ${size === "md" ? "px-4 py-2 text-sm" : "px-2 py-2 text-xs"}`}
       >
         <Icon name="calendarDays" size={size === "md" ? 16 : 14} /> Plan work
       </button>
@@ -63,28 +63,28 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
   const today = localDay();
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[14vh]" onMouseDown={(e) => { e.stopPropagation(); onClose(); }} onClick={(e) => e.stopPropagation()}>
-      <div role="dialog" aria-modal="true" aria-label={`Plan work on ${project.jiraKey}`} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-line bg-white p-5 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label={`Plan work on ${project.jiraKey}`} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-line bg-white p-6 shadow-xl">
         <h2 className="text-lg font-bold">Plan work</h2>
-        <p className="mb-4 mt-1 text-sm text-muted">{project.jiraKey} · {project.title}. When does work start?{project.deadline ? ` Due ${project.deadline}.` : ""}</p>
-        {error && <div className="mb-3"><Callout tone="bad" icon="alert">{error}</Callout></div>}
+        <p className="mb-4 mt-2 text-sm text-muted">{project.jiraKey} · {project.title}. When does work start?{project.deadline ? ` Due ${project.deadline}.` : ""}</p>
+        {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
         <div className="space-y-2">
-          <button autoFocus disabled={busy} onClick={() => save(today)} className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-50">
+          <button autoFocus disabled={busy} onClick={() => save(today)} className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-50">
             Start today
           </button>
           {!picking ? (
-            <button disabled={busy} onClick={() => setPicking(true)} className="flex w-full items-center justify-center gap-2 rounded-lg border border-control px-4 py-2.5 text-sm font-medium hover:bg-brand-soft">
+            <button disabled={busy} onClick={() => setPicking(true)} className="flex w-full items-center justify-center gap-2 rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">
               <Icon name="calendarDays" size={16} /> Choose a start date
             </button>
           ) : (
-            <div className="rounded-lg border border-control p-3">
+            <div className="rounded-lg border border-control p-4">
               <label className="block text-sm font-semibold">Start date
-                <div className="mt-1"><DatePicker autoFocus value={date} max={project.deadline || undefined} onChange={setDate} /></div>
+                <div className="mt-2"><DatePicker autoFocus value={date} max={project.deadline || undefined} onChange={setDate} /></div>
               </label>
               <button disabled={busy || !date} onClick={() => save(date)} className="mt-2 w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save start date"}</button>
             </div>
           )}
         </div>
-        <button onClick={onClose} className="mt-3 text-sm font-medium text-brand hover:underline">Cancel</button>
+        <button onClick={onClose} className="mt-4 text-sm font-medium text-brand hover:underline">Cancel</button>
       </div>
     </div>
   );

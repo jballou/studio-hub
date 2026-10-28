@@ -54,8 +54,8 @@ function NameLink({ id, name }: { id: string; name: string }) {
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-line bg-white p-5">
-      <div className="mb-3 flex items-center"><h2 className="text-lg font-semibold">{title}</h2><span className="ml-auto">{action}</span></div>
+    <section className="rounded-xl border border-line bg-white p-6">
+      <div className="mb-4 flex items-center"><h2 className="text-lg font-semibold">{title}</h2><span className="ml-auto">{action}</span></div>
       {children}
     </section>
   );
@@ -130,26 +130,26 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
 
   return (
     <main className="w-full p-6">
-      <nav aria-label="Breadcrumb" className="mb-1 flex items-center gap-1 text-sm text-muted">
+      <nav aria-label="Breadcrumb" className="mb-2 flex items-center gap-2 text-sm text-muted">
         <Link href="/projects" className="hover:underline">Projects</Link>
         {(rel?.ancestors ?? []).map((a) => (
-          <span key={a.key} className="flex min-w-0 items-center gap-1">
+          <span key={a.key} className="flex min-w-0 items-center gap-2">
             <Icon name="chevronRight" size={12} />
             <IssueIcon level={a.level} typeName={a.typeName} size={14} />
             <IssueLink r={a} className="max-w-48 truncate" />
           </span>
         ))}
         <Icon name="chevronRight" size={12} />
-        <span className="flex items-center gap-1"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.jiraKey}</span>
+        <span className="flex items-center gap-2"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.jiraKey}</span>
       </nav>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-4">
         <StarButton starred={favs.isStarred(project.jiraKey)} onToggle={() => favs.toggle(project.jiraKey, project.title)} label={project.title} />
         <h1 className="text-2xl font-bold">{project.title}</h1>
         <StatusMenu project={project} canChange={canManage} onChanged={reloadProject} />
         {late !== null && <Tag tone="bad" icon="alert">Past due · {pastDueWords(late)}</Tag>}
         <FlagTags flag={project.flag} block={block} />
         {needsStartDate(project) && <NoStartTag />}
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-4">
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>
             {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-full ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
           </div>
@@ -165,7 +165,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         </div>
       </div>
 
-      <div role="tablist" aria-label="Project sections" className="mb-5 flex gap-6 border-b border-line">
+      <div role="tablist" aria-label="Project sections" className="mb-6 flex gap-6 border-b border-line">
         {([["overview", "Overview", null], ["designs", "Designs", assets.length], ["calendar", "Calendar", items.length]] as const).map(([id, label, n]) => (
           <button
             key={id}
@@ -175,36 +175,36 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             className={`-mb-px flex items-center gap-2 border-b-2 pb-2 text-sm font-medium ${tab === id ? "border-brand text-brand" : "border-transparent text-n-800 hover:text-ink"}`}
           >
             {label}
-            {n ? <span className="rounded-full bg-brand px-1.5 text-xs text-n-50">{n}</span> : null}
+            {n ? <span className="rounded-full bg-brand px-2 text-xs text-n-50">{n}</span> : null}
           </button>
         ))}
       </div>
 
       {tab === "overview" && (
-        <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-          <div className="space-y-5">
+        <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+          <div className="space-y-6">
             {late !== null && (
               <section role="alert" aria-label="Past due" className="rounded-xl border border-bad-line bg-bad-bg p-4 text-bad-fg">
                 <h2 className="flex items-center gap-2 text-lg font-semibold"><Icon name="alert" size={18} /> Past due by {pastDueWords(late)}</h2>
-                <p className="mt-1 text-sm">The deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })} and this ticket is still {project.statusName ?? project.stage}.</p>
+                <p className="mt-2 text-sm">The deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })} and this ticket is still {project.statusName ?? project.stage}.</p>
               </section>
             )}
             {(block || project.flag === "blocked") && (
-              <section className="rounded-xl border border-bad-line bg-bad-bg p-5 text-bad-fg" aria-label="Blocked">
-                <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Icon name="close" size={18} /> {block ? `Blocked by ${block.blockedBy.name}` : "Blocked in Jira, but nobody is named"}</h2>
+              <section className="rounded-xl border border-bad-line bg-bad-bg p-6 text-bad-fg" aria-label="Blocked">
+                <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold"><Icon name="close" size={18} /> {block ? `Blocked by ${block.blockedBy.name}` : "Blocked in Jira, but nobody is named"}</h2>
                 {block ? (
                   <>
                     <p className="text-sm">{block.reason}</p>
-                    <p className="mt-1 text-xs">For {daysSince(block.since)} {daysSince(block.since) === 1 ? "day" : "days"} · marked by {block.setBy}</p>
+                    <p className="mt-2 text-xs">For {daysSince(block.since)} {daysSince(block.since) === 1 ? "day" : "days"} · marked by {block.setBy}</p>
                     {iHoldIt && <p className="mt-2 text-sm font-medium">This is waiting on you. Clear it once you&apos;ve done what&apos;s needed.</p>}
                   </>
                 ) : (
                   <p className="text-sm">Say who it&apos;s waiting on so they get a notification and can act on it.</p>
                 )}
                 {blockError && <p role="alert" className="mt-2 text-sm font-medium">{blockError}</p>}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {canUnblock && <button onClick={() => setUnblocking(true)} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark">{iHoldIt ? "I\u2019ve unblocked this" : "Mark as unblocked"}</button>}
-                  {canManage && <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-1.5 text-sm font-medium text-ink hover:bg-brand-soft">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {canUnblock && <button onClick={() => setUnblocking(true)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">{iHoldIt ? "I\u2019ve unblocked this" : "Mark as unblocked"}</button>}
+                  {canManage && <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-brand-soft">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
                 </div>
               </section>
             )}
@@ -212,14 +212,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             {openBlockers(rel).length > 0 && (
               <section role="status" aria-label="Linked blockers" className="rounded-xl border border-warn-line bg-warn-bg p-4 text-warn-fg">
                 <h2 className="flex items-center gap-2 text-base font-semibold"><Icon name="block" size={16} /> Waiting on linked work</h2>
-                <p className="mt-1 text-sm">{openBlockers(rel).map((l, i) => <span key={l.key}>{i > 0 && ", "}<IssueLink r={l} className="font-medium underline" /> ({l.status})</span>)} {openBlockers(rel).length === 1 ? "is" : "are"} linked as blocking this ticket and not finished yet.</p>
+                <p className="mt-2 text-sm">{openBlockers(rel).map((l, i) => <span key={l.key}>{i > 0 && ", "}<IssueLink r={l} className="font-medium underline" /> ({l.status})</span>)} {openBlockers(rel).length === 1 ? "is" : "are"} linked as blocking this ticket and not finished yet.</p>
               </section>
             )}
 
             <Card title="Details">
               <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
                 <div><dt className="inline text-muted">Requester: </dt><dd className="inline"><NameLink id={project.requesterId} name={project.requesterName ?? person(project.requesterId)?.name ?? "Unknown"} /></dd></div>
-                <div><dt className="inline text-muted">Type: </dt><dd className="inline-flex items-center gap-1 align-middle"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.issueType?.name ?? project.type}</dd></div>
+                <div><dt className="inline text-muted">Type: </dt><dd className="inline-flex items-center gap-2 align-middle"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.issueType?.name ?? project.type}</dd></div>
                 {project.startDate !== undefined && <div><dt className="inline text-muted">Start date: </dt><dd className="inline">{project.startDate ? dayLabel(project.startDate, { month: "short", day: "numeric", year: "numeric" }) : "Not set"}</dd></div>}
                 <div><dt className="inline text-muted">Date submitted: </dt><dd className="inline">{dayLabel(project.submittedAt, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
                 <div><dt className="inline text-muted">Deadline: </dt><dd className={`inline ${late !== null ? "font-semibold text-bad-fg" : ""}`}>{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}{late !== null ? ` (${pastDueWords(late)} late)` : ""}</dd></div>
@@ -238,7 +238,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                       </span>
                       <span className={`h-0.5 flex-1 ${i === STAGES.length - 1 ? "bg-transparent" : i < current ? "bg-brand" : "bg-n-200"}`} />
                     </div>
-                    <span className={`mt-1.5 font-medium ${i === current ? "text-ink" : "text-muted"}`}>{s}</span>
+                    <span className={`mt-2 font-medium ${i === current ? "text-ink" : "text-muted"}`}>{s}</span>
                   </li>
                 ))}
               </ol>
@@ -254,7 +254,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
               {project.briefSections?.length ? (
                 <div className="space-y-4">
                   {project.briefSections.map((x) => (
-                    <div key={x.label}><h3 className="text-sm font-semibold">{x.label}</h3><p className="mt-0.5 whitespace-pre-wrap text-sm">{x.value}</p></div>
+                    <div key={x.label}><h3 className="text-sm font-semibold">{x.label}</h3><p className="mt-0 whitespace-pre-wrap text-sm">{x.value}</p></div>
                   ))}
                 </div>
               ) : brief.length === 0 ? (
@@ -268,7 +268,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                   {brief.map((s) => (
                     <div key={s.key}>
                       <h3 className="text-sm font-semibold">{s.label}</h3>
-                      <p className="mt-0.5 whitespace-pre-wrap text-sm">{project.brief?.[s.key] as string}</p>
+                      <p className="mt-0 whitespace-pre-wrap text-sm">{project.brief?.[s.key] as string}</p>
                     </div>
                   ))}
                 </div>
@@ -276,18 +276,18 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             </Card>
           </div>
 
-          <aside className="space-y-5">
+          <aside className="space-y-6">
             <div>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Current project phase</h2>
+              <h2 className="mb-2 text-muted eyebrow">Current project phase</h2>
               <div className="rounded-xl bg-n-150 p-4 text-sm">
                 <p className="mb-2 font-semibold">{shownStage}</p>
-                <ul className="list-disc space-y-1 pl-5">{PHASE_TIPS[shownStage].map((t) => <li key={t}>{t}</li>)}</ul>
+                <ul className="list-disc space-y-2 pl-6">{PHASE_TIPS[shownStage].map((t) => <li key={t}>{t}</li>)}</ul>
               </div>
             </div>
             {next.length > 0 && (
               <div>
-                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Next</h2>
-                <ul className="list-disc space-y-1 pl-5 text-sm">{next.map((s) => <li key={s}>{s}</li>)}</ul>
+                <h2 className="mb-2 text-muted eyebrow">Next</h2>
+                <ul className="list-disc space-y-2 pl-6 text-sm">{next.map((s) => <li key={s}>{s}</li>)}</ul>
               </div>
             )}
           </aside>
@@ -297,17 +297,17 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
       {tab === "designs" && (
         assets.length === 0 ? (
           <div className="rounded-xl border border-dashed border-control bg-white/60 p-10 text-center">
-            <p className="mb-3 text-sm text-muted">Nothing has been shared for feedback yet.</p>
+            <p className="mb-4 text-sm text-muted">Nothing has been shared for feedback yet.</p>
             <Link href={`/submit?ticket=${project.jiraKey}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>
           </div>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {assets.map((a) => (
               <li key={a.id}>
                 <Link href={`/review/${a.id}`} className="block rounded-xl border border-line bg-white p-4 hover:border-brand">
                   <span className="mb-2 flex items-center gap-2"><Tag tone="neutral">{a.source ? a.source.label : a.kind}</Tag><span className="text-xs text-muted">{a.versionIds.length} version{a.versionIds.length > 1 ? "s" : ""}</span></span>
                   <span className="block font-medium">{a.name}</span>
-                  {a.dueAt && <span className="mt-1 block text-xs text-muted">Feedback by {formatDue(a.dueAt, a.dueTz)}</span>}
+                  {a.dueAt && <span className="mt-2 block text-xs text-muted">Feedback by {formatDue(a.dueAt, a.dueTz)}</span>}
                 </Link>
               </li>
             ))}
@@ -321,7 +321,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         ) : (
           <ul className="space-y-2">
             {items.map((i) => (
-              <li key={i.id} className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm">
+              <li key={i.id} className="flex items-center gap-4 rounded-xl border border-line bg-white px-4 py-4 text-sm">
                 <span className="w-28 text-muted">{dayLabel(i.date, { weekday: "short", month: "short", day: "numeric" })}</span>
                 <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
                 <span className="font-medium">{i.title}</span>

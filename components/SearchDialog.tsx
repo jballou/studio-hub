@@ -62,7 +62,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
           if (e.key === "Enter") go(hits[active]);
         }}
       >
-        <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+        <div className="flex items-center gap-2 border-b border-line px-4 py-4">
           <Icon name="search" size={18} />
           <input
             ref={input}
@@ -72,7 +72,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             aria-label="Search projects and designs"
             className="min-w-0 flex-1 bg-transparent text-sm outline-none"
           />
-          <kbd className="rounded border border-line px-1.5 text-xs text-muted">esc</kbd>
+          <kbd className="rounded border border-line px-2 text-xs text-muted">esc</kbd>
         </div>
         <ul className="max-h-80 overflow-y-auto p-2">
           {hits.length === 0 && <li className="p-4 text-center text-sm text-muted">No matches.</li>}
@@ -81,7 +81,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
               <button
                 onMouseEnter={() => setActive(i)}
                 onClick={() => go(h)}
-                className={`flex w-full flex-col rounded-lg px-3 py-2 text-left ${i === active ? "bg-brand-soft" : ""}`}
+                className={`flex w-full flex-col rounded-lg px-4 py-2 text-left ${i === active ? "bg-brand-soft" : ""}`}
               >
                 <span className="text-sm font-medium">{h.title}</span>
                 <span className="text-xs text-muted">{h.sub}</span>

@@ -183,7 +183,7 @@ export function AnnotationLayer({
             }}
           >
             <span
-              className="absolute -left-0.5 -top-6 rounded px-1.5 py-0.5 text-xs font-bold"
+              className="absolute -left-0.5 -top-6 rounded px-2 py-0 text-xs font-bold"
               style={{ background: color, color: ink }}
             >
               {label}

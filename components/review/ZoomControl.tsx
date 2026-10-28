@@ -28,20 +28,20 @@ export function ZoomControl({ zoom, onChange }: { zoom: Zoom; onChange: (z: Zoom
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Zoom: ${label(zoom)}`}
-        className="flex items-center gap-1.5 rounded-full border border-control bg-white py-1.5 pl-3 pr-2 text-sm hover:bg-brand-soft"
+        className="flex items-center gap-2 rounded-full border border-control bg-white py-2 pl-4 pr-2 text-sm hover:bg-brand-soft"
       >
         <Icon name="search" size={14} />
         <span className="w-9 text-left">{label(zoom)}</span>
         <Icon name="chevronDown" size={14} />
       </button>
       {open && (
-        <ul role="listbox" aria-label="Zoom" className="absolute left-0 top-full z-20 mt-1 w-32 rounded-xl border border-line bg-white p-1 shadow-lg">
+        <ul role="listbox" aria-label="Zoom" className="absolute left-0 top-full z-20 mt-2 w-32 rounded-xl border border-line bg-white p-2 shadow-lg">
           {options.map((z) => (
             <li key={z} role="option" aria-selected={z === zoom}>
-              {z !== "fit" && z === ZOOM_STEPS[0] && <div className="mx-2 my-1 border-t border-line" />}
+              {z !== "fit" && z === ZOOM_STEPS[0] && <div className="mx-2 my-2 border-t border-line" />}
               <button
                 onClick={() => { onChange(z); setOpen(false); }}
-                className={`flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm ${z === zoom ? "bg-n-150 font-medium" : "hover:bg-brand-soft"}`}
+                className={`flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left text-sm ${z === zoom ? "bg-n-150 font-medium" : "hover:bg-brand-soft"}`}
               >
                 <span className="w-4">{z === zoom && <Icon name="check" size={14} />}</span>
                 {label(z)}

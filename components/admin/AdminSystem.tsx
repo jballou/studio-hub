@@ -35,22 +35,22 @@ export function AdminSystem() {
 
   return (
     <main className="mx-auto w-full max-w-3xl p-6">
-      <div className="mb-3 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-4">
         <h1 className="text-2xl font-bold">System</h1>
-        <button onClick={load} disabled={loading} className="ml-auto rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft disabled:opacity-40">{loading ? "Checking…" : "Re-check"}</button>
+        <button onClick={load} disabled={loading} className="ml-auto rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-40">{loading ? "Checking…" : "Re-check"}</button>
       </div>
       <p className="mb-4 text-sm text-muted">Is everything the app depends on connected? Shows names and counts only, never secret values. Useful when handing this over.</p>
       {error && <Callout tone="bad" icon="alert">{error}</Callout>}
       <ul className="space-y-2">
         {data?.checks.map((c) => (
-          <li key={c.id} className="flex items-start gap-3 rounded-xl border border-line bg-white p-3">
+          <li key={c.id} className="flex items-start gap-4 rounded-xl border border-line bg-white p-4">
             <Tag tone={c.ok ? "ok" : "bad"} icon={c.ok ? "check" : "close"}>{c.ok ? "OK" : "Check"}</Tag>
             <div><p className="text-sm font-medium">{c.label}</p><p className="text-xs text-muted">{c.detail}</p></div>
           </li>
         ))}
       </ul>
       {data && (
-        <dl className="mt-5 grid grid-cols-[120px_1fr] gap-y-1 text-sm">
+        <dl className="mt-6 grid grid-cols-[120px_1fr] gap-y-2 text-sm">
           <dt className="text-muted">Environment</dt><dd>{data.build.env}</dd>
           <dt className="text-muted">Version</dt><dd className="font-mono text-xs">{data.build.commit ?? "local"}</dd>
           <dt className="text-muted">Jira site</dt><dd>{data.build.site ?? "Not set"}</dd>

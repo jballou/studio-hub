@@ -16,7 +16,7 @@ type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[96px_1fr] gap-2 py-1.5 text-sm">
+    <div className="grid grid-cols-[96px_1fr] gap-2 py-2 text-sm">
       <dt className="text-muted">{label}</dt>
       <dd className="min-w-0 break-words">{children}</dd>
     </div>
@@ -45,18 +45,18 @@ export function ItemPanel({
       <aside
         role="dialog"
         aria-label={item ? item.title : "Items on this day"}
-        className="fixed right-0 top-0 z-40 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-white p-5 shadow-xl"
+        className="fixed right-0 top-0 z-40 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-white p-6 shadow-xl"
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       >
         <button onClick={onClose} aria-label="Close" className="mb-2 flex h-8 w-8 items-center justify-center self-end rounded-full hover:bg-n-150"><Icon name="x" size={16} /></button>
 
         {panel.kind === "day" && (
           <>
-            <h2 className="mb-3 text-lg font-bold">{dayLabel(panel.day, { weekday: "long", month: "long", day: "numeric" })}</h2>
+            <h2 className="mb-4 text-lg font-bold">{dayLabel(panel.day, { weekday: "long", month: "long", day: "numeric" })}</h2>
             <ul className="space-y-2">
               {dayItems.map((i) => (
                 <li key={i.id}>
-                  <button onClick={() => onPick(i.id)} className="flex w-full items-center gap-2 rounded-xl border border-line p-3 text-left text-sm hover:border-brand">
+                  <button onClick={() => onPick(i.id)} className="flex w-full items-center gap-2 rounded-xl border border-line p-4 text-left text-sm hover:border-brand">
                     <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
                     <span className="min-w-0 flex-1 truncate font-medium">{i.title}</span>
                   </button>
@@ -75,7 +75,7 @@ export function ItemPanel({
               {item.type === "task" ? <Tag tone={item.status === "Published" ? "ok" : "neutral"}>{item.status === "Published" ? "Done" : "To do"}</Tag> : <Tag tone={STATUS_TONE[item.status]}>{item.status}</Tag>}
               {item.statusDerived && item.type !== "task" && <span className="text-xs text-muted" title="This source has no status column, so status is estimated from dates">estimated</span>}
             </div>
-            <h2 className="mb-3 text-xl font-bold leading-tight">{item.title}</h2>
+            <h2 className="mb-4 text-xl font-bold">{item.title}</h2>
             <dl className="divide-y divide-line border-y border-line">
               <Row label="Date">{dayLabel(item.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}{item.endDate && item.endDate !== item.date ? ` to ${dayLabel(item.endDate, { month: "short", day: "numeric" })}` : ""}{item.time != null ? ` · ${formatTime(item.time)}` : ""}</Row>
               {item.type !== "task" && item.dueDate && <Row label="Creative due">{dayLabel(item.dueDate, { weekday: "short", month: "short", day: "numeric" })}</Row>}
@@ -84,8 +84,8 @@ export function ItemPanel({
               {item.channel && <Row label="Channel">{item.channel}</Row>}
               {item.type === "task" ? <Row label="Visible to">Only you</Row> : <Row label="Source">{item.sourceName} · {item.sourceRef}</Row>}
             </dl>
-            {item.description && <p className="mt-3 whitespace-pre-wrap text-sm">{item.description}</p>}
-            <div className="mt-5 flex flex-wrap gap-2">
+            {item.description && <p className="mt-4 whitespace-pre-wrap text-sm">{item.description}</p>}
+            <div className="mt-6 flex flex-wrap gap-2">
               {/* Primary action first. Items tied to a known project open its home; others start a feedback request. */}
               {item.type === "task" ? (
                 <Link href="/my-day" className={primary}>Open My Day</Link>

@@ -24,12 +24,12 @@ export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; cap
           offset += len;
           return seg;
         })}
-        <text x="90" y="82" textAnchor="middle" className="fill-ink text-[30px] font-bold">{pct}%</text>
+        <text x="90" y="82" textAnchor="middle" className="fill-ink text-3xl font-bold">{pct}%</text>
       </svg>
-      <p className="mt-1 text-center text-sm text-muted">{caption}</p>
-      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+      <p className="mt-2 text-center text-sm text-muted">{caption}</p>
+      <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
         {parts.map((s) => (
-          <li key={s.key} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} aria-hidden />{s.label} <b className="tabular-nums">{s.count}</b></li>
+          <li key={s.key} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} aria-hidden />{s.label} <b className="tabular-nums">{s.count}</b></li>
         ))}
       </ul>
     </div>
@@ -49,7 +49,7 @@ export function TimelineMeter({ t, label }: { t: Timeline; label: string }) {
       <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={t.pct} aria-valuetext={`${t.pct}% of the time used, ${words}`} className="h-2 overflow-hidden rounded-full bg-n-150">
         <div className="h-full rounded-full" style={{ width: `${Math.max(t.pct, 3)}%`, background: BAR[t.state] }} />
       </div>
-      <div className="mt-1 flex justify-between gap-2 text-xs text-muted">
+      <div className="mt-2 flex justify-between gap-2 text-xs text-muted">
         <span>{day(t.from)}</span>
         <span className={t.state === "late" ? "font-semibold text-bad-fg" : t.state === "watch" ? "font-semibold text-warn-fg" : ""}>{words} · due {day(t.to)}</span>
       </div>
@@ -63,7 +63,7 @@ export function ScoreMeter({ score, compact }: { score: number | null; compact?:
   const color = score >= 80 ? "#08794a" : score >= 50 ? "#a95c18" : "#8a3734";
   return (
     <div>
-      <div className="flex items-baseline gap-1"><span className={`${compact ? "text-2xl" : "text-5xl"} font-bold tabular-nums`}>{score}</span><span className="text-lg font-semibold text-muted">%</span></div>
+      <div className="flex items-baseline gap-2"><span className={`${compact ? "text-2xl" : "text-5xl"} font-bold tabular-nums`}>{score}</span><span className="text-lg font-semibold text-muted">%</span></div>
       <div role="meter" aria-label="On-time score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} className="mt-2 h-2.5 overflow-hidden rounded-full bg-n-150">
         <div className="h-full rounded-full" style={{ width: `${Math.max(score, 2)}%`, background: color }} />
       </div>
@@ -83,7 +83,7 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[34rem]">
-        <div className="grid items-end border-b border-line pb-1.5 text-xs text-muted" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
+        <div className="grid items-end border-b border-line pb-2 text-xs text-muted" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
           <span className="sr-only">Ticket</span><span aria-hidden />
           {days.map((d, i) => <span key={d} className={`text-center ${i === todayIdx ? "font-bold text-brand" : ""}`}>{head(d)}</span>)}
         </div>
@@ -93,12 +93,12 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
           )}
           <ul>
             {bars.map((b) => (
-              <li key={b.key} className="grid items-center border-b border-dashed border-line py-1.5" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
-                <Link href={`/projects/${b.key}`} className="truncate pr-3 text-sm hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
+              <li key={b.key} className="grid items-center border-b border-dashed border-line py-2" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
+                <Link href={`/projects/${b.key}`} className="truncate pr-4 text-sm hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
                 <Link
                   href={`/projects/${b.key}`}
                   title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.startDate || b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
-                  className="flex h-8 items-center gap-1 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
+                  className="flex h-8 items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
                   style={{
                     gridColumn: `${b.from + 2} / ${b.to + 3}`,
                     background: `color-mix(in srgb, ${b.color} 22%, var(--card))`,

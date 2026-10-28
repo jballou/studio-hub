@@ -95,7 +95,7 @@ export function Sidebar() {
     : undefined;
 
   const row = (active: boolean) =>
-    `relative flex items-center gap-3 rounded-lg py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-3"} ${active ? "bg-n-200 text-ink" : "text-n-800 hover:bg-n-150"}`;
+    `relative flex items-center gap-2 rounded-xl py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-4"} ${active ? "bg-white text-ink shadow-sm" : "text-n-800 hover:bg-white/60"}`;
 
   const navLink = (i: Item, badge?: number) => {
     const active = i.match(pathname);
@@ -104,8 +104,8 @@ export function Sidebar() {
         <Icon name={i.icon} size={18} />
         {!collapsed && <span className="flex-1">{i.label}</span>}
         {!!badge && (collapsed
-          ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-bad-fg ring-2 ring-n-50" />
-          : <span className="rounded-full bg-bad-fg px-1.5 text-xs font-semibold text-n-50">{badge}</span>)}
+          ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-bad-fg ring-2 ring-white" />
+          : <span className="rounded-full bg-bad-fg px-2 text-xs font-semibold text-n-50">{badge}</span>)}
       </Link>
     );
   };
@@ -116,7 +116,7 @@ export function Sidebar() {
       aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       aria-expanded={!collapsed}
       title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-white/60"
     >
       <Icon name="panel" size={18} />
     </button>
@@ -126,12 +126,12 @@ export function Sidebar() {
     <>
       <nav
         aria-label="Main"
-        className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-line bg-n-50 p-3 transition-[width] duration-150 ${collapsed ? "w-16" : "w-60"}`}
+        className={`sticky top-0 flex h-screen shrink-0 flex-col p-4 transition-[width] duration-150 ${collapsed ? "w-16" : "w-64"}`}
       >
-        <div className={`mb-3 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
+        <div className={`mb-4 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
           <Link href="/projects" title="Brand Creative Hub" className="flex min-w-0 flex-1 items-center gap-2 font-bold text-ink">
             <Logo size={32} />
-            {!collapsed && <span className="truncate leading-tight">Brand Creative Hub</span>}
+            {!collapsed && <span className="truncate">Brand Creative Hub</span>}
           </Link>
           {toggleBtn}
         </div>
@@ -140,7 +140,7 @@ export function Sidebar() {
           onClick={() => setSearchOpen(true)}
           aria-label="Search"
           title="Search (⌘K)"
-          className={`mb-3 flex items-center gap-2 rounded-lg border border-control bg-white py-2 text-sm text-n-700 hover:bg-n-150 ${collapsed ? "justify-center px-2" : "px-3"}`}
+          className={`mb-2 flex items-center gap-2 rounded-xl border border-control bg-white py-2 text-sm text-n-700 hover:bg-white/60 ${collapsed ? "justify-center px-2" : "px-4"}`}
         >
           <Icon name="search" size={16} />
           {!collapsed && (<><span className="flex-1 text-left">Search</span><kbd className="text-xs">⌘K</kbd></>)}
@@ -150,7 +150,7 @@ export function Sidebar() {
           href="/my-day?new=task"
           title="New task"
           aria-label="New task"
-          className={`mb-3 flex items-center justify-center gap-2 rounded-lg border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-3"}`}
+          className={`mb-2 flex items-center justify-center gap-2 rounded-xl border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-4"}`}
         >
           <Icon name="listChecks" size={16} />
           {!collapsed && "New task"}
@@ -160,39 +160,40 @@ export function Sidebar() {
           title="Submit for feedback"
           aria-label="Submit for feedback"
           aria-current={pathname === "/submit" ? "page" : undefined}
-          className={`mb-3 flex items-center justify-center gap-2 rounded-lg border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-3"} ${pathname === "/submit" ? "bg-brand-soft" : ""}`}
+          className={`mb-4 flex items-center justify-center gap-2 rounded-xl border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-4"} ${pathname === "/submit" ? "bg-brand-soft" : ""}`}
         >
           <Icon name="upload" size={16} />
           {!collapsed && "Submit for feedback"}
         </Link>
 
-        <div className="flex flex-col gap-1">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
+        {!collapsed && <p className="mb-2 px-4 text-xs font-medium text-muted">Workspace</p>}
+        <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
 
         {/* Favorites folder */}
-        <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
           {collapsed ? (
             <button onClick={() => setMode("expanded")} title="Favorites" aria-label="Show favorites" className={row(false)}>
               <Icon name="star" size={18} />
             </button>
           ) : (
             <section aria-label="Favorites">
-              <button onClick={toggleFav} aria-expanded={favOpen} className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-n-700 hover:bg-n-150">
+              <button onClick={toggleFav} aria-expanded={favOpen} className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
                 <Icon name="star" size={14} />
                 <span className="flex-1 text-left">Favorites</span>
                 <span className={favOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
               </button>
               {favOpen && (
                 favs.items.length === 0 ? (
-                  <p className="px-3 py-2 text-xs text-muted">Star a project to pin it here.</p>
+                  <p className="px-4 py-2 text-xs text-muted">Star a project to pin it here.</p>
                 ) : (
-                  <ul className="mt-0.5 space-y-0.5">
+                  <ul className="mt-0 space-y-0">
                     {favs.items.map((f) => (
                       <li key={f.key}>
                         <Link
                           href={`/projects/${f.key}`}
                           title={`${f.key} · ${f.title}`}
                           aria-current={pathname === `/projects/${f.key}` ? "page" : undefined}
-                          className={`block truncate rounded-lg py-1.5 pl-9 pr-3 text-sm ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-n-150"}`}
+                          className={`block truncate rounded-lg py-2 pl-10 pr-4 text-sm ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}
                         >
                           {f.title}
                         </Link>
@@ -209,20 +210,20 @@ export function Sidebar() {
           href="/projects/new"
           title="New brief"
           aria-label="New brief"
-          className={`mb-3 flex items-center justify-center gap-2 rounded-lg bg-brand py-2 text-sm font-medium text-n-50 hover:bg-brand-dark ${collapsed ? "px-2" : "px-3"}`}
+          className={`mb-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-2 text-sm font-medium text-n-50 hover:bg-brand-dark ${collapsed ? "px-2" : "px-4"}`}
         >
           <Icon name="plus" size={16} />
           {!collapsed && "New brief"}
         </Link>
 
         {/* Bottom: Admin, then you */}
-        <div className="border-t border-line pt-2">
-          <div className={`mb-2 flex ${collapsed ? "justify-center" : "justify-start px-1"}`}><ThemeToggle vertical={collapsed} /></div>
+        <div className="pt-2">
+          <div className={`mb-2 flex ${collapsed ? "justify-center" : "justify-start px-2"}`}><ThemeToggle vertical={collapsed} /></div>
           {(me?.isAdmin || me?.role === "creative") && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
-          <div className={`flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
+          <div className={`flex rounded-xl bg-white shadow-sm ${collapsed ? "flex-col items-center gap-2 p-2" : "items-center gap-2 p-2"}`}>
             <Avatar user={user} size={32} />
             {!collapsed && (
-              <span className="min-w-0 flex-1 leading-tight">
+              <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{user?.name ?? ""}</span>
                 <span className="block text-xs capitalize text-muted">{me ? (me.isAdmin ? "Admin" : me.role) : ""}</span>
               </span>
@@ -234,7 +235,7 @@ export function Sidebar() {
                 onClick={() => signOut({ callbackUrl: "/signin" })}
                 aria-label="Sign out"
                 title="Sign out"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-100"
               >
                 <Icon name="logOut" size={18} />
               </button>

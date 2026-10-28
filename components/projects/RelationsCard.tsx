@@ -19,7 +19,7 @@ const statusProps = (r: IssueRef) => ({ stage: "Submitted" as const, statusName:
 
 function Row({ r, here }: { r: IssueRef; here?: boolean }) {
   return (
-    <div className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${here ? "bg-brand-soft" : "hover:bg-n-100"}`}>
+    <div className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 text-sm ${here ? "bg-brand-soft" : "hover:bg-n-100"}`}>
       <IssueIcon level={r.level} typeName={r.typeName} />
       <span className="font-mono text-xs text-muted">{r.key}</span>
       {here ? <span className="font-semibold">{r.title}</span> : <IssueLink r={r} className="min-w-0 flex-1 truncate font-medium" />}
@@ -31,7 +31,7 @@ function Row({ r, here }: { r: IssueRef; here?: boolean }) {
 }
 
 function Nested({ children }: { children: React.ReactNode }) {
-  return <ul className="ml-4 space-y-0.5 border-l-2 border-line pl-3">{children}</ul>;
+  return <ul className="ml-4 space-y-0 border-l-2 border-line pl-4">{children}</ul>;
 }
 
 const LINK_GROUPS: { kind: LinkKind; title: string }[] = [
@@ -79,20 +79,20 @@ export function RelationsCard({ project, rel }: { project: Project; rel: Relatio
   return (
     <>
       {hasTree && (
-        <section className="rounded-xl border border-line bg-white p-5">
-          <h2 className="mb-3 text-lg font-semibold">Hierarchy</h2>
+        <section className="rounded-xl border border-line bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold">Hierarchy</h2>
           <ul>{tree(0)}</ul>
           {rel.children.length > 0 && (
-            <div className="mt-3 border-t border-line pt-3">
-              <div className="mb-1 flex justify-between text-xs text-muted"><span>{done} of {rel.children.length} {rel.children.length === 1 ? "item" : "items"} done</span><span>{pct}%</span></div>
+            <div className="mt-4 border-t border-line pt-4">
+              <div className="mb-2 flex justify-between text-xs text-muted"><span>{done} of {rel.children.length} {rel.children.length === 1 ? "item" : "items"} done</span><span>{pct}%</span></div>
               <div role="meter" aria-label="Child items done" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="h-2 overflow-hidden rounded-full bg-n-150"><div className="h-full rounded-full bg-brand" style={{ width: `${Math.max(pct, 2)}%` }} /></div>
             </div>
           )}
         </section>
       )}
       {rel.links.length > 0 && (
-        <section className="rounded-xl border border-line bg-white p-5">
-          <h2 className="mb-3 text-lg font-semibold">Linked work</h2>
+        <section className="rounded-xl border border-line bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold">Linked work</h2>
           <div className="space-y-4">
             {LINK_GROUPS.map((g) => {
               const items = rel.links.filter((l) => l.kind === g.kind);
@@ -100,10 +100,10 @@ export function RelationsCard({ project, rel }: { project: Project; rel: Relatio
               const hot = g.kind === "blockedBy" && items.some((l) => l.statusCategory !== "done");
               return (
                 <div key={g.kind}>
-                  <h3 className={`mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${hot ? "text-bad-fg" : "text-muted"}`}>
+                  <h3 className={`mb-2 flex items-center gap-2 eyebrow ${hot ? "text-bad-fg" : "text-muted"}`}>
                     {(g.kind === "blockedBy" || g.kind === "blocks") && <Icon name="block" size={13} />}{g.title}
                   </h3>
-                  <ul className="space-y-0.5">{items.map((l) => <li key={`${l.key}-${l.label}`}><Row r={l} />{g.kind === "other" && <p className="pl-9 text-xs text-muted">{l.label}</p>}</li>)}</ul>
+                  <ul className="space-y-0">{items.map((l) => <li key={`${l.key}-${l.label}`}><Row r={l} />{g.kind === "other" && <p className="pl-10 text-xs text-muted">{l.label}</p>}</li>)}</ul>
                 </div>
               );
             })}

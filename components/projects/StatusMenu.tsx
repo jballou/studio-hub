@@ -58,10 +58,10 @@ export function StatusMenu({ project, canChange, onChanged }: { project: Project
   const choose = (s: TargetStatus) => (s.category === "done" ? setPending(s) : void apply(s));
   const group = (title: string, items: TargetStatus[]) => items.length > 0 && (
     <li role="none">
-      <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted">{title}</p>
+      <p className="px-4 pb-2 pt-2 text-muted eyebrow">{title}</p>
       <ul role="none">
         {items.map((s) => (
-          <li key={s.name} role="none"><button role="menuitem" disabled={busy} onClick={() => choose(s)} className="block w-full px-3 py-1.5 text-left text-sm hover:bg-brand-soft disabled:opacity-50">{s.name}</button></li>
+          <li key={s.name} role="none"><button role="menuitem" disabled={busy} onClick={() => choose(s)} className="block w-full px-4 py-2 text-left text-sm hover:bg-brand-soft disabled:opacity-50">{s.name}</button></li>
         ))}
       </ul>
     </li>
@@ -75,31 +75,31 @@ export function StatusMenu({ project, canChange, onChanged }: { project: Project
         aria-expanded={open}
         aria-label={`Status: ${project.statusName ?? project.stage}. Change status`}
         title={blocked ? "Blocked. Use “Mark as unblocked” to move it on." : "Change status (updates Jira)"}
-        className="flex items-center gap-1 rounded-full hover:opacity-80"
+        className="flex items-center gap-2 rounded-full hover:opacity-80"
       >
         <StatusTag project={project} />
         <Icon name="chevronDown" size={14} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-line bg-white py-1 shadow-lg">
+        <div className="absolute left-0 top-full z-30 mt-2 w-64 rounded-xl border border-line bg-white py-2 shadow-lg">
           {blocked ? (
-            <p className="px-3 py-2 text-sm text-muted">This ticket is blocked. Use “Mark as unblocked” to choose its next status.</p>
+            <p className="px-4 py-2 text-sm text-muted">This ticket is blocked. Use “Mark as unblocked” to choose its next status.</p>
           ) : pending ? (
-            <div className="p-3">
+            <div className="p-4">
               <p className="text-sm font-medium">Move to {pending.name}?</p>
-              <p className="mb-3 mt-1 text-xs text-muted">This closes the ticket in Jira.</p>
+              <p className="mb-4 mt-2 text-xs text-muted">This closes the ticket in Jira.</p>
               <div className="flex gap-2">
-                <button autoFocus disabled={busy} onClick={() => apply(pending)} className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-50">{busy ? "Moving…" : `Move to ${pending.name}`}</button>
-                <button onClick={() => setPending(null)} className="rounded-lg border border-control px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Back</button>
+                <button autoFocus disabled={busy} onClick={() => apply(pending)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-50">{busy ? "Moving…" : `Move to ${pending.name}`}</button>
+                <button onClick={() => setPending(null)} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Back</button>
               </div>
             </div>
           ) : options === null && !error ? (
-            <p className="px-3 py-2 text-sm text-muted">Loading from Jira…</p>
+            <p className="px-4 py-2 text-sm text-muted">Loading from Jira…</p>
           ) : (
             <ul role="menu" aria-label="Move to status">
               {options && group("Keep working", options.filter((s) => s.category !== "done"))}
               {options && group("Close it out", options.filter((s) => s.category === "done"))}
-              {options && options.length === 0 && <li className="px-3 py-2 text-sm text-muted">Jira doesn&apos;t offer another status right now.</li>}
+              {options && options.length === 0 && <li className="px-4 py-2 text-sm text-muted">Jira doesn&apos;t offer another status right now.</li>}
             </ul>
           )}
           {error && <div className="p-2"><Callout tone="bad" icon="alert">{error}</Callout></div>}

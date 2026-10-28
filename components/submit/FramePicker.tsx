@@ -77,7 +77,7 @@ export function FramePicker({
 
         {res === null && <p className="py-16 text-center text-sm text-muted">Loading frames from Figma…</p>}
         {res?.state === "not-configured" && (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-4">
             <Callout tone="warn" icon="alert">Figma isn&apos;t connected to this app yet, so frames can&apos;t be listed. An admin needs to add a Figma access token (see docs/figma-setup.md).</Callout>
             <p className="text-sm text-muted">Until then, copy each frame&apos;s link in Figma (right-click the frame, then Copy link to selection) and add them one at a time, or paste several links with “Add several links”.</p>
           </div>
@@ -86,21 +86,21 @@ export function FramePicker({
 
         {file && (
           <>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center gap-4">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-n-150 text-xs font-bold" aria-hidden>F</span>
               <h3 className="min-w-0 flex-1 truncate text-xl font-semibold">{file.name}</h3>
               <span className="text-sm text-muted" aria-live="polite">{count} out of {all.length} frames selected</span>
-              <button onClick={() => setPicked((s) => new Set([...s, ...selectable.map((f) => f.id)]))} className="rounded-full border-2 border-brand px-4 py-1.5 text-sm font-semibold text-brand hover:bg-brand-soft">Select all</button>
-              <button onClick={() => setPicked(new Set())} className="px-3 py-1.5 text-sm font-semibold text-brand hover:underline">Clear</button>
+              <button onClick={() => setPicked((s) => new Set([...s, ...selectable.map((f) => f.id)]))} className="rounded-full border-2 border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand-soft">Select all</button>
+              <button onClick={() => setPicked(new Set())} className="px-4 py-2 text-sm font-semibold text-brand hover:underline">Clear</button>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <select aria-label="Page" value={page} onChange={(e) => { setPage(e.target.value); setVisible(THUMB_CHUNK); }} className="rounded-lg border border-control bg-white px-2 py-1.5 text-sm">
+            <div className="mt-4 flex flex-wrap gap-2">
+              <select aria-label="Page" value={page} onChange={(e) => { setPage(e.target.value); setVisible(THUMB_CHUNK); }} className="rounded-lg border border-control bg-white px-2 py-2 text-sm">
                 <option value="all">All pages ({all.length})</option>
                 {file.pages.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.frames.length})</option>)}
               </select>
-              <input aria-label="Search frames" value={q} onChange={(e) => { setQ(e.target.value); setVisible(THUMB_CHUNK); }} placeholder="Search frames" className="min-w-48 flex-1 rounded-lg border border-control bg-white px-3 py-1.5 text-sm" />
+              <input aria-label="Search frames" value={q} onChange={(e) => { setQ(e.target.value); setVisible(THUMB_CHUNK); }} placeholder="Search frames" className="min-w-48 flex-1 rounded-lg border border-control bg-white px-4 py-2 text-sm" />
             </div>
-            <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" onScroll={(e) => { const el = e.currentTarget; if (el.scrollTop + el.clientHeight > el.scrollHeight - 300) setVisible((v) => Math.min(v + THUMB_CHUNK, shown.length)); }}>
+            <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2" onScroll={(e) => { const el = e.currentTarget; if (el.scrollTop + el.clientHeight > el.scrollHeight - 300) setVisible((v) => Math.min(v + THUMB_CHUNK, shown.length)); }}>
               {shown.length === 0 ? <p className="py-10 text-center text-sm text-muted">No frames match.</p> : (
                 <ul className="grid grid-cols-2 gap-4 md:grid-cols-3">
                   {shown.map((f, i) => {
@@ -115,9 +115,9 @@ export function FramePicker({
                               // eslint-disable-next-line @next/next/no-img-element
                               ? <img src={thumbs[f.id]} alt="" loading="lazy" className="h-full w-full object-contain" />
                               : <span className="flex h-full w-full items-center justify-center text-xs text-muted">{f.id in thumbs ? "No preview" : i < visible ? "Loading…" : ""}</span>}
-                            {added && <span className="absolute bottom-2 right-2 rounded-full bg-white px-2 py-0.5 text-xs font-medium">Added</span>}
+                            {added && <span className="absolute bottom-2 right-2 rounded-full bg-white px-2 py-0 text-xs font-medium">Added</span>}
                           </span>
-                          <span className="mt-1 block truncate text-sm font-medium">{f.name}</span>
+                          <span className="mt-2 block truncate text-sm font-medium">{f.name}</span>
                           <span className="block truncate text-xs text-muted">{f.section ? `${f.section} · ` : ""}{f.w}×{f.h}{page === "all" ? ` · ${f.page}` : ""}</span>
                         </label>
                       </li>
@@ -129,10 +129,10 @@ export function FramePicker({
           </>
         )}
 
-        <div className="mt-5 flex items-center gap-3">
-          <button onClick={onBack} className="px-3 py-2 text-sm font-semibold text-brand hover:underline">Back</button>
-          <button onClick={onCancel} className="ml-auto px-3 py-2 text-sm font-semibold text-brand hover:underline">Cancel</button>
-          <button onClick={doImport} disabled={!file || count === 0} className="rounded-full bg-brand px-6 py-2.5 text-sm font-semibold text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650">
+        <div className="mt-6 flex items-center gap-4">
+          <button onClick={onBack} className="px-4 py-2 text-sm font-semibold text-brand hover:underline">Back</button>
+          <button onClick={onCancel} className="ml-auto px-4 py-2 text-sm font-semibold text-brand hover:underline">Cancel</button>
+          <button onClick={doImport} disabled={!file || count === 0} className="rounded-full bg-brand px-6 py-2 text-sm font-semibold text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650">
             {count > 0 ? `Import ${count} ${count === 1 ? "frame" : "frames"}` : "Import frames"}
           </button>
         </div>

@@ -107,20 +107,20 @@ export function Board({
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-4 text-sm">
         <span className="font-semibold">Cards</span>
         {([["ticket", "Jira tickets"], ["task", "My tasks"]] as const).map(([k, label]) => (
-          <label key={k} className="flex cursor-pointer items-center gap-2 rounded-full border border-control bg-white px-3 py-1 hover:bg-brand-soft">
+          <label key={k} className="flex cursor-pointer items-center gap-2 rounded-full border border-control bg-white px-4 py-2 hover:bg-brand-soft">
             <input type="checkbox" checked={show[k]} onChange={() => setShow({ ...show, [k]: !show[k] })} className="accent-brand" />
             <Icon name={k === "ticket" ? "ticket" : "task"} size={14} /> {label} <span className="text-muted">{counts[k]}</span>
           </label>
         ))}
         <span className="text-xs text-muted">{canMove ? "Drag a card to a new column, or use ⋯ to move it." : "You can move your own tasks. Ticket statuses are changed by the creative team."}</span>
       </div>
-      {error && <div className="mb-3"><Callout tone="bad" icon="alert">{error}</Callout></div>}
+      {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
 
       <div className="overflow-x-auto pb-2">
-        <div className="grid min-w-[60rem] grid-cols-4 gap-3">
+        <div className="grid min-w-[60rem] grid-cols-4 gap-4">
           {COLUMNS.map((col) => {
             const inCol = cards.filter((c) => c.column === col.id);
             const shown = expanded[col.id] ? inCol : inCol.slice(0, COLLAPSED);
@@ -131,9 +131,9 @@ export function Board({
                 onDragOver={(e) => { if (dragged.current) { e.preventDefault(); setOver(col.id); } }}
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
                 onDrop={(e) => { e.preventDefault(); setOver(null); const c = dragged.current; dragged.current = null; if (c) move(c, col.id); }}
-                className={`rounded-2xl bg-n-150 p-2.5 transition-shadow ${over === col.id ? "ring-2 ring-brand" : ""}`}
+                className={`rounded-2xl bg-n-150 p-2 transition-shadow ${over === col.id ? "ring-2 ring-brand" : ""}`}
               >
-                <h2 className="mb-2.5 flex items-center gap-2 px-1 text-sm font-semibold">
+                <h2 className="mb-2 flex items-center gap-2 px-2 text-sm font-semibold">
                   <Icon name={col.icon} size={16} />
                   {col.label}
                   <span className="font-normal text-muted">({inCol.length})</span>
@@ -142,7 +142,7 @@ export function Board({
                   )}
                 </h2>
                 {adding === col.id && <QuickAdd onAdd={(t) => addTask(col.id, t)} onCancel={() => setAdding(null)} />}
-                <ul className="space-y-2.5">
+                <ul className="space-y-2">
                   {shown.map((c) => (
                     <li key={keyOf(c)}>
                       <Card
@@ -153,10 +153,10 @@ export function Board({
                       />
                     </li>
                   ))}
-                  {inCol.length === 0 && <li className="px-1 py-4 text-center text-xs text-muted">{over === col.id ? "Drop here" : "Nothing here."}</li>}
+                  {inCol.length === 0 && <li className="px-2 py-4 text-center text-xs text-muted">{over === col.id ? "Drop here" : "Nothing here."}</li>}
                 </ul>
                 {inCol.length > COLLAPSED && (
-                  <button onClick={() => setExpanded({ ...expanded, [col.id]: !expanded[col.id] })} aria-expanded={!!expanded[col.id]} className="mt-2 flex items-center gap-1 px-1 text-sm font-medium text-brand hover:underline">
+                  <button onClick={() => setExpanded({ ...expanded, [col.id]: !expanded[col.id] })} aria-expanded={!!expanded[col.id]} className="mt-2 flex items-center gap-2 px-2 text-sm font-medium text-brand hover:underline">
                     <Icon name={expanded[col.id] ? "chevronDown" : "chevronRight"} size={12} />
                     {expanded[col.id] ? "Show fewer" : `View ${inCol.length - COLLAPSED} more`}
                   </button>
@@ -169,9 +169,9 @@ export function Board({
 
       {confirm && confirm.card.kind === "ticket" && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[14vh]" onMouseDown={() => setConfirm(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Close ticket" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-xl border border-line bg-white p-5 shadow-xl">
+          <div role="dialog" aria-modal="true" aria-label="Close ticket" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-xl border border-line bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold">Move to Done?</h2>
-            <p className="mb-4 mt-1 text-sm text-muted">{confirm.card.id} · {confirm.card.project.title}. This closes the ticket in Jira.</p>
+            <p className="mb-4 mt-2 text-sm text-muted">{confirm.card.id} · {confirm.card.project.title}. This closes the ticket in Jira.</p>
             <div className="flex gap-2">
               <button autoFocus onClick={() => { const c = confirm; setConfirm(null); void run(c.card, c.col); }} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Move to Done</button>
               <button onClick={() => setConfirm(null)} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
@@ -186,10 +186,10 @@ export function Board({
 function QuickAdd({ onAdd, onCancel }: { onAdd: (t: string) => void; onCancel: () => void }) {
   const [v, setV] = useState("");
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onAdd(v); }} className="mb-2.5 rounded-xl border border-brand bg-white p-2">
+    <form onSubmit={(e) => { e.preventDefault(); onAdd(v); }} className="mb-2 rounded-xl border border-brand bg-white p-2">
       <label className="sr-only" htmlFor="quick-task">New task</label>
-      <input id="quick-task" autoFocus value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onCancel()} maxLength={200} placeholder="New task, then Enter" className="w-full bg-transparent px-1 py-1 text-sm outline-none" />
-      <p className="px-1 text-xs text-muted">Private to you. Not added to Jira.</p>
+      <input id="quick-task" autoFocus value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onCancel()} maxLength={200} placeholder="New task, then Enter" className="w-full bg-transparent px-2 py-2 text-sm outline-none" />
+      <p className="px-2 text-xs text-muted">Private to you. Not added to Jira.</p>
     </form>
   );
 }
@@ -209,20 +209,20 @@ function Card({
       draggable={draggable}
       onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", `${card.kind}:${card.id}`); onDragStart(); }}
       onDragEnd={onDragEnd}
-      className={`rounded-xl border border-line bg-white p-3 shadow-sm hover:border-brand ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`rounded-xl border border-line bg-white p-4 shadow-sm hover:border-brand ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
-      <div className="mb-2 flex items-center gap-1.5">
+      <div className="mb-2 flex items-center gap-2">
         <KindChip kind={card.kind} />
         <span className="ml-auto flex items-center">
           {isTicket && <StarButton starred={starred} onToggle={onStar} label={card.project.title} />}
           <span className="relative">
             <button onClick={(e) => { e.stopPropagation(); onMenu(); }} aria-haspopup="menu" aria-expanded={menuOpen} aria-label={`Move ${isTicket ? card.project.title : card.task.title}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-n-700 hover:bg-n-150"><Icon name="more" size={16} /></button>
             {menuOpen && (
-              <ul role="menu" className="absolute right-0 top-full z-20 mt-1 w-40 rounded-xl border border-line bg-white p-1 shadow-lg">
-                <li className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted">Move to</li>
+              <ul role="menu" className="absolute right-0 top-full z-20 mt-2 w-40 rounded-xl border border-line bg-white p-2 shadow-lg">
+                <li className="px-2 py-2 text-muted eyebrow">Move to</li>
                 {COLUMNS.map((c) => (
                   <li key={c.id} role="none">
-                    <button role="menuitem" disabled={c.id === card.column} onClick={(e) => { e.stopPropagation(); onMove(c.id); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm enabled:hover:bg-brand-soft disabled:opacity-40"><Icon name={c.icon} size={14} />{c.label}</button>
+                    <button role="menuitem" disabled={c.id === card.column} onClick={(e) => { e.stopPropagation(); onMove(c.id); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm enabled:hover:bg-brand-soft disabled:opacity-40"><Icon name={c.icon} size={14} />{c.label}</button>
                   </li>
                 ))}
               </ul>
@@ -232,13 +232,13 @@ function Card({
       </div>
 
       {isTicket
-        ? <><Link href={`/projects/${card.id}`} draggable={false} className="block font-semibold leading-snug hover:underline">{card.project.title}</Link><p className="mt-0.5 text-xs text-muted">{card.id} · {card.project.type}</p></>
-        : <h3 className={`font-semibold leading-snug ${card.task.done ? "text-muted line-through" : ""}`}>{card.task.title}</h3>}
+        ? <><Link href={`/projects/${card.id}`} draggable={false} className="block font-semibold hover:underline">{card.project.title}</Link><p className="mt-0 text-xs text-muted">{card.id} · {card.project.type}</p></>
+        : <h3 className={`font-semibold ${card.task.done ? "text-muted line-through" : ""}`}>{card.task.title}</h3>}
       {(isTicket ? card.project.description : card.task.notes) && (
-        <p className="mt-1 line-clamp-2 text-sm text-muted">{isTicket ? card.project.description : card.task.notes}</p>
+        <p className="mt-2 line-clamp-2 text-sm text-muted">{isTicket ? card.project.description : card.task.notes}</p>
       )}
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         {isTicket && <StatusTag project={card.project} />}
         {isTicket && <FlagTags flag={card.project.flag === "blocked" && !blocks[card.id] ? "blocked" : card.project.flag === "blocked" ? undefined : card.project.flag} block={blocks[card.id]} />}
         {isTicket && card.project.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
@@ -250,12 +250,12 @@ function Card({
 
       {isTicket && canMove && needsStartDate(card.project) && <div className="mt-2"><PlanWork project={card.project} onPlanned={onPlanned} /></div>}
 
-      <div className="mt-3 flex items-center gap-2 border-t border-line pt-2 text-xs">
-        <span className="flex -space-x-1.5">
-          {names.slice(0, 3).map((n) => <span key={n} title={n} className="flex h-6 w-6 items-center justify-center rounded-full bg-n-150 text-[10px] font-bold ring-2 ring-white">{initials(n)}</span>)}
-          {!isTicket && <span title="You" className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-soft text-[10px] font-bold ring-2 ring-white">You</span>}
+      <div className="mt-4 flex items-center gap-2 border-t border-line pt-2 text-xs">
+        <span className="flex -space-x-2">
+          {names.slice(0, 3).map((n) => <span key={n} title={n} className="flex h-6 w-6 items-center justify-center rounded-full bg-n-150 text-xs font-bold ring-2 ring-white">{initials(n)}</span>)}
+          {!isTicket && <span title="You" className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-soft text-xs font-bold ring-2 ring-white">You</span>}
         </span>
-        <span className="ml-auto flex items-center gap-1">
+        <span className="ml-auto flex items-center gap-2">
           <Icon name="calendar" size={12} />
           {due ? <span className={DUE_TONE[due.tone]}>{due.text}</span> : <span className="text-muted">No due date</span>}
         </span>

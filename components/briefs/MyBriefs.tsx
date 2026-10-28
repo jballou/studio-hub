@@ -27,7 +27,7 @@ function Stepper({ p }: { p: Project }) {
     <ol className="flex items-center" aria-label={`Progress: step ${at + 1} of ${BRIEF_STEPS.length}, ${BRIEF_STEPS[at]}`}>
       {BRIEF_STEPS.map((s, i) => (
         <li key={s} className="flex flex-1 items-center last:flex-none" aria-current={i === at ? "step" : undefined}>
-          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold ${i < at || p.group === "closed" ? "border-brand bg-brand text-n-50" : i === at ? "border-brand bg-white text-brand" : "border-n-200 bg-white text-n-650"}`} title={s}>
+          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${i < at || p.group === "closed" ? "border-brand bg-brand text-n-50" : i === at ? "border-brand bg-white text-brand" : "border-n-200 bg-white text-n-650"}`} title={s}>
             {i < at || p.group === "closed" ? <Icon name="check" size={11} /> : i + 1}
           </span>
           {i < BRIEF_STEPS.length - 1 && <span className={`h-0.5 flex-1 ${i < at ? "bg-brand" : "bg-n-200"}`} />}
@@ -44,22 +44,22 @@ function BriefCard({ p, today, people }: { p: Project; today: string; people: Ma
   const who = p.collaboratorNames?.[0] ?? people.get(p.collaboratorIds[0] ?? "");
   const text = excerpt(p);
   return (
-    <li className={`group relative flex flex-col rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${input ? "border-warn-line" : late !== null ? "border-bad-line" : "border-line"}`}>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+    <li className={`group relative flex flex-col rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${input ? "border-warn-line" : late !== null ? "border-bad-line" : "border-line"}`}>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <IssueIcon level={p.issueType?.level ?? 0} typeName={p.issueType?.name} size={18} />
         <span className="text-xs font-medium text-muted">{p.issueType?.name ?? p.type}</span>
-        <span className="ml-auto flex items-center gap-1.5">
+        <span className="ml-auto flex items-center gap-2">
           {p.viaHub ? <Tag tone="ok" icon="check">Made in the Hub</Tag> : <Tag tone="neutral" icon="ticket">From Jira</Tag>}
         </span>
       </div>
 
-      <h2 className="text-lg font-bold leading-snug">
+      <h2 className="text-lg font-bold">
         <Link href={`/projects/${p.jiraKey}`} className="after:absolute after:inset-0 after:content-[''] hover:underline">{p.title}</Link>
       </h2>
-      <p className="mt-0.5 font-mono text-xs text-muted">{p.jiraKey}</p>
+      <p className="mt-0 font-mono text-xs text-muted">{p.jiraKey}</p>
       {text && <p className="mt-2 line-clamp-2 text-sm text-n-800">{text}</p>}
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <StatusTag project={p} />
         {input && <Tag tone="warn" icon="alert">{p.flag === "needs-info" ? "More info needed" : "Your feedback is needed"}</Tag>}
         {late !== null && <Tag tone="bad" icon="alert">Past due · {pastDueWords(late)}</Tag>}
@@ -67,16 +67,16 @@ function BriefCard({ p, today, people }: { p: Project; today: string; people: Ma
       </div>
 
       <div className="mt-4"><Stepper p={p} /></div>
-      <div className="mt-1 flex justify-between text-[11px] text-muted"><span>{BRIEF_STEPS[0]}</span><span>{BRIEF_STEPS[BRIEF_STEPS.length - 1]}</span></div>
+      <div className="mt-2 flex justify-between text-xs text-muted"><span>{BRIEF_STEPS[0]}</span><span>{BRIEF_STEPS[BRIEF_STEPS.length - 1]}</span></div>
 
-      <div className="mt-4 flex items-center gap-3 border-t border-line pt-3 text-sm">
+      <div className="mt-4 flex items-center gap-4 border-t border-line pt-4 text-sm">
         {who ? (
           <span className="flex min-w-0 items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-n-150 text-[11px] font-bold" aria-hidden>{who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-n-150 text-xs font-bold" aria-hidden>{who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
             <span className="truncate text-muted">With <b className="font-semibold text-ink">{who}</b></span>
           </span>
         ) : <span className="text-muted">Waiting to be picked up</span>}
-        <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs">
+        <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
           <Icon name="calendar" size={13} />
           {p.group === "closed" ? <span className="text-muted">{p.resolvedAt ? `Delivered ${dayLabel(p.resolvedAt)}` : "Delivered"}</span>
             : late !== null ? <span className="font-semibold text-bad-fg">Was due {dayLabel(p.deadline)}</span>
@@ -120,7 +120,7 @@ export function MyBriefs() {
 
   return (
     <main className="mx-auto w-full max-w-6xl p-6">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold">{first ? `${first}'s briefs` : "My briefs"}</h1>
           <p className="text-sm text-muted">Everything you&apos;ve asked the creative team for, and where it stands.</p>
@@ -128,11 +128,11 @@ export function MyBriefs() {
         <Link href="/projects/new" className="ml-auto flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> New brief</Link>
       </div>
 
-      <div className="mt-3"><StaleNotice /></div>
+      <div className="mt-4"><StaleNotice /></div>
       {error && (
-        <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="mb-4 flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1"><Callout tone="bad" icon="alert">Couldn&apos;t load your briefs: {error}</Callout></div>
-          <button onClick={() => setTick((t) => t + 1)} className="rounded-lg border border-control bg-white px-3 py-1.5 text-sm font-medium hover:bg-brand-soft">Try again</button>
+          <button onClick={() => setTick((t) => t + 1)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Try again</button>
         </div>
       )}
 
@@ -140,12 +140,12 @@ export function MyBriefs() {
         <section className="mt-6 rounded-3xl border border-dashed border-control bg-white/70 p-12 text-center">
           <Logo size={64} className="mx-auto mb-4 shadow-md" />
           <h2 className="text-xl font-bold">No briefs yet</h2>
-          <p className="mx-auto mb-5 mt-1 max-w-md text-sm text-muted">Start a brief and answer a few questions. The creative team picks it up, and you can follow it here. Briefs you create in Jira show up here too.</p>
-          <Link href="/projects/new" className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Start a brief</Link>
+          <p className="mx-auto mb-6 mt-2 max-w-md text-sm text-muted">Start a brief and answer a few questions. The creative team picks it up, and you can follow it here. Briefs you create in Jira show up here too.</p>
+          <Link href="/projects/new" className="inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Start a brief</Link>
         </section>
       ) : (
         <>
-          <div className="mt-5 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-3 gap-4">
             {([["In progress", counts.active, "active"], ["Needs your input", counts.input, "input"], ["Delivered", counts.delivered, "delivered"]] as const).map(([label, n, f]) => (
               <button key={f} onClick={() => setFilter(f)} className={`rounded-xl border bg-white p-4 text-left hover:border-brand ${filter === f ? "border-brand ring-2 ring-brand-soft" : "border-line"}`}>
                 <div className="text-sm font-semibold">{label}</div>
@@ -154,11 +154,11 @@ export function MyBriefs() {
             ))}
           </div>
 
-          <div role="tablist" aria-label="Filter briefs" className="mt-5 flex flex-wrap gap-2">
+          <div role="tablist" aria-label="Filter briefs" className="mt-6 flex flex-wrap gap-2">
             {FILTERS.map((f) => {
               const n = f.id === "all" ? counts.total : f.id === "active" ? counts.active : f.id === "input" ? counts.input : counts.delivered;
               return (
-                <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className={`rounded-full border px-4 py-1.5 text-sm ${filter === f.id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+                <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className={`rounded-full border px-4 py-2 text-sm ${filter === f.id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
                   {f.label} <span className="text-muted">{n}</span>
                 </button>
               );
@@ -168,7 +168,7 @@ export function MyBriefs() {
           {shown.length === 0 ? (
             <p className="mt-6 rounded-xl border border-dashed border-control p-8 text-center text-sm text-muted">Nothing here right now.</p>
           ) : (
-            <ul className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {shown.map((p) => <BriefCard key={p.jiraKey} p={p} today={today!} people={people} />)}
             </ul>
           )}

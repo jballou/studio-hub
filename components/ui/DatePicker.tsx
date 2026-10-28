@@ -72,7 +72,7 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
       <button
         ref={trigger} type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined}
         onClick={() => (open ? setOpen(false) : openIt())}
-        className={`flex w-full items-center gap-2 rounded-lg border border-control bg-white px-3 py-2 text-left text-sm font-normal hover:border-brand ${className}`}
+        className={`flex w-full items-center gap-2 rounded-lg border border-control bg-white px-4 py-2 text-left text-sm font-normal hover:border-brand ${className}`}
       >
         <Icon name="calendarDays" size={16} />
         <span className={value ? "" : "text-muted"}>{value ? label(value) : placeholder}</span>
@@ -80,14 +80,14 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
 
       {open && (
         <div id={id} role="dialog" aria-label="Choose a date" onKeyDown={onKey} className="absolute left-0 top-full z-50 mt-2 w-[19rem] rounded-3xl border border-line bg-white p-4 shadow-xl">
-          <div className="flex items-center rounded-full bg-n-100 p-1.5">
+          <div className="flex items-center rounded-full bg-n-100 p-2">
             <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={16} /></span></button>
             <span className="flex-1 text-center text-sm font-semibold" aria-live="polite">{MONTHS[view.m]} {view.y}</span>
             <button type="button" onClick={() => go(1)} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-brand-soft"><Icon name="chevronRight" size={16} /></button>
           </div>
 
-          <div ref={grid} role="grid" className="mt-3 grid grid-cols-7 gap-y-1 text-center" aria-label={`${MONTHS[view.m]} ${view.y}`}>
-            {DAYS.map((d) => <span key={d} role="columnheader" className="pb-1 text-xs font-medium uppercase text-muted">{d}</span>)}
+          <div ref={grid} role="grid" className="mt-4 grid grid-cols-7 gap-y-2 text-center" aria-label={`${MONTHS[view.m]} ${view.y}`}>
+            {DAYS.map((d) => <span key={d} role="columnheader" className="pb-2 text-xs font-medium uppercase text-muted">{d}</span>)}
             {cells.map((s, i) => {
               const p = parse(s)!;
               const inMonth = p.m === view.m && i >= first && i < first + count;

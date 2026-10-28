@@ -87,12 +87,12 @@ export function AdminUsers() {
   }
 
   const shown = (users ?? []).filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(q.trim().toLowerCase()));
-  const sel = "rounded-lg border border-control bg-white px-2 py-1.5 text-sm";
+  const sel = "rounded-lg border border-control bg-white px-2 py-2 text-sm";
 
   return (
     <main className="mx-auto w-full max-w-4xl p-6">
       <h1 className="text-2xl font-bold">Team &amp; access</h1>
-      <p className="mb-5 mt-1 text-sm text-muted">Anyone with a SurveyMonkey Atlassian account can sign in as a requester. Use this page to give people more access or take it away.</p>
+      <p className="mb-6 mt-2 text-sm text-muted">Anyone with a SurveyMonkey Atlassian account can sign in as a requester. Use this page to give people more access or take it away.</p>
 
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
 
@@ -106,10 +106,10 @@ export function AdminUsers() {
           }}
         >
           <label className="min-w-64 flex-1 text-xs font-semibold">Work email
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@surveymonkey.com" type="email" className={`${sel} mt-1 w-full font-normal`} required />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@surveymonkey.com" type="email" className={`${sel} mt-2 w-full font-normal`} required />
           </label>
           <label className="text-xs font-semibold">Role
-            <select value={role} onChange={(e) => setRole(e.target.value as Role)} className={`${sel} mt-1 block font-normal`}>
+            <select value={role} onChange={(e) => setRole(e.target.value as Role)} className={`${sel} mt-2 block font-normal`}>
               {ROLES.map((r) => <option key={r} value={r}>{cap(r)}</option>)}
             </select>
           </label>
@@ -118,35 +118,35 @@ export function AdminUsers() {
         <p className="mt-2 text-xs text-muted">{ROLE_HELP[role]}.</p>
       </section>
 
-      <div className="mb-2 flex items-center gap-3">
+      <div className="mb-2 flex items-center gap-4">
         <h2 className="text-sm font-semibold">People ({users?.length ?? "…"})</h2>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search people" className={`${sel} ml-auto w-52`} />
       </div>
       <div className="overflow-x-auto rounded-xl border border-line bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-n-150 text-xs text-n-800">
-            <tr><th className="px-3 py-2 font-semibold">Person</th><th className="px-3 py-2 font-semibold">Role</th><th className="px-3 py-2 font-semibold">Status</th><th className="px-3 py-2 font-semibold">Last sign-in</th><th className="px-3 py-2" /></tr>
+            <tr><th className="px-4 py-2 font-semibold">Person</th><th className="px-4 py-2 font-semibold">Role</th><th className="px-4 py-2 font-semibold">Status</th><th className="px-4 py-2 font-semibold">Last sign-in</th><th className="px-4 py-2" /></tr>
           </thead>
           <tbody>
-            {users === null && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted">Loading…</td></tr>}
+            {users === null && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">Loading…</td></tr>}
             {shown.map((u) => {
               const locked = envAdmins.includes(u.email);
               const self = u.email === me;
               return (
                 <tr key={u.email} className={`border-b border-line last:border-0 ${u.status === "disabled" ? "opacity-60" : ""}`}>
-                  <td className="px-3 py-2"><div className="font-medium">{u.name || u.email.split("@")[0]}</div><div className="text-xs text-muted">{u.email}{self && " (you)"}</div></td>
-                  <td className="px-3 py-2">
+                  <td className="px-4 py-2"><div className="font-medium">{u.name || u.email.split("@")[0]}</div><div className="text-xs text-muted">{u.email}{self && " (you)"}</div></td>
+                  <td className="px-4 py-2">
                     {locked ? <Tag tone="info" icon="check" title="Set in the ADMIN_EMAILS environment variable">Admin (locked)</Tag> : (
                       <select aria-label={`Role for ${u.email}`} value={u.role} disabled={busy} onChange={(e) => patch(u, { role: e.target.value as Role })} className={sel}>
                         {ROLES.map((r) => <option key={r} value={r}>{cap(r)}</option>)}
                       </select>
                     )}
                   </td>
-                  <td className="px-3 py-2"><Tag tone={u.status === "active" ? "ok" : "neutral"} icon={u.status === "active" ? "check" : "close"}>{u.status === "active" ? "Active" : "Disabled"}</Tag></td>
-                  <td className="px-3 py-2 text-xs text-muted">{when(u.lastSignIn)}</td>
-                  <td className="px-3 py-2 text-right text-xs">
+                  <td className="px-4 py-2"><Tag tone={u.status === "active" ? "ok" : "neutral"} icon={u.status === "active" ? "check" : "close"}>{u.status === "active" ? "Active" : "Disabled"}</Tag></td>
+                  <td className="px-4 py-2 text-xs text-muted">{when(u.lastSignIn)}</td>
+                  <td className="px-4 py-2 text-right text-xs">
                     {!locked && !self && (
-                      <span className="flex justify-end gap-3">
+                      <span className="flex justify-end gap-4">
                         <button disabled={busy} onClick={() => patch(u, { status: u.status === "active" ? "disabled" : "active" })} className="font-medium text-brand hover:underline">{u.status === "active" ? "Disable" : "Enable"}</button>
                         <button disabled={busy} onClick={() => { if (confirm(`Remove ${u.email}? They can still sign in as a requester. Use Disable to block them.`)) call(`/api/admin/users/${encodeURIComponent(u.email)}`, { method: "DELETE" }); }} className="font-medium text-bad-fg hover:underline">Remove</button>
                       </span>
@@ -155,18 +155,18 @@ export function AdminUsers() {
                 </tr>
               );
             })}
-            {users && shown.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-muted">No one matches.</td></tr>}
+            {users && shown.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">No one matches.</td></tr>}
           </tbody>
         </table>
       </div>
-      <p className="mt-2 flex items-start gap-1.5 text-xs text-muted"><Icon name="alert" size={14} /> <span><b>Disable</b> blocks sign-in and API access right away. <b>Remove</b> only deletes the record; the person can sign back in as a requester. Locked admins come from the <code>ADMIN_EMAILS</code> setting so the app can never be left without an owner.</span></p>
+      <p className="mt-2 flex items-start gap-2 text-xs text-muted"><Icon name="alert" size={14} /> <span><b>Disable</b> blocks sign-in and API access right away. <b>Remove</b> only deletes the record; the person can sign back in as a requester. Locked admins come from the <code>ADMIN_EMAILS</code> setting so the app can never be left without an owner.</span></p>
 
       <section className="mt-8">
         <h2 className="mb-2 text-sm font-semibold">Recent changes</h2>
         {audit.length === 0 ? <p className="text-sm text-muted">Nothing yet.</p> : (
           <ul className="divide-y divide-line rounded-xl border border-line bg-white text-sm">
             {audit.map((a, i) => (
-              <li key={i} className="flex flex-wrap gap-x-2 px-3 py-2">
+              <li key={i} className="flex flex-wrap gap-x-2 px-4 py-2">
                 <span className="w-36 shrink-0 text-xs text-muted">{when(a.at)}</span>
                 <span><b>{a.actor}</b> {ACTION_LABEL[a.action] ?? a.action} <b>{a.target}</b>{a.detail ? ` (${a.detail})` : ""}</span>
               </li>

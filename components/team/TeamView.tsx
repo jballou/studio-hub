@@ -27,7 +27,7 @@ function Person({ name, count }: { name: string; count?: number }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
       <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-dark text-xs font-bold text-n-50">{initialsOf(name)}</span>
-      <span className="min-w-0 leading-tight">
+      <span className="min-w-0">
         <span className="block truncate text-sm font-semibold">{name}</span>
         {count !== undefined && <span className="block text-xs text-muted">{count} open</span>}
       </span>
@@ -39,9 +39,9 @@ function Person({ name, count }: { name: string; count?: number }) {
 function Card({ p, today }: { p: Project; today: string }) {
   const due = dueLabel(p.deadline, today);
   return (
-    <Link href={`/projects/${p.jiraKey}`} className="block rounded-lg border border-line bg-white p-2.5 text-sm shadow-sm hover:border-brand">
-      <span className="line-clamp-2 font-medium leading-snug">{p.title}</span>
-      <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+    <Link href={`/projects/${p.jiraKey}`} className="block rounded-lg border border-line bg-white p-2 text-sm shadow-sm hover:border-brand">
+      <span className="line-clamp-2 font-medium">{p.title}</span>
+      <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs">
         <span className="font-mono text-muted">{p.jiraKey.replace("MKTGCRTV-", "#")}</span>
         {p.flag === "blocked" && <Tag tone="bad" icon="block">Blocked</Tag>}
         {due && <span className={`ml-auto ${DUE_TONE[due.tone]}`}>{due.text}</span>}
@@ -53,7 +53,7 @@ function Card({ p, today }: { p: Project; today: string }) {
 function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Project[]; members: Person[]; today: string; canAssign: boolean; busy: string | null; onAssign: (p: Project, id: string) => void }) {
   const [open, setOpen] = useState(true);
   return (
-    <section aria-labelledby="queue-h" className="mb-5 rounded-2xl border border-line bg-white p-4">
+    <section aria-labelledby="queue-h" className="mb-6 rounded-2xl border border-line bg-white p-4">
       <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-2 text-left">
         <span className={`transition-transform ${open ? "rotate-90" : ""}`}><Icon name="chevronRight" size={16} /></span>
         <h2 id="queue-h" className="text-base font-bold">Unassigned queue</h2>
@@ -61,9 +61,9 @@ function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Proj
         <span className="ml-auto text-xs text-muted">Soonest deadline first</span>
       </button>
       {open && (list.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">Everything open has someone on it.</p>
+        <p className="mt-4 text-sm text-muted">Everything open has someone on it.</p>
       ) : (
-        <ul className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((p) => (
             <li key={p.jiraKey} className="flex flex-col gap-2">
               <Card p={p} today={today} />
@@ -71,7 +71,7 @@ function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Proj
                 <select
                   aria-label={`Assign ${p.title}`} value="" disabled={busy === p.jiraKey || members.length === 0}
                   onChange={(e) => e.target.value && onAssign(p, e.target.value)}
-                  className="rounded-lg border border-control bg-white px-2 py-1.5 text-sm disabled:opacity-50"
+                  className="rounded-lg border border-control bg-white px-2 py-2 text-sm disabled:opacity-50"
                 >
                   <option value="">{busy === p.jiraKey ? "Assigning…" : members.length ? "Assign to…" : "No team members yet"}</option>
                   {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -89,17 +89,17 @@ function Kanban({ lanes, today }: { lanes: Lane[]; today: string }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-line bg-white">
       <div className="min-w-[56rem]">
-        <div className="grid border-b border-line bg-n-100 text-xs font-semibold uppercase tracking-wide text-muted" style={{ gridTemplateColumns: `12rem repeat(${COLS.length}, minmax(0, 1fr))` }}>
-          <span className="p-3">Person</span>
-          {COLS.map((c) => <span key={c.id} className="flex items-center gap-1.5 p-3"><Icon name={c.icon} size={14} /> {c.label}</span>)}
+        <div className="grid border-b border-line bg-n-100 text-muted eyebrow" style={{ gridTemplateColumns: `12rem repeat(${COLS.length}, minmax(0, 1fr))` }}>
+          <span className="p-4">Person</span>
+          {COLS.map((c) => <span key={c.id} className="flex items-center gap-2 p-4"><Icon name={c.icon} size={14} /> {c.label}</span>)}
         </div>
         {lanes.map((l) => (
           <div key={l.id} className="grid border-b border-line last:border-b-0" style={{ gridTemplateColumns: `12rem repeat(${COLS.length}, minmax(0, 1fr))` }}>
-            <div className="p-3"><Person name={l.name} count={l.projects.length} /></div>
+            <div className="p-4"><Person name={l.name} count={l.projects.length} /></div>
             {COLS.map((c) => {
               const cards = l.projects.filter((p) => columnOfProject(p) === c.id);
               return (
-                <ul key={c.id} aria-label={`${l.name}: ${c.label}`} className="space-y-2 border-l border-line p-2.5">
+                <ul key={c.id} aria-label={`${l.name}: ${c.label}`} className="space-y-2 border-l border-line p-2">
                   {cards.map((p) => <li key={p.jiraKey}><Card p={p} today={today} /></li>)}
                 </ul>
               );
@@ -122,22 +122,22 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
   const cols = `13rem repeat(${n}, minmax(0, 1fr))`;
   return (
     <div className="rounded-2xl border border-line bg-white p-4">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
         <button onClick={() => setStart(addDay(start, -span))} aria-label="Earlier" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
         <button onClick={() => setStart(addDay(start, span))} aria-label="Later" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
-        <button onClick={() => setStart(mondayOf(today))} className="rounded-full border border-control px-3 py-1 hover:bg-brand-soft">Today</button>
+        <button onClick={() => setStart(mondayOf(today))} className="rounded-full border border-control px-4 py-2 hover:bg-brand-soft">Today</button>
         <span className="font-semibold">{fmt(start, { month: "short", day: "numeric" })} – {fmt(days[n - 1], { month: "short", day: "numeric", year: "numeric" })}</span>
-        <span className="ml-auto flex gap-1">
-          {WINDOWS.map((w) => <button key={w.id} onClick={() => setSpan(w.id)} aria-pressed={span === w.id} className={`rounded-full border px-3 py-1 ${span === w.id ? "border-brand bg-brand-soft font-medium" : "border-control hover:bg-brand-soft"}`}>{w.label}</button>)}
+        <span className="ml-auto flex gap-2">
+          {WINDOWS.map((w) => <button key={w.id} onClick={() => setSpan(w.id)} aria-pressed={span === w.id} className={`rounded-full border px-4 py-2 ${span === w.id ? "border-brand bg-brand-soft font-medium" : "border-control hover:bg-brand-soft"}`}>{w.label}</button>)}
         </span>
       </div>
       <div className="overflow-x-auto">
         <div className="min-w-[56rem]">
-          <div className="grid items-end border-b border-line pb-1.5 text-xs text-muted" style={{ gridTemplateColumns: cols }}>
+          <div className="grid items-end border-b border-line pb-2 text-xs text-muted" style={{ gridTemplateColumns: cols }}>
             <span className="sr-only">Person and ticket</span><span aria-hidden />
             {days.map((d, i) => {
               const first = fmt(d, { day: "numeric" }) === "1" || i === 0;
-              return <span key={d} className={`text-center ${d === today ? "font-bold text-brand" : ""} ${new Date(`${d}T12:00:00`).getDay() % 6 === 0 ? "opacity-50" : ""}`}>{first && n > 14 ? <span className="block text-[10px] uppercase">{fmt(d, { month: "short" })}</span> : null}{fmt(d, { day: "numeric" })}</span>;
+              return <span key={d} className={`text-center ${d === today ? "font-bold text-brand" : ""} ${new Date(`${d}T12:00:00`).getDay() % 6 === 0 ? "opacity-50" : ""}`}>{first && n > 14 ? <span className="block text-xs uppercase">{fmt(d, { month: "short" })}</span> : null}{fmt(d, { day: "numeric" })}</span>;
             })}
           </div>
           <div className="relative">
@@ -146,16 +146,16 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
               const { bars, undated } = ganttBars(l.projects, start, n, today);
               return (
                 <section key={l.id} aria-label={l.name} className="border-b border-line py-2 last:border-b-0">
-                  <div className="mb-1"><Person name={l.name} count={l.projects.length} /></div>
-                  {bars.length === 0 && <p className="py-1 pl-10 text-xs text-muted">{l.projects.length === 0 ? "Nothing assigned." : "Nothing scheduled in this window."}</p>}
+                  <div className="mb-2"><Person name={l.name} count={l.projects.length} /></div>
+                  {bars.length === 0 && <p className="py-2 pl-10 text-xs text-muted">{l.projects.length === 0 ? "Nothing assigned." : "Nothing scheduled in this window."}</p>}
                   <ul>
                     {bars.map((b) => (
-                      <li key={b.key} className="grid items-center py-1" style={{ gridTemplateColumns: cols }}>
-                        <Link href={`/projects/${b.key}`} className="truncate pr-3 pl-10 text-xs text-muted hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
+                      <li key={b.key} className="grid items-center py-2" style={{ gridTemplateColumns: cols }}>
+                        <Link href={`/projects/${b.key}`} className="truncate pr-4 pl-10 text-xs text-muted hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
                         <Link
                           href={`/projects/${b.key}`}
                           title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.startDate || b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
-                          className="flex h-7 items-center gap-1 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
+                          className="flex h-7 items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
                           style={{ gridColumn: `${b.from + 2} / ${b.to + 3}`, background: `color-mix(in srgb, ${b.color} 22%, var(--card))`, borderLeft: b.clippedLeft ? undefined : `3px solid ${b.color}`, outline: b.late ? "1.5px solid #8a3734" : undefined }}
                         >
                           {b.clippedLeft && <span aria-hidden>◂</span>}
@@ -182,16 +182,16 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
   const cols = "12rem repeat(5, minmax(0, 1fr))";
   return (
     <div className="rounded-2xl border border-line bg-white p-4">
-      <div className="mb-3 flex items-center gap-2 text-sm">
+      <div className="mb-4 flex items-center gap-2 text-sm">
         <button onClick={() => setMonday(addDay(monday, -7))} aria-label="Previous week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
         <button onClick={() => setMonday(addDay(monday, 7))} aria-label="Next week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
-        <button onClick={() => setMonday(mondayOf(today))} className="rounded-full border border-control px-3 py-1 hover:bg-brand-soft">This week</button>
+        <button onClick={() => setMonday(mondayOf(today))} className="rounded-full border border-control px-4 py-2 hover:bg-brand-soft">This week</button>
         <span className="font-semibold">{fmt(week[0], { month: "short", day: "numeric" })} – {fmt(week[4], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto text-xs text-muted">Shown on the day each ticket is due</span>
       </div>
       <div className="overflow-x-auto">
         <div className="min-w-[56rem]">
-          <div className="grid border-b border-line pb-1.5 text-xs font-semibold" style={{ gridTemplateColumns: cols }}>
+          <div className="grid border-b border-line pb-2 text-xs font-semibold" style={{ gridTemplateColumns: cols }}>
             <span className="sr-only">Person</span><span aria-hidden />
             {week.map((d) => <span key={d} className={`px-2 ${d === today ? "text-brand" : "text-muted"}`}>{fmt(d, { weekday: "short", month: "short", day: "numeric" })}</span>)}
           </div>
@@ -200,13 +200,13 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
             const outside = l.projects.length - placed.filter((x) => x.at).length;
             return (
               <div key={l.id} className="grid border-b border-line last:border-b-0" style={{ gridTemplateColumns: cols }}>
-                <div className="p-2.5"><Person name={l.name} count={l.projects.length} />{outside > 0 && <p className="mt-1 pl-10 text-[11px] text-muted">{outside} due other weeks</p>}</div>
+                <div className="p-2"><Person name={l.name} count={l.projects.length} />{outside > 0 && <p className="mt-2 pl-10 text-xs text-muted">{outside} due other weeks</p>}</div>
                 {week.map((d) => (
-                  <ul key={d} aria-label={`${l.name}, ${fmt(d, { weekday: "long", month: "long", day: "numeric" })}`} className={`min-h-16 space-y-1.5 border-l border-line p-1.5 ${d === today ? "bg-brand-soft/30" : ""}`}>
+                  <ul key={d} aria-label={`${l.name}, ${fmt(d, { weekday: "long", month: "long", day: "numeric" })}`} className={`min-h-16 space-y-2 border-l border-line p-2 ${d === today ? "bg-brand-soft/30" : ""}`}>
                     {placed.filter((x) => x.at?.day === d).map(({ p, at }) => (
                       <li key={p.jiraKey}>
-                        <Link href={`/projects/${p.jiraKey}`} title={`${p.title} (${p.jiraKey})`} className={`block truncate rounded-md border px-2 py-1 text-xs font-medium hover:border-brand ${p.flag === "blocked" ? "border-bad-line bg-bad-bg text-bad-fg" : d < today ? "border-warn-line bg-warn-bg text-warn-fg" : "border-line bg-white"}`}>
-                          {at?.weekend && <span className="mr-1 text-[10px] uppercase text-muted">{at.weekend}</span>}{p.title}
+                        <Link href={`/projects/${p.jiraKey}`} title={`${p.title} (${p.jiraKey})`} className={`block truncate rounded-md border px-2 py-2 text-xs font-medium hover:border-brand ${p.flag === "blocked" ? "border-bad-line bg-bad-bg text-bad-fg" : d < today ? "border-warn-line bg-warn-bg text-warn-fg" : "border-line bg-white"}`}>
+                          {at?.weekend && <span className="mr-2 text-xs uppercase text-muted">{at.weekend}</span>}{p.title}
                         </Link>
                       </li>
                     ))}
@@ -261,20 +261,20 @@ export function TeamView() {
 
   return (
     <main className="mx-auto w-full max-w-7xl p-6">
-      <div className="mb-4 flex flex-wrap items-end gap-3">
+      <div className="mb-4 flex flex-wrap items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold">Team</h1>
           <p className="text-sm text-muted">Open work by person, and what still needs an owner.</p>
         </div>
         <div role="group" aria-label="View" className="ml-auto flex overflow-hidden rounded-full border border-control text-sm">
           {VIEWS.map((v) => (
-            <button key={v.id} onClick={() => choose(v.id)} aria-pressed={view === v.id} className={`flex items-center gap-1.5 px-4 py-1.5 ${view === v.id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}><Icon name={v.icon} size={14} />{v.label}</button>
+            <button key={v.id} onClick={() => choose(v.id)} aria-pressed={view === v.id} className={`flex items-center gap-2 px-4 py-2 ${view === v.id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}><Icon name={v.icon} size={14} />{v.label}</button>
           ))}
         </div>
       </div>
-      <div className="mb-3"><StaleNotice /></div>
-      {error && <div className="mb-3"><Callout tone="bad" icon="alert">{error}</Callout></div>}
-      {total >= LIMIT && <div className="mb-3"><Callout tone="info" icon="alert">Showing the {LIMIT} most recently updated open tickets.</Callout></div>}
+      <div className="mb-4"><StaleNotice /></div>
+      {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
+      {total >= LIMIT && <div className="mb-4"><Callout tone="info" icon="alert">Showing the {LIMIT} most recently updated open tickets.</Callout></div>}
 
       {projects === null || !today ? <p className="text-sm text-muted">Loading…</p> : (
         <>
