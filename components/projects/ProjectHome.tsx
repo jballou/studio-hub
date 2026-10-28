@@ -94,7 +94,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   if (project === undefined) return <p className="p-8 text-sm text-muted">Loading…</p>;
   if (project === null) {
     return (
-      <main className="mx-auto w-full max-w-2xl p-8">
+      <main className="page [&>*]:max-w-2xl">
         <h1 className="text-2xl font-bold">Project not found</h1>
         <p className="mt-2 text-sm text-muted">There&apos;s no project {jiraKey}, or you don&apos;t have access to it in Jira.</p>
         <Link href="/projects" className="mt-4 inline-block font-medium text-brand hover:underline">Back to projects</Link>
@@ -129,7 +129,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const brief = BRIEF_SECTIONS.filter((s) => project.brief?.[s.key]);
 
   return (
-    <main className="w-full p-6">
+    <main className="page">
       <nav aria-label="Breadcrumb" className="mb-2 flex items-center gap-2 text-sm text-muted">
         <Link href="/projects" className="hover:underline">Projects</Link>
         {(rel?.ancestors ?? []).map((a) => (

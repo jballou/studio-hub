@@ -60,7 +60,7 @@ export function FlowEditor() {
   }, [dirty]);
 
   if (me && me.role !== "creative") {
-    return <main className="mx-auto w-full max-w-3xl p-8"><h1 className="text-2xl font-bold">Brief builder</h1><p className="mt-2 text-sm text-muted">Only the creative team can edit the brief questions.</p></main>;
+    return <main className="page [&>*]:max-w-3xl"><h1 className="text-2xl font-bold">Brief builder</h1><p className="mt-2 text-sm text-muted">Only the creative team can edit the brief questions.</p></main>;
   }
   if (!draft || !saved) return <main className="p-8 text-sm text-muted">{error ?? "Loading…"}</main>;
 
@@ -87,7 +87,7 @@ export function FlowEditor() {
   const guard = (fn: () => void) => { if (!dirty || confirm("You have unsaved changes. They will be lost.")) fn(); };
 
   return (
-    <main className="w-full p-4 lg:p-6">
+    <main className="page">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-bold">Brief builder</h1>
         <Tag tone={isDefault ? "neutral" : "ok"}>{isDefault ? "Built-in questions" : `Version ${saved.version}`}</Tag>

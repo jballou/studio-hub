@@ -161,7 +161,7 @@ export function CalendarView() {
   const flip = () => { const next = order === "newest" ? "oldest" : "newest"; setOrder(next); try { localStorage.setItem("calendar-order", next); } catch { /* ignore */ } };
 
   return (
-    <main className="w-full p-6">
+    <main className="page">
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <h1 className="text-2xl font-bold">Calendar</h1>
         <div className="flex items-center gap-2">

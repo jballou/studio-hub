@@ -181,7 +181,7 @@ export function ProjectsView() {
   const clearFilters = () => { setAction(false); setNewOnly(false); setStarredOnly(false); setBlockedOnly(false); setStage(""); setType(""); setCollab(""); setBefore(""); setScope("mine"); };
 
   return (
-    <main className={`mx-auto w-full p-6 ${view === "board" ? "max-w-7xl" : "max-w-5xl"}`}>
+    <main className="page">
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <h1 className="text-2xl font-bold">Projects</h1>
         <div className="ml-auto flex items-center gap-4 text-xs">

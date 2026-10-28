@@ -39,7 +39,7 @@ export function AdminTrash() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-8">
+    <main className="page">
       <div className="mb-2 flex items-center gap-4">
         <h1 className="flex items-center gap-2 text-2xl font-bold"><Icon name="trash" size={22} /> Trash</h1>
         {me?.isAdmin && (items?.length ?? 0) > 0 && (

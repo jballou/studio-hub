@@ -119,7 +119,7 @@ export function MyBriefs() {
   const first = me?.name.split(" ")[0];
 
   return (
-    <main className="mx-auto w-full max-w-6xl p-6">
+    <main className="page">
       <div className="flex flex-wrap items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold">{first ? `${first}'s briefs` : "My briefs"}</h1>

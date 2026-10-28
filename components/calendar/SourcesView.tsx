@@ -60,7 +60,7 @@ export function SourcesView() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-8">
+    <main className="page [&>*]:max-w-3xl">
       <Link href="/calendar" className="mb-2 inline-block text-sm font-medium text-brand hover:underline">← Calendar</Link>
       <h1 className="text-2xl font-bold">Calendar sources</h1>
       <p className="mb-6 mt-2 text-sm text-muted">Everything on the calendar comes from a source: a Google Sheet tracker or a Jira query. Add one and its dates show up for everyone.</p>

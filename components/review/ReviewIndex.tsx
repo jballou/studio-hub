@@ -126,7 +126,7 @@ export function ReviewIndex() {
   const count = (s: ReviewState) => mine.filter((g) => stateOf(g) === s).length;
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-8">
+    <main className="page">
       <div className="mb-6 flex items-center">
         <h1 className="text-2xl font-bold">Review</h1>
         <Link href="/submit" className="ml-auto rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>

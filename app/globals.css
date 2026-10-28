@@ -66,6 +66,14 @@
   --text-display-lg: 76px; --text-display-lg--line-height: 80px; --text-display-lg--letter-spacing: -1.52px;
 }
 
+/* The one page container: left aligned, same width and padding on every tab. Narrow reading pages add [&>*]:max-w-3xl. */
+@utility page {
+  width: 100%;
+  max-width: 80rem;
+  padding: 16px;
+  @media (min-width: 768px) { padding: 32px; }
+}
+
 /* Eyebrow (Figma "Label Eyebrow Small"): small caps-style label above a heading or group. */
 @utility eyebrow {
   font-size: 14px;

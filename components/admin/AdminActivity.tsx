@@ -26,11 +26,11 @@ export function AdminActivity() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  if (!isJira) return <main className="mx-auto w-full max-w-4xl p-6"><p className="text-sm text-muted">Activity appears once sign-in is turned on.</p></main>;
+  if (!isJira) return <main className="page"><p className="text-sm text-muted">Activity appears once sign-in is turned on.</p></main>;
   const shown = (rows ?? []).filter((r) => `${r.actor} ${r.action} ${r.target} ${r.detail ?? ""}`.toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <main className="mx-auto w-full max-w-4xl p-6">
+    <main className="page">
       <div className="mb-4 flex items-center gap-4">
         <h1 className="text-2xl font-bold">Activity</h1>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search activity" className="ml-auto w-56 rounded-lg border border-control bg-white px-4 py-2 text-sm" />

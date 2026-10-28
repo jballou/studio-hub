@@ -256,11 +256,11 @@ export function TeamView() {
     } catch (e) { setError(e instanceof Error ? e.message : "Couldn't assign that."); } finally { setBusy(null); }
   };
 
-  if (me && me.role !== "creative") return <main className="mx-auto w-full max-w-3xl p-8"><Callout tone="info" icon="alert">The Team view is for the creative team.</Callout></main>;
+  if (me && me.role !== "creative") return <main className="page [&>*]:max-w-3xl"><Callout tone="info" icon="alert">The Team view is for the creative team.</Callout></main>;
   const total = (projects ?? []).filter((p) => p.group !== "closed").length;
 
   return (
-    <main className="mx-auto w-full max-w-7xl p-6">
+    <main className="page">
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold">Team</h1>

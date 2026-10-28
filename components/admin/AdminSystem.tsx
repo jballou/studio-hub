@@ -31,10 +31,10 @@ export function AdminSystem() {
     if (isJira) load();
   }, [load]);
 
-  if (!isJira) return <main className="mx-auto w-full max-w-3xl p-6"><p className="text-sm text-muted">System status appears once sign-in is turned on.</p></main>;
+  if (!isJira) return <main className="page [&>*]:max-w-3xl"><p className="text-sm text-muted">System status appears once sign-in is turned on.</p></main>;
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-6">
+    <main className="page">
       <div className="mb-4 flex items-center gap-4">
         <h1 className="text-2xl font-bold">System</h1>
         <button onClick={load} disabled={loading} className="ml-auto rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-40">{loading ? "Checking…" : "Re-check"}</button>

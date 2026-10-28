@@ -165,7 +165,7 @@ export function MyDay() {
   const bigSlot = [...slots].sort((a, b) => b.end - b.start - (a.end - a.start))[0];
 
   return (
-    <main className="mx-auto w-full max-w-7xl p-6">
+    <main className="page">
       <div className="flex flex-wrap items-end gap-4">
         <div>
           <h1 className="text-4xl font-bold md:text-display-md">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</h1>

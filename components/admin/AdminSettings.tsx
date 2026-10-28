@@ -43,7 +43,7 @@ export function AdminSettings() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-6">
+    <main className="page [&>*]:max-w-3xl">
       <h1 className="mb-2 text-2xl font-bold">Settings</h1>
       <p className="mb-6 text-sm text-muted">Organization-wide. Changes apply to everyone the next time they load a page.</p>
 
