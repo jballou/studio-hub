@@ -18,7 +18,7 @@ export type BoxAnchor = { kind: "box"; x: number; y: number; w: number; h: numbe
 export type Anchor = DotAnchor | BoxAnchor;
 
 export type AssetKind = "image" | "video" | "audio" | "pdf" | "embed";
-export type SourceKind = "figma" | "staging" | "drive" | "slides" | "lottie" | "upload";
+export type SourceKind = "figma" | "staging" | "drive" | "slides" | "lottie" | "wistia" | "upload";
 
 /** Where a submission stands with its reviewers. */
 export type ReviewState = "awaiting" | "changes" | "approved";

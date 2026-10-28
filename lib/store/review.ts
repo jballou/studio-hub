@@ -21,7 +21,7 @@ export type Actor = { accountId: string; name: string; email: string; role: "cre
 const KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
 const ID_RE = /^[A-Za-z0-9-]{8,64}$/;
 const KINDS: AssetKind[] = ["image", "video", "audio", "pdf", "embed"];
-const SOURCES: SourceKind[] = ["figma", "staging", "drive", "slides", "lottie", "upload"];
+const SOURCES: SourceKind[] = ["figma", "staging", "drive", "slides", "lottie", "wistia", "upload"];
 export const FILE_PREFIX = "/api/review/file/";
 
 const bad = (m: string) => new AdminError(400, m);
@@ -70,7 +70,8 @@ export function validateSubmission(raw: unknown): Omit<SubmitInput, "submittedBy
   if (src.startsWith("https://")) httpsUrl(src, "The file link");
   const embedUrl = httpsUrl(b.embedUrl, "The preview link") || undefined;
   if (b.assetKind === "embed" && !embedUrl) throw bad("Add a link to preview.");
-  if (b.assetKind !== "embed" && !src) throw bad("Add a file.");
+  // A Wistia video has no file of ours, only its player.
+  if (b.assetKind !== "embed" && !src && !(b.assetKind === "video" && embedUrl)) throw bad("Add a file.");
   const aspect = Number(b.aspect);
   if (!(aspect > 0.05 && aspect < 20)) throw bad("Bad frame shape.");
   const dueAt = new Date(String(b.dueAt)).toString() === "Invalid Date" ? "" : new Date(String(b.dueAt)).toISOString();

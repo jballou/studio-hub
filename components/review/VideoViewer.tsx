@@ -47,7 +47,8 @@ export function VideoViewer({
   const [dragging, setDragging] = useState(false);
   const [rate, setRate] = useState(1);
 
-  const usingFallback = failed && !!fallbackEmbed;
+  // No file to stream (a Wistia video) or one that won't play: show the host's own player instead.
+  const usingFallback = (failed || !src) && !!fallbackEmbed;
   useEffect(() => { onFallback?.(usingFallback); }, [usingFallback, onFallback]);
 
   const report = useCallback((t: number) => {
@@ -145,7 +146,7 @@ export function VideoViewer({
   const videoEl = (
     <video
       ref={videoRef}
-      src={src}
+      src={src || undefined}
       playsInline
       preload="metadata"
       className={audio ? "hidden" : "absolute inset-0 h-full w-full bg-black"}

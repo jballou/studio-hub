@@ -12,7 +12,7 @@ import { useMe } from "@/hooks/useMe";
 import type { Asset, ReviewState, SourceKind, User } from "@/lib/types";
 
 const SOURCE_LABEL: Record<SourceKind, string> = {
-  figma: "Figma", staging: "Landing page", drive: "Google Drive", slides: "Google Slides", lottie: "Lottie", upload: "Upload",
+  figma: "Figma", staging: "Landing page", drive: "Google Drive", slides: "Google Slides", lottie: "Lottie", wistia: "Wistia", upload: "Upload",
 };
 
 /** One row per batch; everything else stays one row per asset. Order follows the first item of each. */

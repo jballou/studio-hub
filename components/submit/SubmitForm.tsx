@@ -24,6 +24,7 @@ const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; pl
   { id: "staging", label: "Landing page", hint: "Staging link", icon: "link", placeholder: "https://staging.example.com/landing" },
   { id: "drive", label: "Google Drive", hint: "Video, audio (MP3, M4A, WAV…), image or PDF", icon: "link", placeholder: "https://drive.google.com/file/d/…/view" },
   { id: "slides", label: "Google Slides", hint: "Deck link", icon: "link", placeholder: "https://docs.google.com/presentation/d/…/edit" },
+  { id: "wistia", label: "Wistia", hint: "Video link", icon: "link", placeholder: "https://yourcompany.wistia.com/medias/…" },
   { id: "lottie", label: "LottieFiles", hint: "Animation link", icon: "link", placeholder: "https://lottiefiles.com/animations/… or a lottie.host embed link" },
   { id: "upload", label: "Upload files", hint: "Image, video, audio (MP3, M4A, WAV…), PDF. Pick several.", icon: "upload" },
 ];
@@ -306,7 +307,7 @@ export function SubmitForm() {
                 <p className="mt-2 text-xs text-muted">Video and audio get a player with timestamped comments.</p>
               </fieldset>
             )}
-            {(source === "figma" || (source === "drive" && driveType !== "audio")) && (
+            {(source === "figma" || source === "wistia" || (source === "drive" && driveType !== "audio")) && (
               <label className="mt-2 flex items-center gap-2 text-sm">Frame shape
                 <select value={shape} onChange={(e) => setShape(e.target.value as Shape)} className="rounded border border-control px-2 py-2">
                   {SHAPES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}

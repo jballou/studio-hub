@@ -138,6 +138,26 @@ function parseLottie(u: URL): ParsedSource {
   };
 }
 
+/** Wistia: a link to one video, from the Wistia app (…wistia.com/medias/<id>) or an embed link. Plays in Wistia's own player. */
+function parseWistia(u: URL, shape: Shape): ParsedSource {
+  const host = u.hostname.replace(/^www\./, "");
+  if (!/(^|\.)wistia\.(com|net)$/.test(host) && host !== "wi.st") return fail("That isn't a Wistia link.");
+  if (host === "wi.st") return fail("Short wi.st links can't be read. Open the video in Wistia and copy its full link.");
+  const id = /\/(?:medias|iframe)\/([a-z0-9]{6,12})(?![a-z0-9])/i.exec(u.pathname)?.[1];
+  if (!id) return fail("Paste a link to one Wistia video. Open it in Wistia and copy the address (…/medias/…).");
+  return {
+    ok: true, kind: "wistia", summary: "Wistia video", suggestedTitle: "Wistia video",
+    embedUrl: `https://fast.wistia.net/embed/iframe/${id}?videoFoam=true&playerColor=089b5e`,
+    aspect: shapeAspect(shape), baseWidth: 1280,
+    // The player is Wistia's, so there is no playback clock to read: reviewers type the time they are at.
+    media: { kind: "video", streamUrl: "" },
+    warnings: [
+      "Reviewers play it in Wistia's own player. When they comment, they type the time they're at (for example 0:42).",
+      "The video must be viewable by your reviewers in Wistia (public, or shared with them).",
+    ],
+  };
+}
+
 function parseStaging(u: URL, device: Device): ParsedSource {
   if (u.protocol !== "https:") return fail("Staging links must start with https://.");
   if (isBlockedHost(u.hostname)) return fail("Use the staging hostname, not localhost or an IP address.");
@@ -160,6 +180,7 @@ export function parseSource(kind: Exclude<SourceKind, "upload">, raw: string, de
     case "figma": return parseFigma(u, shape);
     case "slides": return parseSlides(u);
     case "lottie": return parseLottie(u);
+    case "wistia": return parseWistia(u, shape);
     case "drive": return parseDrive(u, shape, driveType);
     case "staging": return parseStaging(u, device);
   }
