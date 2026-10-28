@@ -1,0 +1,28 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+/** A small yes/no dialog for actions that deserve a second look. Esc or clicking outside cancels. */
+export function ConfirmDialog({ title, body, confirmLabel, danger = false, busy = false, onConfirm, onCancel }: {
+  title: string; body: string; confirmLabel: string; danger?: boolean; busy?: boolean; onConfirm: () => void; onCancel: () => void;
+}) {
+  const cancel = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    cancel.current?.focus();
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [onCancel]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-n-1000/40 p-4 pt-[18vh]" onMouseDown={onCancel}>
+      <div role="alertdialog" aria-modal="true" aria-label={title} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-line bg-white p-5 shadow-xl">
+        <h2 className="text-lg font-bold">{title}</h2>
+        <p className="mt-1 text-sm text-muted">{body}</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button ref={cancel} onClick={onCancel} className="rounded-full border border-control px-5 py-2 text-sm font-medium hover:bg-n-150">Cancel</button>
+          <button onClick={onConfirm} disabled={busy} className={`rounded-full px-5 py-2 text-sm font-medium text-n-50 disabled:opacity-60 ${danger ? "bg-bad-fg hover:opacity-90" : "bg-brand hover:bg-brand-dark"}`}>{busy ? "Working…" : confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}

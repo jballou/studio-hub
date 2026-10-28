@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Icon } from "@/components/ui/Icon";
 import { Tag, type Tone } from "@/components/ui/Tag";
 import type { IconName } from "@/components/ui/Icon";
 import { repo } from "@/lib/data";
@@ -41,7 +43,7 @@ function stateOf(g: Group): ReviewState {
   return all.includes("changes") ? "changes" : all.every((x) => x === "approved") ? "approved" : "awaiting";
 }
 
-function Row({ g, users, showState }: { g: Group; users: User[]; showState: boolean }) {
+function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showState: boolean; onTrash?: (a: Asset) => void }) {
   const first = g.items[0];
   const state = STATES.find((x) => x.id === stateOf(g))!;
   const who = users.find((u) => u.id === first.submittedBy)?.name;
@@ -67,8 +69,8 @@ function Row({ g, users, showState }: { g: Group; users: User[]; showState: bool
     );
   }
   return (
-    <li>
-      <Link href={`/review/${first.id}`} className="flex items-center gap-3 rounded-xl border border-line bg-white p-4 hover:border-brand">
+    <li className="group relative">
+      <Link href={`/review/${first.id}`} className={`flex items-center gap-3 rounded-xl border border-line bg-white p-4 hover:border-brand ${onTrash ? "pr-14" : ""}`}>
         <Tag tone="neutral">{first.source ? SOURCE_LABEL[first.source.kind] : first.kind}</Tag>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{first.name}</span>
@@ -77,6 +79,11 @@ function Row({ g, users, showState }: { g: Group; users: User[]; showState: bool
         {status}
         <span className="font-mono text-xs text-muted">{first.projectKey}</span>
       </Link>
+      {onTrash && (
+        <button onClick={() => onTrash(first)} aria-label={`Move ${first.name} to Trash`} title="Move to Trash" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
+          <Icon name="trash" size={16} />
+        </button>
+      )}
     </li>
   );
 }
@@ -86,6 +93,14 @@ export function ReviewIndex() {
   const [assets, setAssets] = useState<Asset[] | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<ReviewState | "all">("all");
+  const [asking, setAsking] = useState<Asset | null>(null);
+  const [busy, setBusy] = useState(false);
+  const mayTrash = (a: Asset) => !!me && (me.role === "creative" || a.submittedBy === me.id);
+  const trash = async () => {
+    if (!asking) return;
+    setBusy(true);
+    try { await repo.deleteAsset(asking.id); setAssets((cur) => (cur ?? []).filter((x) => x.id !== asking.id)); } finally { setBusy(false); setAsking(null); }
+  };
 
   useEffect(() => {
     repo.listAssets().then(setAssets).catch(() => setAssets([]));
@@ -123,7 +138,7 @@ export function ReviewIndex() {
                   <div key={s.id} className="mb-5">
                     <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
                     {list.length === 0 ? <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">{s.empty}</p> : (
-                      <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState />)}</ul>
+                      <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState onTrash={mayTrash(g.items[0]) ? setAsking : undefined} />)}</ul>
                     )}
                   </div>
                 );
@@ -138,6 +153,12 @@ export function ReviewIndex() {
             </section>
           )}
         </>
+      )}
+      {asking && (
+        <ConfirmDialog
+          title="Move to Trash?" confirmLabel="Move to Trash" danger busy={busy} onCancel={() => setAsking(null)} onConfirm={trash}
+          body={`“${asking.name}” and its comments will be hidden for everyone. The creative team can restore it from Trash for 30 days, then it is removed for good.`}
+        />
       )}
     </main>
   );

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Icon } from "@/components/ui/Icon";
 import { StageTag } from "@/components/ui/Tag";
 import { formatDue } from "@/lib/time";
@@ -51,6 +53,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const [localSrc, setLocalSrc] = useState<string | null>(null);
   const [simFail, setSimFail] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
+  const [trashAsk, setTrashAsk] = useState(false);
+  const [trashing, setTrashing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareMenu, setShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -270,7 +275,12 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-full z-20 mt-1 w-72 space-y-3 rounded-xl border border-line bg-white p-3 text-xs shadow-lg">
-              <p className="font-semibold uppercase tracking-wide text-muted">Demo controls (mock data)</p>
+              {canShare && (
+                <button onClick={() => { setMenuOpen(false); setTrashAsk(true); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-medium text-bad-fg hover:bg-bad-bg">
+                  <Icon name="trash" size={16} /> Move to Trash
+                </button>
+              )}
+              {!isJira && <p className="font-semibold uppercase tracking-wide text-muted">Demo controls (mock data)</p>}
               {!isJira && (
                 <label className="flex items-center justify-between gap-2">Viewing as
                   <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-1 py-1">
@@ -278,11 +288,11 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
                   </select>
                 </label>
               )}
-              <label className="flex items-center gap-1.5">
+              {!isJira && <label className="flex items-center gap-1.5">
                 <input type="checkbox" checked={simFail} onChange={(e) => { setSimFail(e.target.checked); mockControls.simulatePushFailure = e.target.checked; }} />
                 Make the next Jira push fail
-              </label>
-              {kind === "video" && (
+              </label>}
+              {!isJira && kind === "video" && (
                 <label className="block cursor-pointer rounded border border-control px-2 py-1.5 text-center hover:bg-brand-soft">
                   Load a local video file
                   <input type="file" accept="video/*" className="hidden" onChange={(e) => {
@@ -329,6 +339,11 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           </select>
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevronDown" size={14} /></span>
         </label>
+        {canShare && (
+          <Link href={`/submit?version=${asset.id}`} className="flex items-center gap-1.5 rounded-full border border-brand px-4 py-1.5 text-sm font-medium text-brand hover:bg-brand-soft" title="Upload a new version of this design for re-review">
+            <Icon name="upload" size={14} /> New version
+          </Link>
+        )}
         {kind !== "audio" && <ZoomControl zoom={zoom} onChange={setZoom} />}
         <button
           onClick={() => setCommenting((c) => !c)}
@@ -452,6 +467,14 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           onPushAll={pushAll}
         />
       </div>
+      {trashAsk && (
+        <ConfirmDialog
+          title="Move to Trash?" confirmLabel="Move to Trash" danger busy={trashing}
+          body={`“${asset.name}” and its comments will be hidden for everyone. The creative team can restore it from Trash for 30 days, then it is removed for good.`}
+          onCancel={() => setTrashAsk(false)}
+          onConfirm={async () => { setTrashing(true); try { await repo.deleteAsset(asset.id); router.push("/review"); } catch { setTrashing(false); setTrashAsk(false); } }}
+        />
+      )}
       {shareOpen && <ShareDialog asset={asset} users={people} canManage={canShare} onClose={() => setShareOpen(false)} onChange={setAsset} />}
     </div>
   );

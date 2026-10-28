@@ -56,6 +56,16 @@ export const apiRepo: ReviewRepo = {
   async setReviewState(assetId, state: ReviewState) {
     return (await call<{ asset: Asset }>(`/api/review/assets/${encodeURIComponent(assetId)}`, { method: "PATCH", body: JSON.stringify({ review: state }) })).asset;
   },
+  async deleteAsset(assetId) {
+    await call(`/api/review/assets/${encodeURIComponent(assetId)}`, { method: "DELETE" });
+  },
+  listTrash: async () => (await call<{ items: (Asset & { daysLeft: number })[] }>("/api/review/trash")).items,
+  async restoreAsset(assetId) {
+    await post("/api/review/trash", { op: "restore", id: assetId });
+  },
+  async purgeTrash(assetId) {
+    await post("/api/review/trash", assetId ? { op: "purge", id: assetId } : { op: "empty" });
+  },
   async share(assetId, change: ShareChange) {
     return (await call<{ asset: Asset }>(`/api/review/assets/${encodeURIComponent(assetId)}`, { method: "PATCH", body: JSON.stringify({ share: change }) })).asset;
   },

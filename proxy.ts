@@ -9,6 +9,8 @@ import { auth } from "@/auth";
 const guarded = auth((req) => {
   const { pathname, search } = req.nextUrl;
   if (pathname === "/signin" || pathname.startsWith("/api/auth")) return NextResponse.next();
+  // Scheduled jobs come from Vercel, not a person; each checks its own bearer secret.
+  if (pathname.startsWith("/api/cron/")) return NextResponse.next();
   if (req.auth && !req.auth.error) return NextResponse.next();
 
   if (pathname.startsWith("/api/")) return Response.json({ error: "Not signed in." }, { status: 401 });

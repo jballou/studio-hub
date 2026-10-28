@@ -73,8 +73,8 @@ export const mockControls = { simulatePushFailure: false };
 export const mockRepo: ReviewRepo = {
   // Real mode has no demo people; names come from Jira user search and the signed-in account.
   listUsers: () => delay(isJira ? [] : users),
-  listAssets: () => delay(assets),
-  getAsset: (id) => delay(assets.find((a) => a.id === id) ?? null),
+  listAssets: () => delay(assets.filter((a) => !a.deletedAt)),
+  getAsset: (id) => delay(assets.find((a) => a.id === id && !a.deletedAt) ?? null),
   getVersion: (id) => delay(versions.find((v) => v.id === id) ?? null),
   listThreads: (versionId) => delay(threads.filter((t) => t.versionId === versionId)),
 
@@ -135,6 +135,21 @@ export const mockRepo: ReviewRepo = {
     }
     versions[versions.length - 1].assetId = asset.id;
     return delay({ assetId: asset.id, versionId });
+  },
+
+  async deleteAsset(assetId: string) {
+    const a = assets.find((x) => x.id === assetId);
+    if (!a) throw new Error(`asset ${assetId} not found`);
+    a.deletedAt = new Date().toISOString();
+    a.deletedBy = { id: "u-avery", name: "Avery Chen" };
+  },
+  listTrash: () => delay(assets.filter((a) => a.deletedAt).map((a) => ({ ...a, daysLeft: Math.max(0, 30 - Math.floor((Date.now() - Date.parse(a.deletedAt!)) / 86_400_000)) }))),
+  async restoreAsset(assetId: string) {
+    const a = assets.find((x) => x.id === assetId);
+    if (a) { delete a.deletedAt; delete a.deletedBy; }
+  },
+  async purgeTrash(assetId?: string) {
+    for (let i = assets.length - 1; i >= 0; i--) if (assets[i].deletedAt && (!assetId || assets[i].id === assetId)) assets.splice(i, 1);
   },
 
   share(assetId: string, change: ShareChange) {

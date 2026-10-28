@@ -1,7 +1,8 @@
 import { AdminError } from "@/lib/store/users";
 import { errorResponse, jiraSession } from "@/lib/jira/session";
+import { audit } from "@/lib/store/users";
 import { actorOf } from "@/lib/store/reviewSession";
-import { getAsset, setReviewState, updateSharing } from "@/lib/store/review";
+import { getAsset, moveToTrash, setReviewState, updateSharing } from "@/lib/store/review";
 import type { ReviewState, ShareChange } from "@/lib/types";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -24,6 +25,18 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const body = await req.json().catch(() => ({}));
     if (body.share) return Response.json({ asset: await updateSharing(actorOf(s), (await params).id, body.share as ShareChange) });
     return Response.json({ asset: await setReviewState(actorOf(s), (await params).id, body.review as ReviewState) });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+/** DELETE moves the design to Trash (restorable for 30 days). */
+export async function DELETE(req: Request, { params }: Ctx) {
+  try {
+    const s = await jiraSession(req);
+    const asset = await moveToTrash(actorOf(s), (await params).id);
+    await audit({ actor: s.email, action: "review.trash", target: asset.projectKey, detail: asset.name });
+    return Response.json({ ok: true });
   } catch (e) {
     return errorResponse(e);
   }

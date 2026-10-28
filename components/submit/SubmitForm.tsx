@@ -46,6 +46,7 @@ export function SubmitForm() {
   const [uploadNote, setUploadNote] = useState<{ bad: string[]; cantPlay: string[] } | null>(null);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const cancels = useRef(new Map<string, () => void>());
+  const [versionOf, setVersionOf] = useState<Asset | null>(null);
   const [picker, setPicker] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulk, setBulk] = useState("");
@@ -66,6 +67,25 @@ export function SubmitForm() {
     repo.listAssets().then(setAssets);
     const want = params.get("ticket");
     if (want) projectsRepo.getProject(want, "u-avery").then((p) => p && setTicket((t) => t ?? p));
+  }, [params]);
+
+  // "New version" from a review page: carry over the design, ticket and people so only the new file is needed.
+  useEffect(() => {
+    const vid = params.get("version");
+    if (!vid) return;
+    let live = true;
+    repo.getAsset(vid).then(async (a) => {
+      if (!a || !live) return;
+      const p = await projectsRepo.getProject(a.projectKey, "u-avery");
+      if (!live) return;
+      if (p) setTicket(p);
+      setTarget(a.id);
+      setVersionOf(a);
+      setSource(a.source?.kind ?? "upload");
+      setReviewers(a.reviewers ?? []);
+      setApprovers(a.approvers ?? []);
+    });
+    return () => { live = false; };
   }, [params]);
 
   // Default the approver to the ticket's requester when we know who that is.
@@ -223,7 +243,12 @@ export function SubmitForm() {
 
   return (
     <main className="mx-auto w-full max-w-2xl p-8">
-      <h1 className="text-2xl font-bold">Submit for feedback</h1>
+      <h1 className="text-2xl font-bold">{versionOf ? "Upload a new version" : "Submit for feedback"}</h1>
+      {versionOf && (
+        <p className="mt-2 rounded-xl border border-info-line bg-info-bg px-4 py-3 text-sm text-info-fg">
+          This will be <b>version {versionOf.versionIds.length + 1}</b> of “{versionOf.name}”. Reviewers and approvers are carried over (change them below if needed), and it goes back to awaiting feedback. Add one file or link.
+        </p>
+      )}
       <p className="mb-6 mt-1 text-sm text-muted">Share what you want reviewed. Reviewers get a link and can comment right on it. Add several items to send them as one batch.</p>
 
       <fieldset className="mb-6">

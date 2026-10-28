@@ -3,6 +3,7 @@
 // doesn't make everyone rewrite the same file. Every write is conditional (see doc.ts), so two people
 // commenting at once both land.
 import type { Anchor, Asset, ShareChange, AssetKind, AssetVersion, Person, ReviewState, SourceKind, SubmitInput, Thread } from "@/lib/types";
+import { del } from "@vercel/blob";
 import { readDoc, updateDoc } from "./doc";
 import { AdminError } from "./users";
 
@@ -37,6 +38,7 @@ const people = (v: unknown): Person[] =>
 
 /** A person can open an asset if they sent it, are named on it, or are on the creative team. */
 export function canSee(a: Asset, who: Actor): boolean {
+  if (a.deletedAt) return false;
   return who.role === "creative" || !!a.linkAccess || a.submittedBy === who.accountId || !!a.reviewers?.some((p) => p.id === who.accountId) || !!a.approvers?.some((p) => p.id === who.accountId);
 }
 
@@ -238,4 +240,61 @@ export async function recordPush(versionId: string, threadId: string, result: { 
     else if (!t.jira) t.pushError = result.error;
     return { data: d, result: t };
   });
+}
+
+// ---- Trash ----
+export const TRASH_DAYS = 30;
+const DAY_MS = 86_400_000;
+const isExpired = (a: Asset, nowMs = Date.now()) => !!a.deletedAt && nowMs - Date.parse(a.deletedAt) >= TRASH_DAYS * DAY_MS;
+
+/** Moves a design to Trash. The sender, the creative team or a named approver may; everything stays intact for restoring. */
+export async function moveToTrash(who: Actor, assetId: string): Promise<Asset> {
+  return updateDoc("review-assets", emptyAssets, (d) => {
+    const a = d.assets.find((x) => x.id === assetId);
+    if (!a || !canSee(a, who)) throw new AdminError(404, "That design doesn't exist.");
+    const may = who.role === "creative" || a.submittedBy === who.accountId || !!a.approvers?.some((p) => p.id === who.accountId);
+    if (!may) throw new AdminError(403, "Only the person who sent this, an approver or the creative team can delete it.");
+    a.deletedAt = now();
+    a.deletedBy = { id: who.accountId, name: who.name };
+    return { data: d, result: a };
+  });
+}
+
+/** What is in Trash, newest first. Creative team and admins only (the route checks). */
+export async function listTrash(): Promise<(Asset & { daysLeft: number })[]> {
+  const { data } = await readDoc("review-assets", emptyAssets);
+  return data.assets
+    .filter((a) => a.deletedAt)
+    .sort((x, y) => (y.deletedAt ?? "").localeCompare(x.deletedAt ?? ""))
+    .map((a) => ({ ...a, daysLeft: Math.max(0, Math.ceil((Date.parse(a.deletedAt!) + TRASH_DAYS * DAY_MS - Date.now()) / DAY_MS)) }));
+}
+
+export async function restoreFromTrash(assetId: string): Promise<Asset> {
+  return updateDoc("review-assets", emptyAssets, (d) => {
+    const a = d.assets.find((x) => x.id === assetId);
+    if (!a?.deletedAt) throw new AdminError(404, "That isn't in Trash anymore.");
+    if (isExpired(a)) throw new AdminError(410, "That was past 30 days in Trash and has been removed.");
+    delete a.deletedAt; delete a.deletedBy;
+    return { data: d, result: a };
+  });
+}
+
+/** Removes designs for good: their records, comments and uploaded files. `ids` limits it; otherwise everything past 30 days. */
+export async function purge(opts: { ids?: string[]; expiredOnly: boolean }): Promise<number> {
+  const removed = await updateDoc("review-assets", emptyAssets, (d) => {
+    const gone = d.assets.filter((a) => a.deletedAt && (opts.expiredOnly ? isExpired(a) : true) && (!opts.ids || opts.ids.includes(a.id)));
+    const goneIds = new Set(gone.map((a) => a.id));
+    const vs = d.versions.filter((v) => goneIds.has(v.assetId));
+    d.assets = d.assets.filter((a) => !goneIds.has(a.id));
+    d.versions = d.versions.filter((v) => !goneIds.has(v.assetId));
+    return { data: d, result: vs };
+  });
+  // Files and comment documents go after the records, best effort: an orphan file is harmless, a dangling record is not.
+  const paths: string[] = [];
+  for (const v of removed) {
+    paths.push(`${process.env.VERCEL_ENV ?? "local"}/${threadsName(v.id)}.json`);
+    if (v.src.startsWith(FILE_PREFIX)) paths.push(`review-files/${v.src.slice(FILE_PREFIX.length).split("/").map(decodeURIComponent).join("/")}`);
+  }
+  if (paths.length) await del(paths).catch(() => undefined);
+  return new Set(removed.map((v) => v.assetId)).size;
 }

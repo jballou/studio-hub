@@ -43,6 +43,9 @@ export type Asset = {
   /** what the creative wants feedback on */
   instructions?: string;
   submittedBy?: string;
+  /** set when moved to Trash; it is removed for good 30 days later unless restored */
+  deletedAt?: string;
+  deletedBy?: { id: string; name: string };
   /** anyone at the company who is signed in can open it with the link (they can comment) */
   linkAccess?: boolean;
   /** where this stands with reviewers; absent means awaiting feedback */

@@ -17,6 +17,13 @@ export interface ReviewRepo {
   updateAnchor(threadId: string, anchor: Anchor): Promise<Thread>;
   /** Creates an asset (or a new version of one) and the feedback request for it. */
   submitForReview(input: SubmitInput): Promise<{ assetId: string; versionId: string }>;
+  /** Moves a design to Trash. */
+  deleteAsset(assetId: string): Promise<void>;
+  /** Everything in Trash, with days left before it is removed for good. */
+  listTrash(): Promise<(Asset & { daysLeft: number })[]>;
+  restoreAsset(assetId: string): Promise<void>;
+  /** Admins: remove one design for good, or everything in Trash when no id is given. */
+  purgeTrash(assetId?: string): Promise<void>;
   /** Adds or removes people and sets whether anyone with the link can open it. */
   share(assetId: string, change: ShareChange): Promise<Asset>;
   /** Records the outcome of a review: changes requested or approved. */
