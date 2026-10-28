@@ -10,7 +10,7 @@ import { Icon } from "@/components/ui/Icon";
 import { StageTag } from "@/components/ui/Tag";
 import { formatDue } from "@/lib/time";
 import { isJira, mockControls, projectsRepo, repo } from "@/lib/data";
-import type { Anchor, Asset, AssetVersion, Person, Stage, Thread, User } from "@/lib/types";
+import type { Anchor, Asset, AssetVersion, Person, Severity, Stage, Thread, User } from "@/lib/types";
 import { AnnotationLayer, type Pin } from "./AnnotationLayer";
 import { CommentList, Composer, type Draft, type Tab } from "./CommentPanel";
 import { EmbedViewer } from "./EmbedViewer";
@@ -156,11 +156,12 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const unreadIds = new Set(threads.filter((t) => t.authorId !== me.id && !seen.has(t.id)).map((t) => t.id));
   const firstUnread = threads.find((t) => unreadIds.has(t.id));
 
-  const submit = async (body: string, withTime: boolean, typedMs?: number | null) => {
+  const submit = async (body: string, withTime: boolean, typedMs?: number | null, severity?: Severity) => {
     const t = await repo.createThread({
       versionId: version.id,
       authorId: me.id,
       body,
+      severity,
       anchor,
       timeMs: timed && withTime ? (manualTime ? typedMs ?? 0 : draft?.capturedMs ?? video.current?.currentMs() ?? 0) : null,
       page: kind === "pdf" ? page : null,
@@ -401,6 +402,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           onUnpushed={setUnpushed}
           onSelect={select}
           onReply={async (id, body) => replace(await repo.reply(id, me.id, body))}
+          onEdit={async (id, cid, body, sev) => replace(await repo.editComment(id, cid, body, sev))}
           onStatus={async (id, s) => replace(await repo.setStatus(id, s))}
           onPush={push}
           onPushAll={pushAll}

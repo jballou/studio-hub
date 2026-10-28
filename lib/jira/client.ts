@@ -198,6 +198,13 @@ export async function setStartDate(a: JiraAuth, key: string, date: string): Prom
   await request<void>(a, `/issue/${key}`, { method: "PUT", body: { fields: { [sf]: date } } });
 }
 
+/** Sets the ticket's due date (YYYY-MM-DD). Needs write:jira-work and edit permission on the ticket. */
+export async function setDueDate(a: JiraAuth, key: string, date: string): Promise<void> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new JiraError(400, "That date doesn't look right.");
+  await request<void>(a, `/issue/${key}`, { method: "PUT", body: { fields: { duedate: date } } });
+}
+
 /** Quotes a value for use inside a JQL string literal. */
 export const jqlString = (s: string) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 

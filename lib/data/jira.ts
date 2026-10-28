@@ -67,6 +67,11 @@ export const jiraProjects: ProjectsRepo = {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error ?? `Couldn't save the start date (${res.status}).`);
   },
+  async setDueDate(jiraKey, date) {
+    const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/due`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? `Couldn't save the due date (${res.status}).`);
+  },
   async moveTo(jiraKey, status) {
     const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/status`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     const body = await res.json().catch(() => ({}));

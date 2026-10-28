@@ -18,6 +18,8 @@ export interface ProjectsRepo {
   relations(jiraKey: string): Promise<Relations | null>;
   /** Sets the ticket's start date (YYYY-MM-DD). Rejects with a plain message. */
   setStartDate(jiraKey: string, date: string): Promise<void>;
+  /** Sets the ticket's due date (YYYY-MM-DD). Rejects with a plain message. */
+  setDueDate(jiraKey: string, date: string): Promise<void>;
   /** Moves a ticket to a board status. Rejects with a plain message when Jira or the rules say no. */
   moveTo(jiraKey: string, status: string): Promise<void>;
   /** Open tickets assigned to the signed-in person, soonest deadline first. */
@@ -136,6 +138,12 @@ export const mockProjects: ProjectsRepo = {
     const problem = startDateProblem(date, p.deadline);
     if (problem) throw new Error(problem);
     p.startDate = date;
+  },
+  async setDueDate(jiraKey, date) {
+    const p = projects.find((x) => x.jiraKey === jiraKey);
+    if (!p) throw new Error("That ticket doesn't exist.");
+    if (p.startDate && date < p.startDate) throw new Error("The due date can't be before the start date.");
+    p.deadline = date;
   },
   async closedWork(range) {
     const cutoff = new Date(Date.now() - range * 86_400_000).toISOString().slice(0, 10);

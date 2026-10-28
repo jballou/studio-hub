@@ -2,6 +2,7 @@ import { errorResponse, jiraSession } from "@/lib/jira/session";
 import { actorOf } from "@/lib/store/reviewSession";
 import { addIssueComment } from "@/lib/jira/client";
 import { changeThread, createThread, getThreadForPush, listThreads, recordPush } from "@/lib/store/review";
+import { SEVERITY_LABEL } from "@/lib/types";
 import { formatTime } from "@/lib/timecode";
 
 /** GET /api/review/threads?versionId=… */
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
 
 /**
  * POST { op: "create", versionId, body, anchor, timeMs, page }
- *      { op: "reply" | "status" | "anchor", versionId, threadId, ... }
+ *      { op: "reply" | "edit" | "status" | "anchor", versionId, threadId, ... }
  *      { op: "push", versionId, threadId }   post this comment to the Jira ticket (once)
  */
 export async function POST(req: Request) {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     const who = actorOf(s);
     const b = await req.json().catch(() => ({}));
     const versionId = String(b.versionId ?? "");
-    if (b.op === "create") return Response.json({ thread: await createThread(who, { versionId, body: b.body, anchor: b.anchor, timeMs: b.timeMs, page: b.page }) }, { status: 201 });
+    if (b.op === "create") return Response.json({ thread: await createThread(who, { versionId, body: b.body, anchor: b.anchor, timeMs: b.timeMs, page: b.page, severity: b.severity }) }, { status: 201 });
     const threadId = String(b.threadId ?? "");
     if (b.op === "push") {
       const { thread, asset, version } = await getThreadForPush(who, versionId, threadId);
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
       const where = thread.timeMs != null ? ` at ${formatTime(thread.timeMs)}` : thread.page ? ` on page ${thread.page}` : "";
       const lines = [
         `Review comment #${thread.number} on "${asset.name}" (version ${version.number})${where}`,
-        ...thread.comments.flatMap((c) => [`${c.authorName ?? "Someone"}: ${c.body}`]),
+        ...thread.comments.map((c) => `${c.authorName ?? "Someone"}${c.severity !== undefined ? ` [P${c.severity} ${SEVERITY_LABEL[c.severity]}]` : ""}: ${c.body}`),
         "",
         `Open in the Brand Creative Hub: ${new URL(req.url).origin}/review/${asset.id}`,
       ];
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
         return Response.json({ thread: await recordPush(versionId, threadId, { error: msg }) });
       }
     }
-    if (b.op === "reply" || b.op === "status" || b.op === "anchor") {
+    if (b.op === "reply" || b.op === "edit" || b.op === "status" || b.op === "anchor") {
       return Response.json({ thread: await changeThread(who, versionId, threadId, b) });
     }
     return Response.json({ error: "Unknown request." }, { status: 400 });

@@ -20,8 +20,8 @@ const label = (s: string) => { const p = parse(s); return p ? new Date(p.y, p.m,
  * Date field with a calendar popover. Value is "YYYY-MM-DD" (or "" for none), like a native date input.
  * Arrow keys move by day and week, PageUp/PageDown by month, Esc closes.
  */
-export function DatePicker({ value, onChange, min, max, placeholder = "Select a date", ariaLabel, className = "", autoFocus = false }: {
-  value: string; onChange: (v: string) => void; min?: string; max?: string; placeholder?: string; ariaLabel?: string; className?: string; autoFocus?: boolean;
+export function DatePicker({ value, onChange, min, max, placeholder = "Select a date", ariaLabel, className = "", autoFocus = false, align = "left" }: {
+  value: string; onChange: (v: string) => void; min?: string; max?: string; placeholder?: string; ariaLabel?: string; className?: string; autoFocus?: boolean; /** which edge of the field the calendar lines up with */ align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState<string>("");
@@ -79,7 +79,7 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
       </button>
 
       {open && (
-        <div id={id} role="dialog" aria-label="Choose a date" onKeyDown={onKey} className="absolute left-0 top-full z-50 mt-2 w-[19rem] rounded-3xl border border-line bg-white p-4 shadow-xl">
+        <div id={id} role="dialog" aria-label="Choose a date" onKeyDown={onKey} className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-50 mt-2 w-[19rem] rounded-3xl border border-line bg-white p-4 shadow-xl`}>
           <div className="flex items-center rounded-full bg-n-100 p-2">
             <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={16} /></span></button>
             <span className="flex-1 text-center text-sm font-semibold" aria-live="polite">{MONTHS[view.m]} {view.y}</span>

@@ -46,6 +46,9 @@ export const apiRepo: ReviewRepo = {
   async reply(threadId, _authorId, body) {
     return remember((await post<{ thread: Thread }>("/api/review/threads", { op: "reply", versionId: versionOf(threadId), threadId, body })).thread);
   },
+  async editComment(threadId, commentId, body, severity) {
+    return remember((await post<{ thread: Thread }>("/api/review/threads", { op: "edit", versionId: versionOf(threadId), threadId, commentId, body, severity })).thread);
+  },
   async setStatus(threadId, status) {
     return remember((await post<{ thread: Thread }>("/api/review/threads", { op: "status", versionId: versionOf(threadId), threadId, status })).thread);
   },

@@ -85,7 +85,7 @@ export const mockRepo: ReviewRepo = {
       id: nid("t"), number, versionId: input.versionId, anchor: input.anchor,
       timeMs: input.timeMs, endMs: null, page: input.page, status: "open",
       authorId: input.authorId, createdAt: now,
-      comments: [{ id: nid("c"), authorId: input.authorId, body: input.body, createdAt: now }],
+      comments: [{ id: nid("c"), authorId: input.authorId, body: input.body, createdAt: now, ...(input.severity !== undefined ? { severity: input.severity } : {}) }],
       jira: null, pushError: null,
     };
     threads.push(t);
@@ -96,6 +96,15 @@ export const mockRepo: ReviewRepo = {
     const t = must(threadId);
     t.comments.push({ id: nid("c"), authorId, body, createdAt: new Date().toISOString() });
     return delay(t);
+  },
+
+  editComment(threadId, commentId, body, severity) {
+    const c = must(threadId).comments.find((x) => x.id === commentId);
+    if (!c) throw new Error("comment not found");
+    if (body !== c.body || severity !== c.severity) c.editedAt = new Date().toISOString();
+    c.body = body;
+    if (severity === undefined) delete c.severity; else c.severity = severity;
+    return delay(must(threadId));
   },
 
   setStatus(threadId, status) {

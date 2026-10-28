@@ -98,7 +98,17 @@ export type Comment = {
   authorRole?: "creative" | "requester";
   body: string;
   createdAt: string;
+  /** 0 critical/showstopper, 1 important, 2 moderate, 3 low impact, 4 cosmetic or casual observation */
+  severity?: Severity;
+  /** set when the author changed the comment after posting */
+  editedAt?: string;
 };
+
+export type Severity = 0 | 1 | 2 | 3 | 4;
+
+export const SEVERITY_LABEL: Record<Severity, string> = { 0: "Critical", 1: "Important", 2: "Moderate", 3: "Low impact", 4: "Cosmetic" };
+export const SEVERITY_HINT: Record<Severity, string> = { 0: "Showstopper", 1: "Should be fixed", 2: "Worth fixing", 3: "Minor", 4: "Casual observation" };
+export const asSeverity = (v: unknown): Severity | undefined => (typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 4 ? (v as Severity) : undefined);
 
 export type JiraPush = { commentId: string; pushedAt: string };
 
@@ -126,6 +136,7 @@ export type NewThread = {
   anchor: Anchor | null;
   timeMs: number | null;
   page: number | null;
+  severity?: Severity;
 };
 
 // Requester-facing stages mapped from Jira status.

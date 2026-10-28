@@ -3,6 +3,7 @@
 // doesn't make everyone rewrite the same file. Every write is conditional (see doc.ts), so two people
 // commenting at once both land.
 import type { Anchor, Asset, ShareChange, AssetKind, AssetVersion, Person, ReviewState, SourceKind, SubmitInput, Thread } from "@/lib/types";
+import { asSeverity } from "@/lib/types";
 import { del } from "@vercel/blob";
 import { deleteFile, filesAvailable } from "./files";
 import { readDoc, updateDoc } from "./doc";
@@ -178,7 +179,7 @@ const validAnchor = (a: unknown): Anchor | null => {
   return null;
 };
 
-export async function createThread(who: Actor, input: { versionId: string; body: string; anchor: unknown; timeMs: unknown; page: unknown }): Promise<Thread> {
+export async function createThread(who: Actor, input: { versionId: string; body: string; anchor: unknown; timeMs: unknown; page: unknown; severity?: unknown }): Promise<Thread> {
   await assertVersionVisible(who, input.versionId);
   const body = str(input.body, 5000);
   if (!body) throw bad("Write a comment first.");
@@ -188,7 +189,7 @@ export async function createThread(who: Actor, input: { versionId: string; body:
     const t: Thread = {
       id: uuid(), number: Math.max(0, ...d.threads.map((x) => x.number)) + 1, versionId: input.versionId, anchor: validAnchor(input.anchor),
       timeMs, endMs: null, page, status: "open", authorId: who.accountId, createdAt: now(),
-      comments: [{ id: uuid(), authorId: who.accountId, authorName: who.name, authorRole: who.role, body, createdAt: now() }],
+      comments: [{ id: uuid(), authorId: who.accountId, authorName: who.name, authorRole: who.role, body, createdAt: now(), ...(asSeverity(input.severity) !== undefined ? { severity: asSeverity(input.severity) } : {}) }],
       jira: null, pushError: null,
     };
     d.threads.push(t);
@@ -198,6 +199,7 @@ export async function createThread(who: Actor, input: { versionId: string; body:
 
 type ThreadOp =
   | { op: "reply"; body: string }
+  | { op: "edit"; commentId: string; body: string; severity?: unknown }
   | { op: "status"; status: "open" | "resolved" }
   | { op: "anchor"; anchor: unknown };
 
@@ -212,6 +214,17 @@ export async function changeThread(who: Actor, versionId: string, threadId: stri
       const body = str(change.body, 5000);
       if (!body) throw bad("Write a reply first.");
       t.comments.push({ id: uuid(), authorId: who.accountId, authorName: who.name, authorRole: who.role, body, createdAt: now() });
+    } else if (change.op === "edit") {
+      const c = t.comments.find((x) => x.id === change.commentId);
+      if (!c) throw new AdminError(404, "That comment doesn't exist.");
+      if (c.authorId !== who.accountId) throw new AdminError(403, "You can only edit your own comments.");
+      const body = str(change.body, 5000);
+      if (!body) throw bad("A comment can't be empty.");
+      const sev = asSeverity(change.severity);
+      const same = body === c.body && sev === c.severity;
+      c.body = body;
+      if (sev === undefined) delete c.severity; else c.severity = sev;
+      if (!same) c.editedAt = now();
     } else if (change.op === "status") {
       if (!own) throw new AdminError(403, "Only the creative team or the person who wrote it can resolve this.");
       if (change.status !== "open" && change.status !== "resolved") throw bad("Unknown status.");

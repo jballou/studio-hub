@@ -1,4 +1,4 @@
-import type { Asset, ReviewState, ShareChange, AssetVersion, Anchor, NewThread, SubmitInput, Thread, User } from "@/lib/types";
+import type { Asset, ReviewState, ShareChange, AssetVersion, Anchor, NewThread, Severity, SubmitInput, Thread, User } from "@/lib/types";
 
 /**
  * Data boundary for the review feature. The mock adapter implements this now;
@@ -13,6 +13,8 @@ export interface ReviewRepo {
   listThreads(versionId: string): Promise<Thread[]>;
   createThread(input: NewThread): Promise<Thread>;
   reply(threadId: string, authorId: string, body: string): Promise<Thread>;
+  /** Author only. Marks the comment as edited. */
+  editComment(threadId: string, commentId: string, body: string, severity?: Severity): Promise<Thread>;
   setStatus(threadId: string, status: Thread["status"]): Promise<Thread>;
   updateAnchor(threadId: string, anchor: Anchor): Promise<Thread>;
   /** Creates an asset (or a new version of one) and the feedback request for it. */

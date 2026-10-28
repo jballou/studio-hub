@@ -13,6 +13,8 @@ import { IssueIcon } from "@/components/ui/IssueIcon";
 import { Board } from "./Board";
 import { StaleNotice } from "@/components/ui/StaleNotice";
 import { NoStartTag, PlanWork } from "./PlanWork";
+import { StatusMenu } from "./StatusMenu";
+import { DueDateEdit } from "./DueDateEdit";
 import { needsStartDate } from "@/lib/startdate";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import { lookbackLabel } from "@/lib/settings";
@@ -306,9 +308,15 @@ export function ProjectsView() {
                           </div>
                           <div className="text-xs text-muted">{p.jiraKey} · {p.issueType && p.issueType.level !== 0 ? p.issueType.name : p.type} · {p.requesterName ?? name(p.requesterId)}{p.parentKey && !rows.some((r) => r.jiraKey === p.parentKey) ? ` · in ${p.parentTitle ?? p.parentKey}` : ""}</div>
                         </div>
-                        <StatusTag project={p} />
-                        <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-semibold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>
+                        {!canPlan && <StatusTag project={p} />}
+                        {!canPlan && <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-semibold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>}
                       </Link>
+                      {canPlan && (
+                        <div className="flex shrink-0 items-center gap-4 pr-4">
+                          <StatusMenu project={p} canChange onChanged={() => setTick((t) => t + 1)} />
+                          <DueDateEdit project={p} late={!!today && pastDueDays(p, today) !== null} onSaved={() => setTick((t) => t + 1)} />
+                        </div>
+                      )}
                       {needsStartDate(p) && canPlan && <span className="pr-4"><PlanWork project={p} onPlanned={() => setTick((t) => t + 1)} /></span>}
                     </li>
                   ))}

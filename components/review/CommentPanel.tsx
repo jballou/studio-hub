@@ -5,8 +5,9 @@ import { Menu } from "@/components/ui/Menu";
 import { Icon } from "@/components/ui/Icon";
 import { Tag, UnreadDot } from "@/components/ui/Tag";
 import { knownPeople, peopleRepo } from "@/lib/data/people";
-import type { Person, Thread, User } from "@/lib/types";
+import type { Person, Severity, Thread, User } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { SeverityBadge, SeverityPicker } from "./Severity";
 import { formatTime, parseTimecode } from "@/lib/timecode";
 
 export type Tab = "all" | "open" | "resolved";
@@ -41,8 +42,30 @@ function ago(iso: string) {
   return `${Math.round(m / 1440)}d ago`;
 }
 
+function EditForm({ initial, severity: sev0, onSave, onCancel }: { initial: string; severity: Severity | undefined; onSave: (body: string, severity: Severity | undefined) => void; onCancel: () => void }) {
+  const [body, setBody] = useState(initial);
+  const [sev, setSev] = useState<Severity | undefined>(sev0);
+  const save = () => { if (body.trim()) onSave(body.trim(), sev); };
+  return (
+    <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+      <textarea
+        autoFocus value={body} rows={3} onChange={(e) => setBody(e.target.value)} aria-label="Edit comment"
+        onKeyDown={(e) => { if (e.key === "Escape") onCancel(); if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save(); }}
+        className="w-full resize-none rounded-lg border border-control px-4 py-2 text-sm"
+      />
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <SeverityPicker value={sev} onChange={setSev} />
+        <div className="ml-auto flex gap-2">
+          <button onClick={onCancel} className="rounded-lg border border-control bg-white px-4 py-2 font-medium hover:bg-brand-soft">Cancel</button>
+          <button onClick={save} disabled={!body.trim()} className="rounded-lg bg-brand px-4 py-2 font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ThreadCard({
-  thread, users, me, selected, unread, canResolve, canPush, onSelect, onReply, onStatus, onPush,
+  thread, users, me, selected, unread, canResolve, canPush, onSelect, onReply, onEdit, onStatus, onPush,
 }: {
   thread: Thread;
   users: User[];
@@ -53,12 +76,14 @@ function ThreadCard({
   canPush: boolean;
   onSelect: () => void;
   onReply: (body: string) => void;
+  onEdit: (commentId: string, body: string, severity: Severity | undefined) => void;
   onStatus: (s: Thread["status"]) => void;
   onPush: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [replying, setReplying] = useState(false);
   const [text, setText] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
   const byId = (id: string) => users.find((u) => u.id === id);
   const resolved = thread.status === "resolved";
   const [first, ...replies] = thread.comments;
@@ -80,6 +105,7 @@ function ThreadCard({
         <Avatar user={author} />
         <span className="font-semibold">{author?.name ?? "Unknown"}</span>
         {unread && <UnreadDot />}
+        {first.severity !== undefined && <SeverityBadge level={first.severity} />}
         <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
           {canResolve ? (
             <button
@@ -104,10 +130,13 @@ function ThreadCard({
         )}
         {where && <span className="font-medium text-brand">{where}</span>}
         <span>{ago(first.createdAt)}</span>
+        {first.editedAt && <span title={`Edited ${ago(first.editedAt)}`}>· Edited</span>}
         {thread.jira && <span className="ml-auto"><Tag tone="ok" icon="check" title={`Pushed ${ago(thread.jira.pushedAt)}`}>In Jira</Tag></span>}
       </div>
 
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm"><Mentions text={first.body} users={users} /></p>
+      {editing === first.id
+        ? <EditForm initial={first.body} severity={first.severity} onCancel={() => setEditing(null)} onSave={(b, v) => { onEdit(first.id, b, v); setEditing(null); }} />
+        : <p className="mt-2 whitespace-pre-wrap break-words text-sm"><Mentions text={first.body} users={users} /></p>}
 
       {replies.length > 0 && (
         <ul className="mt-4 space-y-4 border-l-2 border-line pl-4">
@@ -117,8 +146,15 @@ function ThreadCard({
                 <Avatar user={byId(c.authorId)} size={24} />
                 <span className="font-semibold text-ink">{byId(c.authorId)?.name ?? "Unknown"}</span>
                 <span>{ago(c.createdAt)}</span>
+                {c.editedAt && <span title={`Edited ${ago(c.editedAt)}`}>· Edited</span>}
+                {c.severity !== undefined && <SeverityBadge level={c.severity} />}
+                {c.authorId === me.id && editing !== c.id && (
+                  <button onClick={(e) => { e.stopPropagation(); setEditing(c.id); }} className="ml-auto font-medium text-ink hover:underline">Edit</button>
+                )}
               </div>
-              <p className="mt-2 whitespace-pre-wrap break-words"><Mentions text={c.body} users={users} /></p>
+              {editing === c.id
+                ? <EditForm initial={c.body} severity={c.severity} onCancel={() => setEditing(null)} onSave={(b, v) => { onEdit(c.id, b, v); setEditing(null); }} />
+                : <p className="mt-2 whitespace-pre-wrap break-words"><Mentions text={c.body} users={users} /></p>}
             </li>
           ))}
         </ul>
@@ -135,8 +171,11 @@ function ThreadCard({
         <button className="flex items-center gap-2 font-medium text-ink hover:underline" onClick={() => setReplying((r) => !r)}>
           <Icon name="reply" size={13} /> Reply
         </button>
-        {canPush && !thread.jira && (
-          <div className="ml-auto"><Menu label="Comment options" size={24} items={[{ label: thread.pushError ? "Retry push to Jira" : "Push to Jira", icon: "link", onSelect: onPush }]} /></div>
+        {(first.authorId === me.id || (canPush && !thread.jira)) && (
+          <div className="ml-auto"><Menu label="Comment options" size={24} items={[
+            ...(first.authorId === me.id ? [{ label: "Edit comment", icon: "edit" as const, onSelect: () => setEditing(first.id) }] : []),
+            ...(canPush && !thread.jira ? [{ label: thread.pushError ? "Retry push to Jira" : "Push to Jira", icon: "link" as const, onSelect: onPush }] : []),
+          ]} /></div>
         )}
       </div>
 
@@ -168,7 +207,7 @@ function ThreadCard({
 
 export function CommentList({
   threads, counts, users, me, selectedId, unreadIds, tab, mine, unpushed, canResolve, canPush,
-  onTab, onMine, onUnpushed, onSelect, onReply, onStatus, onPush, onPushAll, request, onJumpUnread,
+  onTab, onMine, onUnpushed, onSelect, onReply, onEdit, onStatus, onPush, onPushAll, request, onJumpUnread,
 }: {
   threads: Thread[];
   counts: Record<Tab, number>;
@@ -186,6 +225,7 @@ export function CommentList({
   onUnpushed: (v: boolean) => void;
   onSelect: (t: Thread) => void;
   onReply: (id: string, body: string) => void;
+  onEdit: (threadId: string, commentId: string, body: string, severity: Severity | undefined) => void;
   onStatus: (id: string, s: Thread["status"]) => void;
   onPush: (id: string) => void;
   onPushAll: () => void;
@@ -261,6 +301,7 @@ export function CommentList({
             canPush={canPush(t)}
             onSelect={() => onSelect(t)}
             onReply={(b) => onReply(t.id, b)}
+            onEdit={(cid, b, v) => onEdit(t.id, cid, b, v)}
             onStatus={(s) => onStatus(t.id, s)}
             onPush={() => onPush(t.id)}
           />
@@ -283,9 +324,10 @@ export function Composer({
   hasPdfPage: number | null;
   onStart: () => void;
   onClearPin: () => void;
-  onSubmit: (body: string, withTime: boolean, typedMs?: number | null) => void;
+  onSubmit: (body: string, withTime: boolean, typedMs?: number | null, severity?: Severity) => void;
 }) {
   const [body, setBody] = useState("");
+  const [severity, setSeverity] = useState<Severity | undefined>(undefined);
   const [withTime, setWithTime] = useState(true);
   const [typed, setTyped] = useState("");
   const typedMs = parseTimecode(typed);
@@ -324,8 +366,9 @@ export function Composer({
 
   const submit = () => {
     if (!body.trim() || needsTime) return;
-    onSubmit(body.trim(), isVideo && withTime, manualTime ? typedMs : undefined);
+    onSubmit(body.trim(), isVideo && withTime, manualTime ? typedMs : undefined, severity);
     setBody("");
+    setSeverity(undefined);
     setTyped("");
   };
 
@@ -399,6 +442,7 @@ export function Composer({
             )}
           </label>
         )}
+        <SeverityPicker value={severity} onChange={setSeverity} />
         {needsTime && <span className="text-muted">Type the time you&apos;re at, like 1:23, or untick.</span>}
         <button
           onClick={submit}
