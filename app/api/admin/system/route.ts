@@ -25,13 +25,28 @@ export async function GET(req: Request) {
       checks.push({ id: "jira", label: "Jira connection", ok: false, detail: "Couldn't reach Jira" });
     }
 
-    try {
-      const t0 = Date.now();
-      await readDoc("users", () => ({}));
-      const [users, blocks] = await Promise.all([listUsers(), activeBlocks()]);
-      checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: true, detail: `Reachable in ${Date.now() - t0} ms. ${users.length} people, ${blocks.length} active blocks.` });
-    } catch {
-      checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: false, detail: "Couldn't read the store. Check BLOB_READ_WRITE_TOKEN." });
+    {
+      // One retry: a store that is only briefly busy shouldn't read as broken.
+      let failure: unknown = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const t0 = Date.now();
+          await readDoc("users", () => ({}));
+          const [users, blocks] = await Promise.all([listUsers(), activeBlocks()]);
+          checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: true, detail: `Reachable in ${Date.now() - t0} ms. ${users.length} people, ${blocks.length} active blocks.` });
+          failure = null;
+          break;
+        } catch (e) {
+          failure = e;
+          await new Promise((r) => setTimeout(r, 400));
+        }
+      }
+      if (failure) {
+        console.error("[system] blob check failed", failure);
+        // The error's name and message come from the Blob SDK and never contain the token. They say whether it is a bad token, a suspended store, a quota limit or a busy store.
+        const why = failure instanceof Error ? `${failure.name}: ${failure.message}`.slice(0, 300) : "unknown error";
+        checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: false, detail: `Couldn't read the store (${why}). If this says token or access, check BLOB_READ_WRITE_TOKEN; if it says limit or suspended, check the store in the Vercel dashboard.` });
+      }
     }
 
     const missing = REQUIRED_ENV.filter((n) => !process.env[n]);
