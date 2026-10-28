@@ -1,4 +1,6 @@
-// Small JSON document store on a private Vercel Blob store. Stand-in for a database until Postgres is approved.
+// Small JSON document store. Stand-in for a database until Postgres is approved.
+// Backend: Upstash Redis when KV_REST_API_URL and KV_REST_API_TOKEN are set (the Vercel Marketplace integration adds them),
+// otherwise a private Vercel Blob store. Both give the same compare-and-swap writes described below.
 //
 // Safety model: every write is conditional on the ETag we read (`ifMatch`), so two people saving at the same
 // moment cannot silently overwrite each other. The loser re-reads and re-applies its change (updateDoc retries).
@@ -10,10 +12,27 @@
 import { createHash } from "node:crypto";
 import { BlobPreconditionFailedError, get, put } from "@vercel/blob";
 import { getCache, waitUntil } from "@vercel/functions";
+import { Redis } from "@upstash/redis";
+
+// ---- Redis backend ----
+const redisUrl = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+export const storeKind = redisUrl && redisToken ? "Upstash Redis" : "Vercel Blob";
+let redisClient: Redis | null = null;
+const redis = () => (redisClient ??= new Redis({ url: redisUrl!, token: redisToken! }));
+type RedisRecord<T> = { rev: number; at: number; data: T };
+// Write only if the stored revision is still the one the caller read (0 = not there yet). Atomic on the server.
+const CAS = `local cur = redis.call('GET', KEYS[1])
+local rev = 0
+if cur then rev = cjson.decode(cur).rev end
+if rev ~= tonumber(ARGV[1]) then return 0 end
+redis.call('SET', KEYS[1], ARGV[2])
+return 1`;
 
 /** Separates production, preview and local data inside the one store. */
 const PREFIX = `${process.env.VERCEL_ENV ?? "local"}/`;
 const path = (name: string) => `${PREFIX}${name}.json`;
+const redisKey = (name: string) => `hub:${PREFIX}${name}`;
 
 export type Doc<T> = { data: T; etag: string | null; /** outage mode only: whether the data builds on the store's last known copy or started from nothing */ base?: "known" | "empty" };
 
@@ -55,6 +74,9 @@ export const storeDegraded = () => Date.now() < downUntil;
 
 /** A real, uncached check of the store for the System page. */
 export async function probeStore(): Promise<{ ok: boolean; why?: string }> {
+  if (storeKind === "Upstash Redis") {
+    try { await redis().ping(); return { ok: true }; } catch (e) { return { ok: false, why: e instanceof Error ? `${e.name}: ${e.message}`.slice(0, 300) : "unknown error" }; }
+  }
   try {
     await get(path("users"), { access: "private", useCache: false });
     downUntil = 0;
@@ -94,6 +116,19 @@ export async function readDoc<T>(name: string, empty: () => T, opts: { fresh?: b
     if (hit && Date.now() - hit.at < L1_MS) return { data: structuredClone(hit.data) as T, etag: null };
     const shared = await l2Get<T>(name);
     if (shared !== undefined) { l1.set(name, { at: Date.now(), data: shared }); return { data: structuredClone(shared), etag: null }; }
+  }
+  if (storeKind === "Upstash Redis") {
+    const rec = await redis().get<RedisRecord<T>>(redisKey(name));
+    if (rec && typeof rec === "object" && "data" in rec) {
+      lkSet(name, rec.data);
+      if (!opts.fresh) remember(name, rec.data);
+      return { data: rec.data, etag: String(rec.rev) };
+    }
+    // Not in Redis yet. Carry over anything we still hold from before the move: the outage copy, then the last copy seen from Blob.
+    const moved = (await fbGet<T>(name))?.data ?? (await lkGet<T>(name));
+    const data = moved ?? empty();
+    if (!opts.fresh) remember(name, data);
+    return { data, etag: null };
   }
   let res: Awaited<ReturnType<typeof get>> = null;
   let down = storeDegraded();
@@ -155,6 +190,14 @@ export async function updateDoc<T, R = void>(
     const { data, etag, base } = await readDoc(name, empty, { fresh: true });
     const out = await mutate(structuredClone(data));
     const toTemporaryCopy = async () => { await fbSet(name, out.data, base ?? "empty"); remember(name, out.data); return out.result; };
+    if (storeKind === "Upstash Redis") {
+      const next = JSON.stringify({ rev: (etag ? Number(etag) : 0) + 1, at: Date.now(), data: out.data } satisfies RedisRecord<T>);
+      const ok = await redis().eval(CAS, [redisKey(name)], [etag ?? "0", next]);
+      if (ok === 1) { lkSet(name, out.data); remember(name, out.data); return out.result; }
+      if (i === attempts - 1) throw new Error("Someone else changed this at the same time. Try again.");
+      await new Promise((r) => setTimeout(r, 40 + Math.random() * 120));
+      continue;
+    }
     if (storeDegraded()) return toTemporaryCopy();
     try {
       await put(path(name), JSON.stringify(out.data), {

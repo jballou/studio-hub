@@ -1,4 +1,4 @@
-import { probeStore } from "@/lib/store/doc";
+import { probeStore, storeKind } from "@/lib/store/doc";
 import { activeBlocks } from "@/lib/store/blocks";
 import { listUsers } from "@/lib/store/users";
 import { adminSession, errorResponse } from "@/lib/jira/session";
@@ -31,13 +31,13 @@ export async function GET(req: Request) {
         console.error("[system] blob check failed", probe.why);
         // The error's name and message come from the Blob SDK and never contain the token.
         checks.push({
-          id: "blob", label: "Data store (Vercel Blob)", ok: false,
-          detail: `Can't reach the store (${probe.why}). The Hub is running on a temporary copy in Vercel's cache: it works, but changes made now may be lost. Unsuspend or fix the store in the Vercel dashboard (check BLOB_READ_WRITE_TOKEN only if it says token or unauthorized).`,
+          id: "blob", label: `Data store (${storeKind})`, ok: false,
+          detail: `Can't reach the store (${probe.why}). The Hub is running on a temporary copy in Vercel's cache: it works, but changes made now may be lost. Fix the store in the Vercel dashboard.`,
         });
       } else {
         const t0 = Date.now();
         const [users, blocks] = await Promise.all([listUsers(), activeBlocks()]);
-        checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: true, detail: `Reachable. ${users.length} people, ${blocks.length} active blocks (${Date.now() - t0} ms).` });
+        checks.push({ id: "blob", label: `Data store (${storeKind})`, ok: true, detail: `Reachable. ${users.length} people, ${blocks.length} active blocks (${Date.now() - t0} ms).` });
       }
     }
 
