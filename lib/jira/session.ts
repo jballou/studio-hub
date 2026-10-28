@@ -84,6 +84,11 @@ export function errorResponse(e: unknown): Response {
     const status = e.status === 401 || e.status === 403 || e.status === 404 || e.status === 400 ? e.status : 502;
     return Response.json({ error: e.message }, { status });
   }
+  // The Hub's own data store (Vercel Blob) refused or failed: suspended, over its plan limit, or a bad token.
+  if (e instanceof Error && /Vercel Blob|BlobError|Blob store/i.test(`${e.name} ${e.message}`)) {
+    console.error("[api] data store error", e.message);
+    return Response.json({ error: "The Hub's data store isn't available right now (Vercel Blob may be suspended or over its limit). An admin should check the store in the Vercel dashboard.", code: "store-unavailable" }, { status: 503 });
+  }
   // Not a Jira answer at all: a bug or a storage hiccup on our side. Say so, and keep the detail in the server log.
   console.error("[api] unexpected error", e);
   return Response.json({ error: "Something went wrong on our side. Try again, and tell the Brand Creative team if it keeps happening." }, { status: 500 });

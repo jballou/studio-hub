@@ -98,7 +98,7 @@ export function MyDay() {
     let live = true;
     projectsRepo.myWork(me.id).then((p) => { if (live) { setProjects(p); setJiraErr(null); } }).catch((e) => { if (live) { setProjects([]); setJiraErr(e instanceof Error ? e.message : "Couldn't load your tickets."); } });
     tasksRepo.list().then((s) => live && applyTasks(s)).catch((e) => { if (live) { setTasks([]); setTaskErr(e.message); } });
-    googleRepo.status().then((s) => live && setGoogle(s)).catch(() => live && setGoogle({ configured: false, connected: false }));
+    googleRepo.status().then((s) => live && setGoogle(s)).catch(() => live && setGoogle(null));
     activityRepo.recent().then((a) => live && setActivity(a)).catch(() => live && setActivity([]));
     const start = new Date(`${today}T00:00:00`), end = new Date(`${today}T23:59:59`);
     googleRepo.events(start.toISOString(), end.toISOString())

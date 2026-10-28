@@ -31,7 +31,7 @@ export async function GET(req: Request) {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           const t0 = Date.now();
-          await readDoc("users", () => ({}));
+          await readDoc("users", () => ({}), { fresh: true }); // a real read of the store, not a cached copy
           const [users, blocks] = await Promise.all([listUsers(), activeBlocks()]);
           checks.push({ id: "blob", label: "Data store (Vercel Blob)", ok: true, detail: `Reachable in ${Date.now() - t0} ms. ${users.length} people, ${blocks.length} active blocks.` });
           failure = null;
