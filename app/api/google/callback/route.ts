@@ -1,10 +1,11 @@
-import { exchangeCode, idTokenEmail, SCOPES } from "@/lib/google/client";
+import { DRIVE_SCOPE, exchangeCode, idTokenEmail, SCOPES } from "@/lib/google/client";
 import { readState } from "@/lib/google/crypto";
 import { jiraSession } from "@/lib/jira/session";
 import { getConnection, saveConnection } from "@/lib/store/google";
 import { audit } from "@/lib/store/users";
 
-const NEED = SCOPES.filter((s) => s.startsWith("https://"));
+// Drive access is optional: people can still connect Calendar and Tasks without it (Drive videos then play in Drive's own player).
+const NEED = SCOPES.filter((s) => s.startsWith("https://") && s !== DRIVE_SCOPE);
 
 /** GET /api/google/callback  Google sends the person back here with a one-time code. */
 export async function GET(req: Request) {

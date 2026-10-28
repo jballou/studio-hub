@@ -8,7 +8,10 @@ export const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events.readonly",
   // Read/write, but the app only touches its own "Brand Creative Hub" list.
   "https://www.googleapis.com/auth/tasks",
+  // Read-only: lets the review player stream a Drive video or audio file to people who can already open it in Drive.
+  "https://www.googleapis.com/auth/drive.readonly",
 ];
+export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
 
 export class GoogleError extends Error {
   constructor(public status: number, message: string, public code?: "not-connected" | "reconnect" | "not-configured") {
@@ -204,4 +207,38 @@ export async function listGTasks(email: string, listId: string): Promise<GTask[]
     pageToken = data.nextPageToken;
   }
   return out;
+}
+
+/** Throws "reconnect" unless this person's Google connection includes Drive access. */
+async function assertDrive(email: string): Promise<void> {
+  const conn = await getConnection(email);
+  if (conn && !conn.scopes.includes(DRIVE_SCOPE)) throw new GoogleError(403, "Reconnect Google and allow access to Drive files.", "reconnect");
+}
+
+export type DriveFile = { id: string; name: string; mimeType: string; size?: number; width?: number; height?: number };
+
+/** Name, type and shape of a Drive file the person can open. */
+export async function driveFile(email: string, id: string): Promise<DriveFile> {
+  await assertDrive(email);
+  const qs = new URLSearchParams({ supportsAllDrives: "true", fields: "id,name,mimeType,size,videoMediaMetadata(width,height)" });
+  const f = await gfetch<{ id: string; name: string; mimeType: string; size?: string; videoMediaMetadata?: { width?: number; height?: number } }>(email, `https://www.googleapis.com/drive/v3/files/${id}?${qs}`);
+  return { id: f.id, name: f.name, mimeType: f.mimeType, size: f.size ? Number(f.size) : undefined, width: f.videoMediaMetadata?.width, height: f.videoMediaMetadata?.height };
+}
+
+/** The file's bytes (or the requested range) as Google sends them, for streaming straight on to the browser. */
+export async function driveMedia(email: string, id: string, range: string | null): Promise<Response> {
+  if (!configured()) throw new GoogleError(501, "Google isn't set up for this app yet.", "not-configured");
+  const conn = await getConnection(email);
+  if (!conn) throw new GoogleError(409, "Google isn't connected.", "not-connected");
+  if (!conn.scopes.includes(DRIVE_SCOPE)) throw new GoogleError(403, "Reconnect Google and allow access to Drive files.", "reconnect");
+  if (conn.broken && !conn.accessToken) throw new GoogleError(401, "Reconnect Google.", "reconnect");
+  const token = await accessToken(email, conn);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media&supportsAllDrives=true`, {
+    headers: { Authorization: `Bearer ${token}`, ...(range ? { Range: range } : {}) },
+    cache: "no-store",
+  });
+  if (res.status === 401) throw new GoogleError(401, "Reconnect Google.", "reconnect");
+  if (res.status === 403) throw new GoogleError(403, "Drive didn't let you open that file.");
+  if (res.status === 404) throw new GoogleError(404, "That Drive file wasn't found, or you can't open it.");
+  return res;
 }

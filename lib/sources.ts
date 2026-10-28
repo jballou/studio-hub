@@ -14,6 +14,8 @@ export type ParsedSource =
       warnings: string[];
       /** the video id isn't in the link (a share link); the server has to look it up before this can be used */
       needsLookup?: boolean;
+      /** the Google Drive file id, when the link has one */
+      fileId?: string;
       /** Drive files the person says are video or audio: a direct stream for a real player with timestamps (the embed is the fallback). */
       media?: { kind: "audio" | "video"; streamUrl: string };
     }
@@ -101,7 +103,7 @@ function parseDrive(u: URL, shape: Shape, type: DriveType): ParsedSource {
   if (type === "audio" || type === "video") {
     return {
       ok: true, kind: "drive", summary: `Google Drive ${type} file`, suggestedTitle: `Drive ${type} file`,
-      embedUrl, aspect: type === "audio" ? 16 / 9 : shapeAspect(shape), baseWidth: 1280,
+      embedUrl, aspect: type === "audio" ? 16 / 9 : shapeAspect(shape), baseWidth: 1280, fileId: id,
       media: { kind: type, streamUrl: `https://drive.google.com/uc?export=download&id=${id}` },
       warnings: [
         sharing,
@@ -111,7 +113,7 @@ function parseDrive(u: URL, shape: Shape, type: DriveType): ParsedSource {
   }
   return {
     ok: true, kind: "drive", summary: "Google Drive file", suggestedTitle: "Drive file",
-    embedUrl, aspect: shapeAspect(shape), baseWidth: 1280,
+    embedUrl, aspect: shapeAspect(shape), baseWidth: 1280, fileId: id,
     warnings: [sharing, "Choose Audio or Video above if this is a media file, so comments get timestamps."],
   };
 }

@@ -49,6 +49,7 @@ export function SubmitForm() {
   const [uploadFailed, setUploadFailed] = useState<string[]>([]);
   const cancels = useRef(new Map<string, () => void>());
   const [wistia, setWistia] = useState<{ url: string; state: "loading" | "done" | "failed"; id?: string; resolved?: { name: string; streamUrl: string; width: number; height: number } | null; error?: string } | null>(null);
+  const [drive, setDrive] = useState<{ url: string; state: "loading" | "done" | "failed"; file?: { id: string; name: string; kind: "video" | "audio" | "other"; width?: number; height?: number }; error?: string; reconnect?: boolean } | null>(null);
   const [versionOf, setVersionOf] = useState<Asset | null>(null);
   const [picker, setPicker] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -110,6 +111,30 @@ export function SubmitForm() {
   );
   const figmaLink = source === "figma" && parsed?.ok ? parseFigmaLink(url) : null;
 
+  // Drive: ask what the file is. Video and audio the person can open play in the Hub's own player (streamed with their Google access).
+  const driveId = source === "drive" && parsed?.ok ? parsed.fileId : undefined;
+  useEffect(() => {
+    if (!driveId || !isJira) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDrive(null);
+      return;
+    }
+    const target = url.trim();
+    let live = true;
+    setDrive({ url: target, state: "loading" });
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/drive/resolve?id=${encodeURIComponent(driveId)}`, { cache: "no-store" });
+        const b = await res.json().catch(() => ({}));
+        if (!live) return;
+        setDrive(res.ok ? { url: target, state: "done", file: b } : { url: target, state: "failed", error: b.error ?? "Couldn't check that file.", reconnect: b.code === "reconnect" || b.code === "not-connected" });
+      } catch {
+        if (live) setDrive({ url: target, state: "failed", error: "Couldn't check that file. Try again." });
+      }
+    }, 400);
+    return () => { live = false; clearTimeout(t); };
+  }, [driveId, url]);
+
   // Wistia: ask the server for the video file behind the link, so it can play in the Hub's own player (with automatic timestamps).
   const wistiaOk = source === "wistia" && !!parsed?.ok;
   useEffect(() => {
@@ -148,6 +173,15 @@ export function SubmitForm() {
         assetKind: "video", src: r?.streamUrl ?? "", embedUrl, aspect: r ? r.width / r.height : parsed.aspect, baseWidth: r?.width ?? parsed.baseWidth,
       };
     }
+    if (source === "drive" && isJira && drive?.state === "done" && drive.url === url.trim() && drive.file && drive.file.kind !== "other") {
+      const f = drive.file;
+      const kind = f.kind as "video" | "audio";
+      return {
+        key: `pending-drive-${url.trim()}`, title: f.name.replace(/\.[^.]+$/, ""), source: { kind: "drive", url: url.trim(), label: `Google Drive ${kind} file` },
+        assetKind: kind, src: `/api/review/stream/drive/${f.id}`, embedUrl: parsed.embedUrl,
+        aspect: kind === "video" && f.width && f.height ? f.width / f.height : 16 / 9, baseWidth: f.width ?? 1280,
+      };
+    }
     if (parsed.needsLookup) return null;
     const media = parsed.media;
     return {
@@ -160,7 +194,7 @@ export function SubmitForm() {
       aspect: parsed.aspect,
       baseWidth: parsed.baseWidth,
     };
-  }, [source, parsed, url, wistia]);
+  }, [source, parsed, url, wistia, drive]);
 
   const all = useMemo(() => [...items, ...(pending && !items.some((i) => i.source.url && i.source.url === pending.source.url) ? [pending] : [])], [items, pending]);
   const isBatch = all.length > 1;
@@ -331,7 +365,7 @@ export function SubmitForm() {
             {parsed && !parsed.ok && parsed.error && (
               <p role="alert" className="mt-2 flex items-start gap-2 text-sm text-bad-fg"><Icon name="close" size={16} /> {parsed.error}</p>
             )}
-            {source === "drive" && (
+            {source === "drive" && !(drive?.state === "done" && drive.url === url.trim()) && (
               <fieldset className="mt-4">
                 <legend className="text-sm font-semibold">What kind of file is it?</legend>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -355,6 +389,13 @@ export function SubmitForm() {
             {parsed?.ok && (
               <div className="mt-2 space-y-2 rounded-xl border border-ok-line bg-ok-bg p-4 text-sm text-ok-fg">
                 <p className="flex items-center gap-2 font-medium"><Icon name="check" size={16} /> {parsed.summary}</p>
+                {source === "drive" && drive && drive.url === url.trim() && (
+                  drive.state === "loading" ? <p className="flex items-center gap-2 text-xs">Checking the file…</p>
+                  : drive.state === "failed" ? (
+                    <p role="alert" className="flex flex-wrap items-start gap-2 text-xs text-warn-fg"><Icon name="alert" size={14} /> {drive.error} {drive.reconnect && <a href="/api/google/connect" className="font-semibold underline">Connect Google with Drive access</a>} Until then it opens in Drive&apos;s own player, and reviewers type the time when they comment.</p>
+                  ) : drive.file?.kind !== "other" ? <p className="flex items-center gap-2 text-xs"><Icon name="check" size={14} /> {drive.file?.name}: it&apos;s {drive.file?.kind}, so it plays in the Hub&apos;s own player with automatic timestamps.</p>
+                  : <p className="flex items-center gap-2 text-xs"><Icon name="check" size={14} /> {drive.file.name} is not a video or audio file, so it shows in Drive&apos;s viewer.</p>
+                )}
                 {source === "wistia" && wistia && wistia.url === url.trim() && (
                   wistia.state === "loading" ? <p className="flex items-center gap-2 text-xs">Looking up the video…</p>
                   : wistia.state === "failed" ? <p role="alert" className="flex items-start gap-2 text-xs text-bad-fg"><Icon name="alert" size={14} /> {wistia.error}</p>

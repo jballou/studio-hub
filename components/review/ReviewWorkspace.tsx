@@ -418,6 +418,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
               key={src}
               audio={kind === "audio"}
               fallbackEmbed={version.embedUrl}
+              fallbackHost={asset.source?.kind === "wistia" ? "Wistia" : "Drive"}
               onFallback={setManualTime}
               zoom={zoom}
               src={src}

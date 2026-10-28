@@ -16,7 +16,7 @@ export type Marker = { id: string; timeMs: number; initials: string; name: strin
 export { formatTime };
 
 export function VideoViewer({
-  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, zoom = "fit", audio = false, fallbackEmbed, onFallback,
+  src, aspect, overlay, markers, selectedId, onMarkerClick, onTime, handleRef, zoom = "fit", audio = false, fallbackEmbed, onFallback, fallbackHost = "Drive",
 }: {
   src: string;
   aspect: number;
@@ -32,6 +32,8 @@ export function VideoViewer({
   /** A preview page to show if the file itself won't play (Drive files that can't be streamed). It can't report time, so the parent asks for typed timestamps. */
   fallbackEmbed?: string;
   onFallback?: (active: boolean) => void;
+  /** whose player the fallback is, for the message */
+  fallbackHost?: "Drive" | "Wistia";
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -282,7 +284,10 @@ export function VideoViewer({
       </Stage>
 
       {usingFallback ? (
-        <p className="border-t border-line bg-white px-4 py-4 text-sm">Drive wouldn&apos;t stream this file, so its own player is shown. Type the time you&apos;re at when you comment.</p>
+        <p className="border-t border-line bg-white px-4 py-4 text-sm">
+          {fallbackHost} wouldn&apos;t stream this file here, so its own player is shown. Type the time you&apos;re at when you comment.
+          {fallbackHost === "Drive" && <> To play it here with automatic timestamps, <a href="/api/google/connect" className="font-medium text-brand underline">connect Google with Drive access</a> (you need to be able to open the file in Drive).</>}
+        </p>
       ) : (
       <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-4">
         <div className="pointer-events-auto w-full max-w-3xl rounded-2xl border border-line bg-white px-4 pb-4 pt-2 shadow-lg">
