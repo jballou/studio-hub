@@ -4,6 +4,7 @@
 // commenting at once both land.
 import type { Anchor, Asset, ShareChange, AssetKind, AssetVersion, Person, ReviewState, SourceKind, SubmitInput, Thread } from "@/lib/types";
 import { del } from "@vercel/blob";
+import { deleteFile, filesAvailable } from "./files";
 import { readDoc, updateDoc } from "./doc";
 import { AdminError } from "./users";
 
@@ -293,6 +294,7 @@ export async function purge(opts: { ids?: string[]; expiredOnly: boolean }): Pro
   const paths: string[] = [];
   for (const v of removed) {
     paths.push(`${process.env.VERCEL_ENV ?? "local"}/${threadsName(v.id)}.json`);
+    if (v.src.startsWith(FILE_PREFIX) && filesAvailable()) { await deleteFile(v.src.slice(FILE_PREFIX.length).split("/")[0]).catch(() => undefined); continue; }
     if (v.src.startsWith(FILE_PREFIX)) paths.push(`review-files/${v.src.slice(FILE_PREFIX.length).split("/").map(decodeURIComponent).join("/")}`);
   }
   if (paths.length) await del(paths).catch(() => undefined);

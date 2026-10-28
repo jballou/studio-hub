@@ -9,13 +9,13 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { TicketPicker } from "./TicketPicker";
 import { FramePicker } from "./FramePicker";
 import { UploadZone, type Upload } from "./UploadZone";
-import { upload } from "@vercel/blob/client";
+import { uploadReviewFile } from "@/lib/data/uploads";
 import { useMe } from "@/hooks/useMe";
 import { isJira, peopleRepo, projectsRepo, repo } from "@/lib/data";
 import { addedFrameIds, defaultBatchTitle, figmaFrameItem, itemKey, toSubmitInput, type BatchInfo, type BatchItem } from "@/lib/batch";
 import { parseFigmaLink } from "@/lib/figma";
 import { parseSource, SHAPES, type DriveType, type Shape } from "@/lib/sources";
-import { AUDIO_EXTENSIONS, kindFromFile, mimeOf } from "@/lib/media";
+import { AUDIO_EXTENSIONS, MAX_UPLOAD_BYTES, kindFromFile, mimeOf } from "@/lib/media";
 import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
 import type { Asset, AssetKind, Device, Person, Project, SourceKind } from "@/lib/types";
 
@@ -45,6 +45,7 @@ export function SubmitForm() {
   const [items, setItems] = useState<BatchItem[]>([]);
   const [uploadNote, setUploadNote] = useState<{ bad: string[]; cantPlay: string[] } | null>(null);
   const [uploads, setUploads] = useState<Upload[]>([]);
+  const [uploadFailed, setUploadFailed] = useState<string[]>([]);
   const cancels = useRef(new Map<string, () => void>());
   const [versionOf, setVersionOf] = useState<Asset | null>(null);
   const [picker, setPicker] = useState(false);
@@ -134,11 +135,13 @@ export function SubmitForm() {
   // Files stay in the browser; reading them is the "upload" and gives real progress for big videos.
   const addFiles = (list: File[]) => {
     if (!list.length) return;
+    setUploadFailed([]);
     const bad: string[] = [];
     const cantPlay: string[] = [];
     for (const f of list) {
       const kind = kindFromFile(f);
       if (!kind) { bad.push(f.name); continue; }
+      if (isJira && f.size > MAX_UPLOAD_BYTES) { setUploadFailed((cur) => [...cur, `${f.name}: that's ${(f.size / 1e6).toFixed(0)} MB and uploads are limited to ${MAX_UPLOAD_BYTES / 1024 / 1024} MB for now. For bigger videos, share a Google Drive or Figma link instead.`]); continue; }
       // Warn (don't block) when this browser can't play it, e.g. AIFF outside Safari. Reviewers may be on other browsers too.
       const mime = mimeOf(f);
       if (kind === "audio" && mime && document.createElement("audio").canPlayType(mime) === "") cantPlay.push(f.name);
@@ -158,14 +161,8 @@ export function SubmitForm() {
     try {
       let src: string;
       if (isJira) {
-        // Real mode: the file goes straight to the private store (big videos can't pass through a function), so it outlives this tab.
-        const safe = f.name.replace(/[^A-Za-z0-9._ ()+-]/g, "_").slice(-120) || "file";
-        const folder = crypto.randomUUID();
-        await upload(`review-files/${folder}/${safe}`, f, {
-          access: "private", handleUploadUrl: "/api/review/upload", contentType: mimeOf(f) || undefined, multipart: f.size > 20e6, abortSignal: abort.signal,
-          onUploadProgress: (e) => tick(e.percentage / 100),
-        });
-        src = `/api/review/file/${folder}/${encodeURIComponent(safe)}`;
+        // Real mode: the file is sent to the Hub in small pieces, so it outlives this tab and reviewers can open it.
+        src = (await uploadReviewFile(f, tick, abort.signal)).url;
       } else {
         // Demo: files stay in this tab; reading them gives real progress for big videos.
         const reader = f.stream().getReader();
@@ -190,7 +187,7 @@ export function SubmitForm() {
       };
       setItems((cur) => [...cur, item]);
     } catch (e) {
-      if (!cancelled) setUploadNote((n) => ({ bad: [...(n?.bad ?? []), `${f.name}${e instanceof Error && e.message ? ` (${e.message})` : ""}`], cantPlay: n?.cantPlay ?? [] }));
+      if (!cancelled) setUploadFailed((cur) => [...cur, `${f.name}: ${e instanceof Error && e.message ? e.message : "the upload didn't finish."}`]);
     } finally {
       cancels.current.delete(id);
       setUploads((u) => u.filter((x) => x.id !== id));
@@ -268,7 +265,8 @@ export function SubmitForm() {
         {source === "upload" ? (
           <div>
             <span className="mb-2 block text-sm font-semibold">Files</span>
-            <UploadZone uploads={uploads} onFiles={addFiles} onCancel={cancelUpload} hint="Image, video, audio (MP3, M4A, WAV…) or PDF. Audio is played in the browser and each comment is stamped with the time." />
+            <UploadZone uploads={uploads} onFiles={addFiles} onCancel={cancelUpload} hint={`Image, video, audio (MP3, M4A, WAV…) or PDF${isJira ? `, up to ${MAX_UPLOAD_BYTES / 1024 / 1024} MB each` : ""}. Audio is played in the browser and each comment is stamped with the time.`} />
+            {uploadFailed.length > 0 && <span role="alert" className="mt-2 block text-xs text-bad-fg">Couldn&apos;t upload {uploadFailed.join(" · ")}</span>}
             {uploadNote?.bad.length ? <span role="alert" className="mt-2 block text-xs text-bad-fg">Skipped {uploadNote.bad.join(", ")}: that file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span> : null}
             {uploadNote?.cantPlay.length ? <span role="alert" className="mt-2 block text-xs text-warn-fg">This browser can&apos;t play {uploadNote.cantPlay.join(", ")}, so some reviewers may not either. MP3, M4A and WAV work everywhere.</span> : null}
           </div>

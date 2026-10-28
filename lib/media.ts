@@ -28,3 +28,6 @@ export const mimeOf = (f: { name: string; type: string }): string => f.type || A
 export const ACCEPT = ["image/*", "video/*", "audio/*", "application/pdf", ...Object.keys(AUDIO).map((e) => `.${e}`)].join(",");
 
 export const AUDIO_EXTENSIONS = Object.keys(AUDIO);
+
+/** Largest file the Hub stores itself (per upload). Bigger videos are shared as a link. */
+export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;

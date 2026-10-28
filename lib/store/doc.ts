@@ -20,6 +20,8 @@ const redisToken = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_RE
 export const storeKind = redisUrl && redisToken ? "Upstash Redis" : "Vercel Blob";
 let redisClient: Redis | null = null;
 const redis = () => (redisClient ??= new Redis({ url: redisUrl!, token: redisToken! }));
+/** For other stores that live in the same Redis (uploaded files). Only call when storeKind is "Upstash Redis". */
+export const redisClientForFiles = redis;
 type RedisRecord<T> = { rev: number; at: number; data: T };
 // Write only if the stored revision is still the one the caller read (0 = not there yet). Atomic on the server.
 const CAS = `local cur = redis.call('GET', KEYS[1])
@@ -30,7 +32,7 @@ redis.call('SET', KEYS[1], ARGV[2])
 return 1`;
 
 /** Separates production, preview and local data inside the one store. */
-const PREFIX = `${process.env.VERCEL_ENV ?? "local"}/`;
+export const PREFIX = `${process.env.VERCEL_ENV ?? "local"}/`;
 const path = (name: string) => `${PREFIX}${name}.json`;
 const redisKey = (name: string) => `hub:${PREFIX}${name}`;
 
