@@ -9,7 +9,7 @@ import { googleRepo, isJira, type GoogleStatus } from "@/lib/data";
 import { ShaderBackground } from "./ShaderBackground";
 
 const DONE_KEY = "hub-welcome-done";
-const safePath = (p: string | null) => (p && p.startsWith("/") && !p.startsWith("//") ? p : "/projects");
+const safePath = (p: string | null) => (p && p.startsWith("/") && !p.startsWith("//") ? p : "/my-day");
 
 const FLASH: Record<string, { tone: "ok" | "warn" | "bad"; text: string }> = {
   connected: { tone: "ok", text: "Google is connected." },

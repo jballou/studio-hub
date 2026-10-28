@@ -11,7 +11,7 @@ const MESSAGES: Record<string, string> = {
 };
 
 /** Only same-site paths, so a crafted link can't bounce someone to another host after sign-in. */
-const safePath = (p: string | undefined) => (p && p.startsWith("/") && !p.startsWith("//") ? p : "/projects");
+const safePath = (p: string | undefined) => (p && p.startsWith("/") && !p.startsWith("//") ? p : "/my-day");
 
 async function SignIn({ searchParams }: { searchParams: PageProps<"/signin">["searchParams"] }) {
   const sp = await searchParams;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
+import { greetingFor } from "@/lib/greeting";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { IssueIcon } from "@/components/ui/IssueIcon";
 import { StaleNotice } from "@/components/ui/StaleNotice";
@@ -76,6 +77,7 @@ export function MyDay() {
   const [tileOpen, setTileOpen] = useState<TileKind | null>(null);
   const [jiraErr, setJiraErr] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
+  const [hour, setHour] = useState<number | null>(null);
 
   useEffect(() => {
     if (!wantsNewTask) return;
@@ -89,6 +91,7 @@ export function MyDay() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(localDay());
     setNow(Date.now());
+    setHour(new Date().getHours());
   }, []);
 
   const applyTasks = useCallback((s: { tasks: PersonalTask[]; syncError?: string }) => { setTasks(s.tasks); setSyncErr(s.syncError ?? null); }, []);
@@ -164,8 +167,8 @@ export function MyDay() {
     <main className="mx-auto w-full max-w-7xl p-6">
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{me?.name ? `Welcome back, ${me.name.split(" ")[0]}` : "My Day"}</h1>
-          <p className="text-sm text-muted">{dateLabel}</p>
+          <h1 className="text-4xl font-bold md:text-display-md">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</h1>
+          <p className="mt-2 text-lg text-muted">{dateLabel}</p>
         </div>
         <button onClick={() => setAdding(true)} className="ml-auto flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Add new task</button>
       </div>

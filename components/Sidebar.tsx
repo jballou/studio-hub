@@ -129,7 +129,7 @@ export function Sidebar() {
         className={`sticky top-0 flex h-screen shrink-0 flex-col p-4 transition-[width] duration-150 ${collapsed ? "w-16" : "w-64"}`}
       >
         <div className={`mb-4 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
-          <Link href="/projects" title="Brand Creative Hub" className="flex min-w-0 flex-1 items-center gap-2 font-bold text-ink">
+          <Link href="/my-day" title="Brand Creative Hub" className="flex min-w-0 flex-1 items-center gap-2 font-bold text-ink">
             <Logo size={32} />
             {!collapsed && <span className="truncate">Brand Creative Hub</span>}
           </Link>
