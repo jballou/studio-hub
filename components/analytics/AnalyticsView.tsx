@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Callout, Tag } from "@/components/ui/Tag";
+import { Icon } from "@/components/ui/Icon";
 import { StaleNotice } from "@/components/ui/StaleNotice";
 import { projectsRepo } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
@@ -112,7 +113,7 @@ export function AnalyticsView() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div role="group" aria-label="Whose work" className="seg">
             {(["you", "team"] as const).map((s) => (
-              <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className="seg-item">{s}</button>
+              <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className="seg-item"><Icon name={s === "you" ? "user" : "users"} size={14} />{s}</button>
             ))}
           </div>
           <label className="sr-only" htmlFor="range">Period</label>
