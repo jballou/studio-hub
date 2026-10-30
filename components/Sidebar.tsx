@@ -96,7 +96,7 @@ export function Sidebar() {
     : undefined;
 
   const row = (active: boolean) =>
-    `relative flex items-center gap-2 rounded-xl py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-4"} ${active ? "bg-white text-ink shadow-sm" : "text-n-800 hover:bg-white/60"}`;
+    `relative flex items-center gap-2 rounded-tight py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-4"} ${active ? "bg-white text-ink shadow-sm" : "text-n-800 hover:bg-white/60"}`;
 
   const navLink = (i: Item, badge?: number) => {
     const active = i.match(pathname);
@@ -105,8 +105,8 @@ export function Sidebar() {
         <Icon name={i.icon} size={18} />
         {!collapsed && <span className="flex-1">{i.label}</span>}
         {!!badge && (collapsed
-          ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-bad-fg ring-2 ring-white" />
-          : <span className="rounded-full bg-bad-fg px-2 text-xs font-semibold text-n-50">{badge}</span>)}
+          ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-round bg-bad-fg ring-2 ring-white" />
+          : <span className="rounded-round bg-bad-fg px-2 text-xs font-bold text-n-50">{badge}</span>)}
       </Link>
     );
   };
@@ -117,7 +117,7 @@ export function Sidebar() {
       aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       aria-expanded={!collapsed}
       title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-white/60"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-white/60"
     >
       <Icon name="panel" size={18} />
     </button>
@@ -167,7 +167,7 @@ export function Sidebar() {
           {!collapsed && "Submit for feedback"}
         </Link>
 
-        {!collapsed && <p className="mb-2 px-4 text-xs font-medium text-muted">Workspace</p>}
+        {!collapsed && <p className="mb-2 px-4 text-muted eyebrow">Workspace</p>}
         <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
 
         {/* Favorites folder */}
@@ -178,7 +178,7 @@ export function Sidebar() {
             </button>
           ) : (
             <section aria-label="Favorites">
-              <button onClick={toggleFav} aria-expanded={favOpen} className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
+              <button onClick={toggleFav} aria-expanded={favOpen} className="flex w-full items-center gap-2 rounded-tight px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
                 <Icon name="star" size={14} />
                 <span className="flex-1 text-left">Favorites</span>
                 <span className={favOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
@@ -194,7 +194,7 @@ export function Sidebar() {
                           href={`/projects/${f.key}`}
                           title={`${f.key} · ${f.title}`}
                           aria-current={pathname === `/projects/${f.key}` ? "page" : undefined}
-                          className={`block truncate rounded-lg py-2 pl-10 pr-4 text-sm ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}
+                          className={`block truncate rounded-tight py-2 pl-10 pr-4 text-sm ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}
                         >
                           {f.title}
                         </Link>
@@ -222,7 +222,7 @@ export function Sidebar() {
           <div className={`mb-2 flex ${collapsed ? "justify-center" : "justify-start px-2"}`}><ThemeToggle vertical={collapsed} /></div>
           {(!isJira || me?.role === "creative") && <div>{navLink(ANALYTICS_ITEM)}</div>}
           {(me?.isAdmin || me?.role === "creative") && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
-          <div className={`flex rounded-xl bg-white shadow-sm ${collapsed ? "flex-col items-center gap-2 p-2" : "items-center gap-2 p-2"}`}>
+          <div className={`flex rounded-loose bg-white shadow-sm ${collapsed ? "flex-col items-center gap-2 p-2" : "items-center gap-2 p-2"}`}>
             <Avatar user={user} size={32} />
             {!collapsed && (
               <span className="min-w-0 flex-1">
@@ -237,7 +237,7 @@ export function Sidebar() {
                 onClick={() => signOut({ callbackUrl: "/signin" })}
                 aria-label="Sign out"
                 title="Sign out"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-n-150"
               >
                 <Icon name="logOut" size={18} />
               </button>

@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={<div className="w-16 shrink-0" />}>
           <Sidebar />
         </Suspense>
-        <div className="shell my-2 mr-2 flex min-h-[calc(100vh-16px)] min-w-0 flex-1 flex-col overflow-clip rounded-3xl border border-line bg-paper shadow-sm first:ml-2">
+        <div className="shell my-2 mr-2 flex min-h-[calc(100vh-16px)] min-w-0 flex-1 flex-col overflow-clip rounded-loose border border-line bg-paper shadow-sm first:ml-2">
           <Suspense fallback={null}><TopBar /></Suspense>
           <SegIndicator />
           <div className="paper flex min-w-0 flex-1 flex-col">{children}</div>

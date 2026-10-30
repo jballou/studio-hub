@@ -48,7 +48,7 @@ export function BlockingYou() {
 
       {blocks === null && !error && <p className="text-sm text-muted">Loading…</p>}
       {blocks?.length === 0 && (
-        <div className="rounded-xl border border-dashed border-control bg-white/60 p-10 text-center">
+        <div className="rounded-tight border border-dashed border-control bg-white/60 p-10 text-center">
           <p className="font-medium">Nothing is waiting on you.</p>
           <p className="mt-2 text-sm text-muted">If a project gets blocked on you, it shows up here and you&apos;ll see a notification in the sidebar.</p>
         </div>
@@ -64,13 +64,13 @@ export function BlockingYou() {
                 {b.project && <StatusTag project={b.project} />}
                 <Tag tone={days >= 5 ? "bad" : days >= 2 ? "warn" : "neutral"} icon="alert">Waiting {days === 0 ? "since today" : `${days} ${days === 1 ? "day" : "days"}`}</Tag>
               </div>
-              <h2 className="mt-2 text-lg font-semibold">{b.project?.title ?? b.key}</h2>
-              <p className="mt-2 rounded-lg bg-n-150 p-4 text-sm"><span className="font-medium">What&apos;s needed: </span>{b.reason}</p>
+              <h2 className="mt-2 text-lg font-bold">{b.project?.title ?? b.key}</h2>
+              <p className="mt-2 rounded-tight bg-n-150 p-4 text-sm"><span className="font-medium">What&apos;s needed: </span>{b.reason}</p>
               <p className="mt-2 text-xs text-muted">Marked by {b.setBy}{b.project?.deadline ? ` · project due ${b.project.deadline}` : ""}</p>
 
               {openKey === b.key ? (
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note, e.g. Approved in Slack" aria-label="Note" className="min-w-64 flex-1 rounded-lg border border-control bg-white px-4 py-2 text-sm" />
+                  <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note, e.g. Approved in Slack" aria-label="Note" className="min-w-64 flex-1 rounded-tight border border-control bg-white px-4 py-2 text-sm" />
                   <button disabled={busy} onClick={() => resolve(b.key)} className="btn btn-md btn-primary">Confirm</button>
                   <button onClick={() => { setOpenKey(null); setNote(""); }} className="btn btn-md btn-secondary">Cancel</button>
                 </div>

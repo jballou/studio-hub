@@ -15,7 +15,7 @@ function Assistant({ children }: { children: React.ReactNode }) {
   return (
     <div className="rise flex items-start gap-4">
       <Logo size={32} className="mt-0" />
-      <div className="min-w-0 max-w-[85%] rounded-2xl rounded-tl-sm border border-line bg-white px-4 py-4">{children}</div>
+      <div className="min-w-0 max-w-[85%] rounded-tight rounded-tl-tight border border-line bg-white px-4 py-4">{children}</div>
     </div>
   );
 }
@@ -90,7 +90,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
     return (
       <main className="page [&>*:not(.fixed)]:max-w-2xl">
         <h1 className="mb-2 text-2xl font-bold">Brief submitted</h1>
-        <p className="mb-4">Created <Link href={`/projects/${created}`} className="rounded bg-line px-2 py-0 font-mono text-sm text-brand hover:underline">{created}</Link>. It&apos;s in <Link href="/briefs" className="text-brand underline">My briefs</Link>, where you can follow it.</p>
+        <p className="mb-4">Created <Link href={`/projects/${created}`} className="rounded-tight bg-line px-2 py-0 font-mono text-sm text-brand hover:underline">{created}</Link>. It&apos;s in <Link href="/briefs" className="text-brand underline">My briefs</Link>, where you can follow it.</p>
         <div className="flex gap-2">
           <Link href="/briefs" className="btn btn-md btn-primary">See it in My briefs</Link>
           <Link href={`/projects/${created}`} className="btn btn-md btn-secondary">Open project</Link>
@@ -121,7 +121,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
             ) : (
               <div className="rise flex justify-end gap-2">
                 <button onClick={() => setEditing(n.id)} className="self-center text-xs font-medium text-muted hover:underline" aria-label={`Edit your answer to: ${q(n)}`}>Edit</button>
-                <p className="max-w-[80%] whitespace-pre-wrap break-words rounded-2xl rounded-tr-sm bg-brand px-4 py-2 text-sm text-n-50">
+                <p className="max-w-[80%] whitespace-pre-wrap break-words rounded-tight rounded-tr-tight bg-brand px-4 py-2 text-sm text-n-50">
                   {display(n, answers[n.field]) || <span className="opacity-80">Skipped</span>}
                 </p>
               </div>
@@ -142,13 +142,13 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
         {sub && (
           <div className="space-y-4">
             <Assistant><p className="text-sm">That&apos;s everything I need. Here&apos;s what I&apos;ll send. Look right?</p></Assistant>
-            <section className="rise ml-12 rounded-2xl border border-line bg-white p-6" aria-label="Brief summary">
+            <section className="rise ml-12 rounded-loose border border-line bg-white p-6" aria-label="Brief summary">
               <p className="text-muted eyebrow">{sub.typeLabel}</p>
               <h2 className="mb-4 text-xl font-bold">{sub.title}</h2>
               <dl className="space-y-4 text-sm">
-                {sub.deadline && <div><dt className="font-semibold">Needed by</dt><dd>{sub.deadline}</dd></div>}
-                {sub.stakeholders.length > 0 && <div><dt className="font-semibold">Keeping in the loop</dt><dd>{sub.stakeholders.map((p) => p.name).join(", ")}</dd></div>}
-                {sub.sections.map((s) => <div key={s.label}><dt className="font-semibold">{s.label}</dt><dd className="whitespace-pre-wrap">{s.value}</dd></div>)}
+                {sub.deadline && <div><dt className="font-bold">Needed by</dt><dd>{sub.deadline}</dd></div>}
+                {sub.stakeholders.length > 0 && <div><dt className="font-bold">Keeping in the loop</dt><dd>{sub.stakeholders.map((p) => p.name).join(", ")}</dd></div>}
+                {sub.sections.map((s) => <div key={s.label}><dt className="font-bold">{s.label}</dt><dd className="whitespace-pre-wrap">{s.value}</dd></div>)}
               </dl>
               {error && <div className="mt-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
               <div className="mt-6 flex flex-wrap items-center gap-2">

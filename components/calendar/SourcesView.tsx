@@ -9,7 +9,7 @@ import { toCsvExportUrl } from "@/lib/calendar/gsheet";
 import { loadSource, loadSources, saveUserSources } from "@/lib/calendar/store";
 import { SOURCE_TYPES, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
 
-const field = "w-full rounded-lg border border-control bg-white px-4 py-2 text-sm";
+const field = "w-full rounded-tight border border-control bg-white px-4 py-2 text-sm";
 
 export function SourcesView() {
   const [sources, setSources] = useState<CalendarSource[]>([]);
@@ -86,21 +86,21 @@ export function SourcesView() {
       </ul>
 
       <section className="card p-6">
-        <h2 className="mb-4 text-lg font-semibold">Add a Google Sheet</h2>
+        <h2 className="mb-4 text-lg font-bold">Add a Google Sheet</h2>
         <div className="space-y-4">
-          <label className="block text-sm font-semibold">Name
+          <label className="block text-sm font-bold">Name
             <input className={`${field} mt-2 font-normal`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. 2027 PR & events tracker" />
           </label>
-          <label className="block text-sm font-semibold">Sheet link
+          <label className="block text-sm font-bold">Sheet link
             <input className={`${field} mt-2 font-normal`} value={url} onChange={(e) => { setUrl(e.target.value); setPreview(null); }} placeholder="https://docs.google.com/spreadsheets/d/…/edit?gid=0" />
             {urlProblem && <span role="alert" className="mt-2 block text-xs font-normal text-bad-fg">{urlProblem}</span>}
             <span className="mt-2 block text-xs font-normal text-muted">Open the tab you want, set sharing to “Anyone with the link can view”, and paste its link. The link includes the tab (gid).</span>
           </label>
           <details className="text-sm">
-            <summary className="cursor-pointer font-semibold">Or paste CSV instead</summary>
+            <summary className="cursor-pointer font-bold">Or paste CSV instead</summary>
             <textarea rows={4} className={`${field} mt-2 font-mono text-xs`} value={csv} onChange={(e) => { setCsv(e.target.value); setPreview(null); }} placeholder="Date,Title,Owner&#10;2026-11-03,Launch day,Sam" />
           </details>
-          <label className="block text-sm font-semibold">What do the rows represent?
+          <label className="block text-sm font-bold">What do the rows represent?
             <select className={`${field} mt-2 font-normal sm:w-1/2`} value={type} onChange={(e) => setType(e.target.value as ItemType)}>
               {SOURCE_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
@@ -115,7 +115,7 @@ export function SourcesView() {
 
           {preview?.error && <Callout tone="bad" icon="alert">{preview.error}</Callout>}
           {preview && !preview.error && (
-            <div className="rounded-xl border border-ok-line bg-ok-bg p-4 text-sm text-ok-fg">
+            <div className="rounded-loose border border-ok-line bg-ok-bg p-4 text-sm text-ok-fg">
               <p className="flex items-center gap-2 font-medium"><Icon name="check" size={16} /> Found {preview.items.length} dated items</p>
               {preview.warnings.map((w) => <p key={w} className="mt-2 text-xs text-warn-fg">{w}</p>)}
               <ul className="mt-2 space-y-0 text-xs">
@@ -126,8 +126,8 @@ export function SourcesView() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-xl border border-dashed border-control bg-white/60 p-6">
-        <h2 className="mb-2 text-lg font-semibold">Add a Jira query</h2>
+      <section className="mt-6 rounded-loose border border-dashed border-control bg-white/60 p-6">
+        <h2 className="mb-2 text-lg font-bold">Add a Jira query</h2>
         <p className="text-sm text-muted">Pull dates from tickets with a JQL filter and a date field (like Due date or a Launch date field). This turns on once Atlassian sign-in is connected. The MKTGCRTV source above shows what it will look like.</p>
       </section>
     </main>

@@ -56,11 +56,11 @@ export function TicketPicker({
 
   if (value && !open) {
     return (
-      <div className="mt-2 flex items-center gap-2 rounded-lg border border-control bg-white px-4 py-2 text-sm font-normal">
+      <div className="mt-2 flex items-center gap-2 rounded-tight border border-control bg-white px-4 py-2 text-sm font-normal">
         <span className="font-mono text-xs">{value.jiraKey}</span>
         <span className="min-w-0 flex-1 truncate">{value.title}</span>
         <button type="button" onClick={() => { setOpen(true); }} className="text-xs font-medium text-brand hover:underline">Change</button>
-        <button type="button" onClick={() => onChange(null)} aria-label="Clear ticket" className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-n-150"><Icon name="x" size={12} /></button>
+        <button type="button" onClick={() => onChange(null)} aria-label="Clear ticket" className="flex h-5 w-5 items-center justify-center rounded-round hover:bg-n-150"><Icon name="x" size={12} /></button>
       </div>
     );
   }
@@ -87,10 +87,10 @@ export function TicketPicker({
           else if (e.key === "Escape") setOpen(false);
         }}
         placeholder="Search by number or title, e.g. 101"
-        className="w-full rounded-lg border border-control bg-white py-2 pl-10 pr-4 text-sm font-normal"
+        className="w-full rounded-tight border border-control bg-white py-2 pl-10 pr-4 text-sm font-normal"
       />
       {open && (
-        <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-2 max-h-72 overflow-y-auto rounded-xl border border-line bg-white p-2 shadow-lg">
+        <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-2 max-h-72 overflow-y-auto rounded-loose border border-line bg-white p-2 shadow-lg">
           {hits.length === 0 && <li className="px-4 py-4 text-center text-sm font-normal text-muted">{busy ? "Searching…" : "No matching tickets."}</li>}
           {hits.map((p, i) => (
             <li key={p.id} role="option" aria-selected={i === active}>
@@ -98,7 +98,7 @@ export function TicketPicker({
                 type="button"
                 onMouseEnter={() => setActive(i)}
                 onClick={() => choose(p)}
-                className={`flex w-full items-baseline gap-2 rounded-lg px-4 py-2 text-left text-sm font-normal ${i === active ? "bg-brand-soft" : ""}`}
+                className={`flex w-full items-baseline gap-2 rounded-tight px-4 py-2 text-left text-sm font-normal ${i === active ? "bg-brand-soft" : ""}`}
               >
                 <span className="font-mono text-xs">{p.jiraKey}</span>
                 <span className="min-w-0 flex-1 truncate">{p.title}</span>

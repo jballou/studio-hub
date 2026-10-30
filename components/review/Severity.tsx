@@ -33,7 +33,7 @@ export function SeverityPicker({ value, onChange }: { value: Severity | undefine
             aria-label={`${l}, ${SEVERITY_LABEL[l]}: ${SEVERITY_HINT[l]}`}
             title={`${l} · ${SEVERITY_LABEL[l]}: ${SEVERITY_HINT[l]}`}
             onClick={() => onChange(value === l ? undefined : l)}
-            className={`flex h-8 w-8 items-center justify-center rounded-lg border ${value === l ? `border-2 ${LOOK[l].on}` : `border-control bg-white hover:bg-n-150 ${LOOK[l].off}`}`}
+            className={`flex h-8 w-8 items-center justify-center rounded-tight border ${value === l ? `border-2 ${LOOK[l].on}` : `border-control bg-white hover:bg-n-150 ${LOOK[l].off}`}`}
           >
             <Icon name={LOOK[l].icon} size={16} />
           </button>

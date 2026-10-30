@@ -21,7 +21,7 @@ import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import { lookbackLabel } from "@/lib/settings";
 import { useMe } from "@/hooks/useMe";
 import { localDay } from "@/lib/myday/plan";
-import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, Stage, User } from "@/lib/types";
+import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, User } from "@/lib/types";
 
 const GROUPS: { id: ProjectGroup; label: string }[] = [
   { id: "open", label: "Open" },
@@ -36,7 +36,6 @@ const DUE_PRESETS: { label: string; at: (today: string) => string }[] = [
   { label: "In 7 days", at: (t) => plusDays(t, 7) },
   { label: "In 30 days", at: (t) => plusDays(t, 30) },
 ];
-const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
 const TYPES: ProjectType[] = isJira
   ? ["Graphic", "Video", "Web", "Copy", "Campaign", "Other"]
   : ["Social", "Video", "Print", "Web"];
@@ -61,19 +60,19 @@ function CalendarMode({ projects, mode }: { projects: Project[]; mode: "month" |
     ? `${days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${days[4].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
     : cursor.toLocaleString("en-US", { month: "long", year: "numeric" });
   return (
-    <div className="rounded-lg border border-line bg-white p-4">
+    <div className="rounded-tight border border-line bg-white p-4">
       <div className="mb-4 flex items-center gap-4">
-        <button className="rounded border border-control px-2" onClick={() => step(-1)} aria-label="Previous">‹</button>
-        <span className="font-semibold">{label}</span>
-        <button className="rounded border border-control px-2" onClick={() => step(1)} aria-label="Next">›</button>
+        <button className="rounded-tight border border-control px-2" onClick={() => step(-1)} aria-label="Previous">‹</button>
+        <span className="font-bold">{label}</span>
+        <button className="rounded-tight border border-control px-2" onClick={() => step(1)} aria-label="Next">›</button>
       </div>
       <div className={`grid gap-px bg-line text-xs ${mode === "week" ? "grid-cols-5" : "grid-cols-7"}`}>
-        {(mode === "week" ? ["Mon", "Tue", "Wed", "Thu", "Fri"] : ["S", "M", "T", "W", "T", "F", "S"]).map((d, i) => <div key={i} className="bg-n-150 p-2 text-center font-semibold">{d}</div>)}
+        {(mode === "week" ? ["Mon", "Tue", "Wed", "Thu", "Fri"] : ["S", "M", "T", "W", "T", "F", "S"]).map((d, i) => <div key={i} className="bg-n-150 p-2 text-center font-bold">{d}</div>)}
         {days.map((d, i) => (
           <div key={i} className={`bg-white p-2 ${mode === "week" ? "min-h-40" : "min-h-20"}`}>
             {d && <div className="text-muted">{d.getDate()}</div>}
             {d && projects.filter((p) => p.deadline === iso(d)).map((p) => (
-              <Link key={p.id} href={`/projects/${p.jiraKey}`} className="mt-2 block truncate rounded bg-brand-soft px-2 py-0 text-xs text-ink">
+              <Link key={p.id} href={`/projects/${p.jiraKey}`} className="mt-2 block truncate rounded-tight bg-brand-soft px-2 py-0 text-xs text-ink">
                 {p.title}
               </Link>
             ))}
@@ -128,7 +127,7 @@ export function ProjectsView() {
   const [blockedOnly, setBlockedOnly] = useState(false);
   const [blocks, setBlocks] = useState<Record<string, Block>>({});
   const favs = useFavorites();
-  const [stage, setStage] = useState<Stage | "">("");
+  const [stage, setStage] = useState("");
   const [type, setType] = useState<ProjectType | "">("");
   const [collab, setCollab] = useState("");
   const [before, setBefore] = useState("");
@@ -179,11 +178,21 @@ export function ProjectsView() {
   const newProjects = projects.filter((p) => p.newComments > 0).length;
 
   const filtered = useMemo(() => projects.filter((p) =>
-    (!action || p.actionRequired) && (!newOnly || p.newComments > 0) && (!starredOnly || favs.isStarred(p.jiraKey)) && (!blockedOnly || p.flag === "blocked" || !!blocks[p.jiraKey]) && (!stage || p.stage === stage) &&
-    (!type || p.type === type) && (!collab || p.collaboratorIds.includes(collab) || p.requesterId === collab) &&
+    (!action || p.actionRequired) && (!newOnly || p.newComments > 0) && (!starredOnly || favs.isStarred(p.jiraKey)) && (!blockedOnly || p.flag === "blocked" || !!blocks[p.jiraKey]) && (!stage || (p.statusName ?? p.stage) === stage) &&
+    (!type || p.type === type) && (!collab || p.collaboratorIds.includes(collab) || p.requesterId === collab || p.assigneeId === collab) &&
     (!before || p.deadline <= before)), [projects, action, newOnly, starredOnly, blockedOnly, blocks, favs, stage, type, collab, before]);
 
   // Tasks have no type, requester or action state, so ticket-only filters hide them; the due-by date applies to both.
+  // Choices come from the tickets on screen, so they are the real Jira statuses and the real people.
+  const statusNames = useMemo(() => [...new Set(projects.map((p) => p.statusName ?? p.stage))].sort(), [projects]);
+  const people = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of projects) {
+      if (p.requesterId && (p.requesterName || users.some((u) => u.id === p.requesterId))) m.set(p.requesterId, p.requesterName ?? name(p.requesterId));
+      if (p.assigneeId && (p.assigneeName || users.some((u) => u.id === p.assigneeId))) m.set(p.assigneeId, p.assigneeName ?? name(p.assigneeId));
+    }
+    return [...m].map(([id, n]) => ({ id, name: n })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [projects, users]); // eslint-disable-line react-hooks/exhaustive-deps
   const ticketOnlyFilter = action || newOnly || starredOnly || blockedOnly || !!stage || !!type || !!collab;
   const boardTasks = ticketOnlyFilter ? [] : tasks.filter((t) => !before || (t.date ?? "9999") <= before);
 
@@ -198,7 +207,7 @@ export function ProjectsView() {
         <h1 className="text-2xl font-bold">Projects</h1>
         <div className="ml-auto flex items-center gap-4 text-xs">
           {!isJira && <label className="flex items-center gap-2">Viewing as
-            <select value={meId} onChange={(e) => setMeId(e.target.value)} className="rounded border border-control px-2 py-2">
+            <select value={meId} onChange={(e) => setMeId(e.target.value)} className="rounded-tight border border-control px-2 py-2">
               {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
             </select>
           </label>}
@@ -218,25 +227,25 @@ export function ProjectsView() {
         </div>
         <button onClick={() => setShelf(!shelf)} aria-expanded={shelf} aria-controls="filter-shelf" className="chip" data-on={shelf || filterCount > 0}>
           <Icon name="filter" size={16} /> Filters
-          {filterCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-2 text-xs font-bold text-n-50">{filterCount}</span>}
+          {filterCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-round bg-brand px-2 text-xs font-bold text-n-50">{filterCount}</span>}
         </button>
         {activeFilters > 0 && <button onClick={clearFilters} className="btn btn-sm btn-ghost text-muted"><Icon name="x" size={14} /> Clear filters</button>}
       </div>
       {shelf && <div id="filter-shelf" className="mb-2 flex flex-wrap items-center gap-2">
         <FilterPill label="Status" value={stage} onClear={() => setStage("")}>
-          {(close) => STAGES.map((s) => <FilterOption key={s} label={s} selected={stage === s} onSelect={() => { setStage(s); close(); }} />)}
+          {(close) => statusNames.map((s) => <FilterOption key={s} label={s} selected={stage === s} onSelect={() => { setStage(s); close(); }} />)}
         </FilterPill>
         <FilterPill label="Type" value={type} onClear={() => setType("")}>
           {(close) => TYPES.map((t) => <FilterOption key={t} label={t} selected={type === t} onSelect={() => { setType(t); close(); }} />)}
         </FilterPill>
-        <FilterPill label="Collaborator" value={users.find((u) => u.id === collab)?.name ?? (collab ? "Selected" : "")} onClear={() => setCollab("")}>
-          {(close) => users.length === 0 ? <p className="px-4 py-2 text-sm text-muted">No people to choose from yet.</p> : users.map((u) => <FilterOption key={u.id} label={u.name} selected={collab === u.id} onSelect={() => { setCollab(u.id); close(); }} />)}
+        <FilterPill label="Person" value={people.find((u) => u.id === collab)?.name ?? (collab ? "Selected" : "")} onClear={() => setCollab("")}>
+          {(close) => people.length === 0 ? <p className="px-4 py-2 text-sm text-muted">No people on these projects yet.</p> : people.map((u) => <FilterOption key={u.id} label={u.name} selected={collab === u.id} onSelect={() => { setCollab(u.id); close(); }} />)}
         </FilterPill>
         <FilterPill label="Due by" value={before ? dayLabel(before) : ""} onClear={() => setBefore("")} width="w-72">
           {(close) => (
             <div>
               {DUE_PRESETS.map((p) => { const d = p.at(localDay()); return <FilterOption key={p.label} label={p.label} selected={before === d} onSelect={() => { setBefore(d); close(); }} />; })}
-              <div className="mt-2 border-t border-line p-2"><DatePicker value={before} onChange={(d) => { setBefore(d); close(); }} placeholder="Pick a date" ariaLabel="Due by date" className="!h-10" /></div>
+              <div className="mt-2 border-t border-line p-2"><DatePicker value={before} onChange={(d) => { setBefore(d); close(); }} placeholder="Pick a date" ariaLabel="Due by date" /></div>
             </div>
           )}
         </FilterPill>
@@ -284,7 +293,7 @@ export function ProjectsView() {
             <section key={g.id} className="mb-6">
               <h2 className="mb-2 text-muted eyebrow">
                 {collapsible ? (
-                  <button onClick={() => setClosedOpen(!closedOpen)} aria-expanded={closedOpen} className="flex items-center gap-2 rounded-md hover:text-ink eyebrow">
+                  <button onClick={() => setClosedOpen(!closedOpen)} aria-expanded={closedOpen} className="flex items-center gap-2 rounded-tight hover:text-ink eyebrow">
                     <Icon name={closedOpen ? "chevronDown" : "chevronRight"} size={14} />
                     {g.label} {closedList !== null && <span className="font-normal">({rows.length})</span>}
                   </button>
@@ -294,7 +303,7 @@ export function ProjectsView() {
               {!shown ? null : collapsible && closedList === null ? <p className="text-sm text-muted">Loading closed projects…</p> : rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
                   {nest(rows).map(({ p, depth }) => (
-                    <li key={p.id} style={{ marginLeft: depth * 32 }} className={`flex items-center gap-2 rounded-lg border bg-white pl-2 hover:border-brand ${depth ? "border-line border-l-4 border-l-n-200" : "border-line"}`}>
+                    <li key={p.id} style={{ marginLeft: depth * 32 }} className={`flex items-center gap-2 rounded-tight border bg-white pl-2 hover:border-brand ${depth ? "border-line border-l-4 border-l-n-200" : "border-line"}`}>
                       <StarButton starred={favs.isStarred(p.jiraKey)} onToggle={() => favs.toggle(p.jiraKey, p.title)} label={p.title} />
                       <Link href={`/projects/${p.jiraKey}`} className="flex min-w-0 flex-1 items-center gap-4 p-4 pl-2">
                         <div className="min-w-0 flex-1">
@@ -310,7 +319,7 @@ export function ProjectsView() {
                           <div className="text-xs text-muted">{p.jiraKey} · {p.issueType && p.issueType.level !== 0 ? p.issueType.name : p.type} · {p.requesterName ?? name(p.requesterId)}{p.parentKey && !rows.some((r) => r.jiraKey === p.parentKey) ? ` · in ${p.parentTitle ?? p.parentKey}` : ""}</div>
                         </div>
                         {!canPlan && <StatusTag project={p} />}
-                        {!canPlan && <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-semibold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>}
+                        {!canPlan && <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-bold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>}
                       </Link>
                       {canPlan && (
                         <div className="flex shrink-0 items-center gap-4 pr-4">

@@ -105,7 +105,7 @@ export function FlowEditor() {
           {history.length > 0 && (
             <label className="text-sm">
               <span className="sr-only">Restore an earlier version</span>
-              <select value="" disabled={busy} onChange={(e) => { const v = Number(e.target.value); if (v && confirm(`Publish version ${v} again as the current questions?`)) guard(() => act(() => flowRepo.restore(v), `Restored version ${v}.`)); }} className="rounded-lg border border-control bg-white px-2 py-2 text-sm">
+              <select value="" disabled={busy} onChange={(e) => { const v = Number(e.target.value); if (v && confirm(`Publish version ${v} again as the current questions?`)) guard(() => act(() => flowRepo.restore(v), `Restored version ${v}.`)); }} className="rounded-tight border border-control bg-white px-2 py-2 text-sm">
                 <option value="">Earlier versions…</option>
                 {history.map((h) => <option key={h.version} value={h.version}>v{h.version} · {when(h.updatedAt)} · {h.updatedBy}</option>)}
               </select>
@@ -147,20 +147,20 @@ export function FlowEditor() {
           window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
         }}>
           <div className="sticky left-0 top-0 z-10 flex w-full flex-wrap items-center gap-2 border-b border-line bg-white/90 p-2 text-xs backdrop-blur">
-            <div role="tablist" aria-label="Map view" className="flex rounded-lg bg-n-150 p-px">
+            <div role="tablist" aria-label="Map view" className="flex rounded-tight bg-n-150 p-px">
               {([["types", "By request type"], ["map", "Full map"]] as const).map(([k, l]) => (
-                <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`rounded-lg px-4 py-2 font-medium ${view === k ? "bg-white shadow-sm" : "text-muted hover:text-n-1000"}`}>{l}</button>
+                <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`rounded-tight px-4 py-2 font-medium ${view === k ? "bg-white shadow-sm" : "text-muted hover:text-n-1000"}`}>{l}</button>
               ))}
             </div>
             {view === "map" && (
               <>
-                <button aria-label="Zoom out" onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))} className="rounded px-2 py-2 hover:bg-n-150">−</button>
+                <button aria-label="Zoom out" onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))} className="rounded-tight px-2 py-2 hover:bg-n-150">−</button>
                 <span className="w-10 text-center tabular-nums">{Math.round(scale * 100)}%</span>
-                <button aria-label="Zoom in" onClick={() => setScale((s) => Math.min(1.3, +(s + 0.1).toFixed(1)))} className="rounded px-2 py-2 hover:bg-n-150">+</button>
-                <button onClick={() => setScale(0.6)} className="rounded px-2 py-2 hover:bg-n-150">Fit</button>
+                <button aria-label="Zoom in" onClick={() => setScale((s) => Math.min(1.3, +(s + 0.1).toFixed(1)))} className="rounded-tight px-2 py-2 hover:bg-n-150">+</button>
+                <button onClick={() => setScale(0.6)} className="rounded-tight px-2 py-2 hover:bg-n-150">Fit</button>
               </>
             )}
-            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-auto rounded bg-brand-soft px-4 py-2 font-medium hover:bg-n-150">+ Question</button>
+            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-auto rounded-tight bg-brand-soft px-4 py-2 font-medium hover:bg-n-150">+ Question</button>
           </div>
           {view === "types"
             ? <RouteView flow={draft} selectedId={selected} onSelect={setSelected} problemIds={problemIds} />
@@ -185,10 +185,10 @@ export function FlowEditor() {
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={() => setPreview(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Preview" className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-line bg-paper shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label="Preview" className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-loose border border-line bg-paper shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2">
-              <p className="text-sm font-semibold">Preview{dirty ? " (with your unsaved changes)" : ""}</p>
-              <button onClick={() => setPreview(false)} aria-label="Close preview" className="ml-auto flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Icon name="x" size={16} /></button>
+              <p className="text-sm font-bold">Preview{dirty ? " (with your unsaved changes)" : ""}</p>
+              <button onClick={() => setPreview(false)} aria-label="Close preview" className="ml-auto flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150"><Icon name="x" size={16} /></button>
             </div>
             <div className="overflow-y-auto"><BriefWizard flow={draft} preview /></div>
           </div>

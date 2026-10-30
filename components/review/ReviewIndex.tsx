@@ -62,11 +62,11 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
         {meta && <p className="mt-2 text-xs text-muted">{meta}</p>}
         <ol className="mt-2 flex flex-wrap gap-2">
           {g.items.map((a) => (
-            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="btn btn-md btn-secondary w-full min-w-0 justify-start"><span className="shrink-0 font-semibold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
+            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="btn btn-md btn-secondary w-full min-w-0 justify-start"><span className="shrink-0 font-bold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
           ))}
         </ol>
         {onTrash && (
-          <button onClick={() => onTrash(g.items, g.title)} aria-label={`Move the batch ${g.title} to Trash`} title="Move the whole batch to Trash" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
+          <button onClick={() => onTrash(g.items, g.title)} aria-label={`Move the batch ${g.title} to Trash`} title="Move the whole batch to Trash" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-round text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
             <Icon name="trash" size={16} />
           </button>
         )}
@@ -85,7 +85,7 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
         <span className="font-mono text-xs text-muted">{first.projectKey}</span>
       </Link>
       {onTrash && (
-        <button onClick={() => onTrash([first], first.name)} aria-label={`Move ${first.name} to Trash`} title="Move to Trash" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
+        <button onClick={() => onTrash([first], first.name)} aria-label={`Move ${first.name} to Trash`} title="Move to Trash" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-round text-muted hover:bg-bad-bg hover:text-bad-fg focus-visible:bg-bad-bg">
           <Icon name="trash" size={16} />
         </button>
       )}
@@ -143,14 +143,14 @@ export function ReviewIndex() {
               ))}
             </div>
             {mine.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-control p-8 text-center text-sm text-muted">You haven&apos;t sent anything for feedback yet. <Link href="/submit" className="font-medium text-brand hover:underline">Submit for feedback</Link></p>
+              <p className="rounded-loose border border-dashed border-control p-8 text-center text-sm text-muted">You haven&apos;t sent anything for feedback yet. <Link href="/submit" className="font-medium text-brand hover:underline">Submit for feedback</Link></p>
             ) : (
               STATES.filter((s) => filter === "all" || filter === s.id).map((s) => {
                 const list = mine.filter((g) => stateOf(g) === s.id);
                 return (
                   <div key={s.id} className="mb-6">
-                    <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
-                    {list.length === 0 ? <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">{s.empty}</p> : (
+                    <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
+                    {list.length === 0 ? <p className="rounded-loose border border-dashed border-line p-4 text-sm text-muted">{s.empty}</p> : (
                       <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState onTrash={g.items.every(mayTrash) ? (items, label) => setAsking({ items, label }) : undefined} />)}</ul>
                     )}
                   </div>

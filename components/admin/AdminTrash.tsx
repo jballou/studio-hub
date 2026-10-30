@@ -47,10 +47,10 @@ export function AdminTrash() {
         )}
       </div>
       <p className="mb-6 text-sm text-muted">Designs sent for review that someone deleted. Restore one and it comes back with its versions and comments. After 30 days in Trash, items are removed for good.</p>
-      {error && <p role="alert" className="mb-4 rounded-lg border border-bad-line bg-bad-bg px-4 py-2 text-sm text-bad-fg">{error}</p>}
+      {error && <p role="alert" className="mb-4 rounded-tight border border-bad-line bg-bad-bg px-4 py-2 text-sm text-bad-fg">{error}</p>}
 
       {items === null ? <p className="text-sm text-muted">Loading…</p> : items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-control p-10 text-center text-sm text-muted">Trash is empty.</p>
+        <p className="rounded-tight border border-dashed border-control p-10 text-center text-sm text-muted">Trash is empty.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((it) => (
@@ -64,7 +64,7 @@ export function AdminTrash() {
               <Tag tone={it.daysLeft <= 3 ? "warn" : "neutral"} icon={it.daysLeft <= 3 ? "alert" : undefined}>{it.daysLeft === 0 ? "Removed today" : `${it.daysLeft} day${it.daysLeft === 1 ? "" : "s"} left`}</Tag>
               <button onClick={() => restore(it)} disabled={busy === it.id} className="btn btn-md btn-secondary">{busy === it.id ? "Restoring…" : "Restore"}</button>
               {me?.isAdmin && (
-                <button onClick={() => setAsk({ kind: "one", item: it })} aria-label={`Delete ${it.name} for good`} title="Delete for good" className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-bad-bg hover:text-bad-fg"><Icon name="x" size={14} /></button>
+                <button onClick={() => setAsk({ kind: "one", item: it })} aria-label={`Delete ${it.name} for good`} title="Delete for good" className="flex h-8 w-8 items-center justify-center rounded-round text-muted hover:bg-bad-bg hover:text-bad-fg"><Icon name="x" size={14} /></button>
               )}
             </li>
           ))}

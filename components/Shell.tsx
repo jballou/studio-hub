@@ -25,8 +25,8 @@ function Clock() {
   const d = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const t = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return (
-    <span className="inline-flex h-8 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-medium text-n-800 tabular-nums">
-      <span className="h-2 w-2 rounded-full bg-brand" aria-hidden />
+    <span className="inline-flex h-8 items-center gap-2 rounded-round border border-line bg-white px-4 text-xs font-medium text-n-800 tabular-nums">
+      <span className="h-2 w-2 rounded-round bg-brand" aria-hidden />
       {d} · {t}
     </span>
   );

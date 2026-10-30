@@ -15,7 +15,7 @@ import type { Block, PersonalTask, Project } from "@/lib/types";
 
 const COLLAPSED = 10;
 const initials = (n: string) => n.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-const DUE_TONE = { bad: "text-bad-fg font-semibold", warn: "text-warn-fg font-semibold", muted: "text-muted" } as const;
+const DUE_TONE = { bad: "text-bad-fg font-bold", warn: "text-warn-fg font-bold", muted: "text-muted" } as const;
 
 /** Chip that tells tickets (from Jira) from tasks (made here) at a glance. Icon plus word, never color alone. */
 export function KindChip({ kind }: { kind: "ticket" | "task" }) {
@@ -108,9 +108,9 @@ export function Board({
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-4 text-sm">
-        <span className="font-semibold">Cards</span>
+        <span className="font-bold">Cards</span>
         {([["ticket", "Jira tickets"], ["task", "My tasks"]] as const).map(([k, label]) => (
-          <label key={k} className="flex cursor-pointer items-center gap-2 rounded-full border border-control bg-white px-4 py-2 hover:bg-n-150">
+          <label key={k} className="flex cursor-pointer items-center gap-2 rounded-round border border-control bg-white px-4 py-2 hover:bg-n-150">
             <input type="checkbox" checked={show[k]} onChange={() => setShow({ ...show, [k]: !show[k] })} className="accent-brand" />
             <Icon name={k === "ticket" ? "ticket" : "task"} size={14} /> {label} <span className="text-muted">{counts[k]}</span>
           </label>
@@ -131,14 +131,14 @@ export function Board({
                 onDragOver={(e) => { if (dragged.current) { e.preventDefault(); setOver(col.id); } }}
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
                 onDrop={(e) => { e.preventDefault(); setOver(null); const c = dragged.current; dragged.current = null; if (c) move(c, col.id); }}
-                className={`rounded-2xl bg-n-150 p-2 transition-shadow ${over === col.id ? "ring-2 ring-brand" : ""}`}
+                className={`rounded-tight bg-n-150 p-2 transition-shadow ${over === col.id ? "ring-2 ring-brand" : ""}`}
               >
-                <h2 className="mb-2 flex items-center gap-2 px-2 text-sm font-semibold">
+                <h2 className="mb-2 flex items-center gap-2 px-2 text-sm font-bold">
                   <Icon name={col.icon} size={16} />
                   {col.label}
                   <span className="font-normal text-muted">({inCol.length})</span>
                   {col.id !== "done" && (
-                    <button onClick={() => setAdding(adding === col.id ? null : col.id)} aria-label={`Add a task to ${col.label}`} title="Add a task here" className="ml-auto flex h-6 w-6 items-center justify-center rounded-md hover:bg-white"><Icon name="plus" size={14} /></button>
+                    <button onClick={() => setAdding(adding === col.id ? null : col.id)} aria-label={`Add a task to ${col.label}`} title="Add a task here" className="ml-auto flex h-6 w-6 items-center justify-center rounded-tight hover:bg-white"><Icon name="plus" size={14} /></button>
                   )}
                 </h2>
                 {adding === col.id && <QuickAdd onAdd={(t) => addTask(col.id, t)} onCancel={() => setAdding(null)} />}
@@ -169,7 +169,7 @@ export function Board({
 
       {confirm && confirm.card.kind === "ticket" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={() => setConfirm(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Close ticket" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-xl border border-line bg-white p-6 shadow-xl">
+          <div role="dialog" aria-modal="true" aria-label="Close ticket" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md rounded-loose border border-line bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold">Move to Done?</h2>
             <p className="mb-4 mt-2 text-sm text-muted">{confirm.card.id} · {confirm.card.project.title}. This closes the ticket in Jira.</p>
             <div className="flex gap-2">
@@ -186,7 +186,7 @@ export function Board({
 function QuickAdd({ onAdd, onCancel }: { onAdd: (t: string) => void; onCancel: () => void }) {
   const [v, setV] = useState("");
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onAdd(v); }} className="mb-2 rounded-xl border border-brand bg-white p-2">
+    <form onSubmit={(e) => { e.preventDefault(); onAdd(v); }} className="mb-2 rounded-tight border border-brand bg-white p-2">
       <label className="sr-only" htmlFor="quick-task">New task</label>
       <input id="quick-task" autoFocus value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onCancel()} maxLength={200} placeholder="New task, then Enter" className="w-full bg-transparent px-2 py-2 text-sm outline-none" />
       <p className="px-2 text-xs text-muted">Private to you. Not added to Jira.</p>
@@ -209,20 +209,20 @@ function Card({
       draggable={draggable}
       onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", `${card.kind}:${card.id}`); onDragStart(); }}
       onDragEnd={onDragEnd}
-      className={`rounded-xl border border-line bg-white p-4 shadow-sm hover:border-brand ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`rounded-loose border border-line bg-white p-4 shadow-sm hover:border-brand ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       <div className="mb-2 flex items-center gap-2">
         <KindChip kind={card.kind} />
         <span className="ml-auto flex items-center">
           {isTicket && <StarButton starred={starred} onToggle={onStar} label={card.project.title} />}
           <span className="relative">
-            <button onClick={(e) => { e.stopPropagation(); onMenu(); }} aria-haspopup="menu" aria-expanded={menuOpen} aria-label={`Move ${isTicket ? card.project.title : card.task.title}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-n-700 hover:bg-n-150"><Icon name="more" size={16} /></button>
+            <button onClick={(e) => { e.stopPropagation(); onMenu(); }} aria-haspopup="menu" aria-expanded={menuOpen} aria-label={`Move ${isTicket ? card.project.title : card.task.title}`} className="flex h-8 w-8 items-center justify-center rounded-tight text-n-700 hover:bg-n-150"><Icon name="more" size={16} /></button>
             {menuOpen && (
-              <ul role="menu" className="absolute right-0 top-full z-20 mt-2 w-40 rounded-xl border border-line bg-white p-2 shadow-lg">
+              <ul role="menu" className="absolute right-0 top-full z-20 mt-2 w-40 rounded-loose border border-line bg-white p-2 shadow-lg">
                 <li className="px-2 py-2 text-muted eyebrow">Move to</li>
                 {COLUMNS.map((c) => (
                   <li key={c.id} role="none">
-                    <button role="menuitem" disabled={c.id === card.column} onClick={(e) => { e.stopPropagation(); onMove(c.id); }} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm enabled:hover:bg-n-150 disabled:opacity-40"><Icon name={c.icon} size={14} />{c.label}</button>
+                    <button role="menuitem" disabled={c.id === card.column} onClick={(e) => { e.stopPropagation(); onMove(c.id); }} className="flex w-full items-center gap-2 rounded-tight px-2 py-2 text-left text-sm enabled:hover:bg-n-150 disabled:opacity-40"><Icon name={c.icon} size={14} />{c.label}</button>
                   </li>
                 ))}
               </ul>
@@ -232,8 +232,8 @@ function Card({
       </div>
 
       {isTicket
-        ? <><Link href={`/projects/${card.id}`} draggable={false} className="block font-semibold hover:underline">{card.project.title}</Link><p className="mt-0 text-xs text-muted">{card.id} · {card.project.type}</p></>
-        : <h3 className={`font-semibold ${card.task.done ? "text-muted line-through" : ""}`}>{card.task.title}</h3>}
+        ? <><Link href={`/projects/${card.id}`} draggable={false} className="block font-bold hover:underline">{card.project.title}</Link><p className="mt-0 text-xs text-muted">{card.id} · {card.project.type}</p></>
+        : <h3 className={`font-bold ${card.task.done ? "text-muted line-through" : ""}`}>{card.task.title}</h3>}
       {(isTicket ? card.project.description : card.task.notes) && (
         <p className="mt-2 line-clamp-2 text-sm text-muted">{isTicket ? card.project.description : card.task.notes}</p>
       )}
@@ -252,8 +252,8 @@ function Card({
 
       <div className="mt-4 flex items-center gap-2 border-t border-line pt-2 text-xs">
         <span className="flex -space-x-2">
-          {names.slice(0, 3).map((n) => <span key={n} title={n} className="flex h-6 w-6 items-center justify-center rounded-full bg-n-150 text-xs font-bold ring-2 ring-white">{initials(n)}</span>)}
-          {!isTicket && <span title="You" className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-soft text-xs font-bold ring-2 ring-white">You</span>}
+          {names.slice(0, 3).map((n) => <span key={n} title={n} className="flex h-6 w-6 items-center justify-center rounded-round bg-n-150 text-xs font-bold ring-2 ring-white">{initials(n)}</span>)}
+          {!isTicket && <span title="You" className="flex h-6 w-6 items-center justify-center rounded-round bg-brand-soft text-xs font-bold ring-2 ring-white">You</span>}
         </span>
         <span className="ml-auto flex items-center gap-2">
           <Icon name="calendar" size={12} />

@@ -62,13 +62,13 @@ export function PeoplePicker({
 
   return (
     <div ref={box} className="text-sm">
-      <label htmlFor={id} className="mb-2 block font-semibold">{label}</label>
+      <label htmlFor={id} className="mb-2 block font-bold">{label}</label>
       <div className="relative">
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-control bg-white px-2 py-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-tight border border-control bg-white px-2 py-2">
           {value.map((p) => (
-            <span key={p.id} className="inline-flex items-center gap-2 rounded-full border border-brand bg-brand-soft py-0 pl-4 pr-2 text-sm">
+            <span key={p.id} className="inline-flex items-center gap-2 rounded-round border border-brand bg-brand-soft py-0 pl-4 pr-2 text-sm">
               {p.name}
-              <button type="button" onClick={() => onChange(value.filter((x) => x.id !== p.id))} aria-label={`Remove ${p.name}`} className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-white/60">
+              <button type="button" onClick={() => onChange(value.filter((x) => x.id !== p.id))} aria-label={`Remove ${p.name}`} className="flex h-5 w-5 items-center justify-center rounded-round hover:bg-white/60">
                 <Icon name="x" size={12} />
               </button>
             </span>
@@ -95,12 +95,12 @@ export function PeoplePicker({
           />}
         </div>
         {open && q.trim() && (
-          <ul id={`${id}-list`} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-xl border border-line bg-white p-2 shadow-lg">
+          <ul id={`${id}-list`} role="listbox" className="absolute left-0 right-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-loose border border-line bg-white p-2 shadow-lg">
             {state === "error" && <li className="px-4 py-2 text-bad-fg">{error}</li>}
             {state !== "error" && hits.length === 0 && <li className="px-4 py-4 text-center text-muted">{state === "loading" ? "Searching…" : "No one found."}</li>}
             {hits.map((p, i) => (
               <li key={p.id} role="option" aria-selected={i === active}>
-                <button type="button" onMouseEnter={() => setActive(i)} onClick={() => add(p)} className={`flex w-full items-baseline gap-2 rounded-lg px-4 py-2 text-left ${i === active ? "bg-brand-soft" : ""}`}>
+                <button type="button" onMouseEnter={() => setActive(i)} onClick={() => add(p)} className={`flex w-full items-baseline gap-2 rounded-tight px-4 py-2 text-left ${i === active ? "bg-brand-soft" : ""}`}>
                   <span className="font-medium">{p.name}</span>
                   {p.email && <span className="min-w-0 flex-1 truncate text-xs text-muted">{p.email}</span>}
                 </button>

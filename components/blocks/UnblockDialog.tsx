@@ -62,7 +62,7 @@ export function UnblockDialog({
       <legend className="mb-2 text-muted eyebrow">{title}</legend>
       <div className="grid gap-2 sm:grid-cols-2">
         {items.map((s) => (
-          <label key={s.name} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm ${picked === s.name ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-n-150"}`}>
+          <label key={s.name} className={`flex cursor-pointer items-center gap-2 rounded-tight border px-4 py-2 text-sm ${picked === s.name ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-n-150"}`}>
             <input type="radio" name="status" checked={picked === s.name} onChange={() => setPicked(s.name)} className="accent-brand" />
             {s.name}
           </label>
@@ -75,7 +75,7 @@ export function UnblockDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label={`Unblock ${ticketKey}`} className="w-full max-w-lg rounded-xl border border-line bg-white p-6 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={`Unblock ${ticketKey}`} className="w-full max-w-lg rounded-loose border border-line bg-white p-6 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold">Mark as unblocked</h2>
         <p className="mb-4 mt-2 text-sm text-muted">{ticketKey}. Choose the Jira status it moves to.</p>
         {options === null && !error && <p className="text-sm text-muted">Loading statuses from Jira…</p>}
@@ -85,8 +85,8 @@ export function UnblockDialog({
             {group("Keep working", options.filter((s) => s.category !== "done"))}
             {group("Close it out", closing)}
             {closing.some((s) => s.name === picked) && <div className="mb-4"><Callout tone="warn" icon="alert">This closes the ticket in Jira.</Callout></div>}
-            <label className="mb-4 block text-sm font-semibold">Note <span className="font-normal text-muted">(optional)</span>
-              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Approved in Slack" className="mt-2 w-full rounded-lg border border-control bg-white px-4 py-2 text-sm font-normal" />
+            <label className="mb-4 block text-sm font-bold">Note <span className="font-normal text-muted">(optional)</span>
+              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Approved in Slack" className="mt-2 w-full rounded-tight border border-control bg-white px-4 py-2 text-sm font-normal" />
             </label>
           </>
         )}

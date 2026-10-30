@@ -48,25 +48,25 @@ export function AdminSettings() {
       <p className="mb-6 text-sm text-muted">Organization-wide. Changes apply to everyone the next time they load a page.</p>
 
       <section className="card p-6" aria-labelledby="lookback">
-        <h2 id="lookback" className="text-lg font-semibold">How far back project lists go</h2>
+        <h2 id="lookback" className="text-lg font-bold">How far back project lists go</h2>
         <p className="mb-4 mt-2 text-sm text-muted">Closed projects finished longer ago than this are left out of the Projects page. Open projects always show, and searching by key or title still finds older ones.</p>
 
         <fieldset>
           <legend className="sr-only">Look-back period</legend>
           <div className="flex flex-wrap gap-2">
             {LOOKBACK_PRESETS.map((n) => (
-              <label key={n} className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${choice === String(n) ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
+              <label key={n} className={`cursor-pointer rounded-round border px-4 py-2 text-sm ${choice === String(n) ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
                 <input type="radio" name="lookback" className="sr-only" checked={choice === String(n)} onChange={() => setChoice(String(n))} />
                 {n} days{n === 90 ? " (default)" : ""}
               </label>
             ))}
-            <label className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${choice === CUSTOM ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
+            <label className={`cursor-pointer rounded-round border px-4 py-2 text-sm ${choice === CUSTOM ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
               <input type="radio" name="lookback" className="sr-only" checked={choice === CUSTOM} onChange={() => setChoice(CUSTOM)} />
               Custom
             </label>
           </div>
           {choice === CUSTOM && (
-            <label className="mt-4 block text-sm font-semibold">Number of days
+            <label className="mt-4 block text-sm font-bold">Number of days
               <input
                 type="number"
                 min={LOOKBACK_MIN}
@@ -77,7 +77,7 @@ export function AdminSettings() {
                 value={custom}
                 onChange={(e) => setCustom(e.target.value)}
                 aria-invalid={custom !== "" && days === null}
-                className="mt-2 block w-40 rounded-lg border border-control bg-white px-4 py-2 text-sm font-normal"
+                className="mt-2 block w-40 rounded-tight border border-control bg-white px-4 py-2 text-sm font-normal"
               />
               <span className={`mt-2 block text-xs font-normal ${custom !== "" && days === null ? "text-bad-fg" : "text-muted"}`}>A whole number from {LOOKBACK_MIN} to {LOOKBACK_MAX}.</span>
             </label>

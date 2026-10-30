@@ -37,13 +37,13 @@ export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; cap
             </path>
           );
         })}
-        <text x={CX} y={CY - 6} textAnchor="middle" className="fill-ink text-4xl font-bold tabular-nums">{pct}<tspan className="fill-muted text-xl font-semibold">%</tspan></text>
+        <text x={CX} y={CY - 6} textAnchor="middle" className="fill-ink text-4xl font-bold tabular-nums">{pct}<tspan className="fill-muted text-xl font-bold">%</tspan></text>
       </svg>
       <p className="mt-2 text-center text-sm text-muted">{caption}</p>
       <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
         {parts.map((s) => (
           <li key={s.key} className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm" style={{ background: s.color }} aria-hidden />
+            <span className="h-3 w-3 rounded-tight" style={{ background: s.color }} aria-hidden />
             {s.label} <b className="tabular-nums">{s.count}</b>
           </li>
         ))}
@@ -62,12 +62,12 @@ export function TimelineMeter({ t, label }: { t: Timeline; label: string }) {
   const words = left < 0 ? `${-left} day${left === -1 ? "" : "s"} late` : left === 0 ? "Due today" : `${left} day${left === 1 ? "" : "s"} left`;
   return (
     <div>
-      <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={t.pct} aria-valuetext={`${t.pct}% of the time used, ${words}`} className="h-2 overflow-hidden rounded-full bg-n-150">
-        <div className="h-full rounded-full" style={{ width: `${Math.max(t.pct, 3)}%`, background: BAR[t.state] }} />
+      <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={t.pct} aria-valuetext={`${t.pct}% of the time used, ${words}`} className="h-2 overflow-hidden rounded-round bg-n-150">
+        <div className="h-full rounded-round" style={{ width: `${Math.max(t.pct, 3)}%`, background: BAR[t.state] }} />
       </div>
       <div className="mt-2 flex justify-between gap-2 text-xs text-muted">
         <span>{day(t.from)}</span>
-        <span className={t.state === "late" ? "font-semibold text-bad-fg" : t.state === "watch" ? "font-semibold text-warn-fg" : ""}>{words} · due {day(t.to)}</span>
+        <span className={t.state === "late" ? "font-bold text-bad-fg" : t.state === "watch" ? "font-bold text-warn-fg" : ""}>{words} · due {day(t.to)}</span>
       </div>
     </div>
   );
@@ -79,9 +79,9 @@ export function ScoreMeter({ score, compact }: { score: number | null; compact?:
   const color = score >= 80 ? "#08794a" : score >= 50 ? "#a95c18" : "#8a3734";
   return (
     <div>
-      <div className="flex items-baseline gap-2"><span className={`${compact ? "text-2xl" : "text-5xl"} font-bold tabular-nums`}>{score}</span><span className="text-lg font-semibold text-muted">%</span></div>
-      <div role="meter" aria-label="On-time score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} className="mt-2 h-2.5 overflow-hidden rounded-full bg-n-150">
-        <div className="h-full rounded-full" style={{ width: `${Math.max(score, 2)}%`, background: color }} />
+      <div className="flex items-baseline gap-2"><span className={`${compact ? "text-2xl" : "text-5xl"} font-bold tabular-nums`}>{score}</span><span className="text-lg font-bold text-muted">%</span></div>
+      <div role="meter" aria-label="On-time score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} className="mt-2 h-2.5 overflow-hidden rounded-round bg-n-150">
+        <div className="h-full rounded-round" style={{ width: `${Math.max(score, 2)}%`, background: color }} />
       </div>
     </div>
   );
@@ -114,7 +114,7 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
                 <Link
                   href={`/projects/${b.key}`}
                   title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.startDate || b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
-                  className="flex h-8 items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
+                  className="flex h-8 items-center gap-2 overflow-hidden rounded-tight px-2 text-xs font-medium text-ink"
                   style={{
                     gridColumn: `${b.from + 2} / ${b.to + 3}`,
                     background: `color-mix(in srgb, ${b.color} 22%, var(--card))`,

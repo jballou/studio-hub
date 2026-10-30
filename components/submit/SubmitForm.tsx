@@ -30,7 +30,7 @@ const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; pl
 ];
 
 const KIND_LABEL: Record<AssetKind, string> = { image: "Image", video: "Video", audio: "Audio", pdf: "PDF", embed: "Link" };
-const field = "w-full rounded-lg border border-control bg-white px-4 py-2 text-sm";
+const field = "w-full rounded-tight border border-control bg-white px-4 py-2 text-sm";
 
 export function SubmitForm() {
   const router = useRouter();
@@ -311,17 +311,17 @@ export function SubmitForm() {
     <main className="page [&>*:not(.fixed)]:max-w-2xl">
       <h1 className="text-2xl font-bold">{versionOf ? "Upload a new version" : "Submit for feedback"}</h1>
       {versionOf && (
-        <p className="mt-2 rounded-xl border border-info-line bg-info-bg px-4 py-4 text-sm text-info-fg">
+        <p className="mt-2 rounded-tight border border-info-line bg-info-bg px-4 py-4 text-sm text-info-fg">
           This will be <b>version {versionOf.versionIds.length + 1}</b> of “{versionOf.name}”. Reviewers and approvers are carried over (change them below if needed), and it goes back to awaiting feedback. Add one file or link.
         </p>
       )}
       <p className="mb-6 mt-2 text-sm text-muted">Share what you want reviewed. Reviewers get a link and can comment right on it. Add several items to send them as one batch.</p>
 
       <fieldset className="mb-6">
-        <legend className="mb-2 text-sm font-semibold">What are you sharing?</legend>
+        <legend className="mb-2 text-sm font-bold">What are you sharing?</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {SOURCES.map((s) => (
-            <label key={s.id} className={`cursor-pointer rounded-xl border bg-white p-4 text-sm ${source === s.id ? "border-brand ring-2 ring-brand-soft" : "border-line hover:border-control"}`}>
+            <label key={s.id} className={`cursor-pointer rounded-loose border bg-white p-4 text-sm ${source === s.id ? "border-brand ring-2 ring-brand-soft" : "border-line hover:border-control"}`}>
               <input type="radio" name="source" className="sr-only" checked={source === s.id} onChange={() => { setSource(s.id); setUrl(""); setDriveType("other"); setBulkOpen(false); }} />
               <span className="flex items-center gap-2 font-medium"><Icon name={s.icon} size={16} /> {s.label}</span>
               <span className="mt-0 block text-xs text-muted">{s.hint}</span>
@@ -333,7 +333,7 @@ export function SubmitForm() {
       <section className="mb-4">
         {source === "upload" ? (
           <div>
-            <span className="mb-2 block text-sm font-semibold">Files</span>
+            <span className="mb-2 block text-sm font-bold">Files</span>
             <UploadZone uploads={uploads} onFiles={addFiles} onCancel={cancelUpload} hint={`Image, video, audio (MP3, M4A, WAV…) or PDF${isJira ? `, up to ${MAX_UPLOAD_BYTES / 1024 / 1024} MB each` : ""}. Audio is played in the browser and each comment is stamped with the time.`} />
             {uploadFailed.length > 0 && <span role="alert" className="mt-2 block text-xs text-bad-fg">Couldn&apos;t upload {uploadFailed.join(" · ")}</span>}
             {uploadNote?.bad.length ? <span role="alert" className="mt-2 block text-xs text-bad-fg">Skipped {uploadNote.bad.join(", ")}: that file type isn&apos;t supported. Use an image, video, audio ({AUDIO_EXTENSIONS.slice(0, 6).join(", ")}…) or PDF.</span> : null}
@@ -341,7 +341,7 @@ export function SubmitForm() {
           </div>
         ) : (
           <>
-            <label className="block text-sm font-semibold">Link
+            <label className="block text-sm font-bold">Link
               <input
                 className={`${field} mt-2 font-normal`}
                 value={url}
@@ -353,7 +353,7 @@ export function SubmitForm() {
             </label>
             {source === "staging" && (
               <label className="mt-2 flex items-center gap-2 text-sm">Preview as
-                <select value={device} onChange={(e) => setDevice(e.target.value as Device)} className="rounded border border-control px-2 py-2">
+                <select value={device} onChange={(e) => setDevice(e.target.value as Device)} className="rounded-tight border border-control px-2 py-2">
                   <option value="desktop">Desktop</option>
                   <option value="mobile">Mobile</option>
                 </select>
@@ -364,10 +364,10 @@ export function SubmitForm() {
             )}
             {source === "drive" && !(drive?.state === "done" && drive.url === url.trim()) && (
               <fieldset className="mt-4">
-                <legend className="text-sm font-semibold">What kind of file is it?</legend>
+                <legend className="text-sm font-bold">What kind of file is it?</legend>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {([["other", "Image, PDF or other"], ["video", "Video"], ["audio", "Audio"]] as const).map(([id, label]) => (
-                    <label key={id} className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${driveType === id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
+                    <label key={id} className={`cursor-pointer rounded-round border px-4 py-2 text-sm ${driveType === id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
                       <input type="radio" name="drive-type" className="sr-only" checked={driveType === id} onChange={() => setDriveType(id)} />{label}
                     </label>
                   ))}
@@ -377,19 +377,19 @@ export function SubmitForm() {
             )}
             {(source === "figma" || source === "wistia" || (source === "drive" && driveType !== "audio")) && (
               <label className="mt-2 flex items-center gap-2 text-sm">Frame shape
-                <select value={shape} onChange={(e) => setShape(e.target.value as Shape)} className="rounded border border-control px-2 py-2">
+                <select value={shape} onChange={(e) => setShape(e.target.value as Shape)} className="rounded-tight border border-control px-2 py-2">
                   {SHAPES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
                 </select>
                 <span className="text-xs text-muted">Match your frame so pins stay put.</span>
               </label>
             )}
             {parsed?.ok && (
-              <div className="mt-2 space-y-2 rounded-xl border border-ok-line bg-ok-bg p-4 text-sm text-ok-fg">
+              <div className="mt-2 space-y-2 rounded-loose border border-ok-line bg-ok-bg p-4 text-sm text-ok-fg">
                 <p className="flex items-center gap-2 font-medium"><Icon name="check" size={16} /> {parsed.summary}</p>
                 {source === "drive" && drive && drive.url === url.trim() && (
                   drive.state === "loading" ? <p className="flex items-center gap-2 text-xs">Checking the file…</p>
                   : drive.state === "failed" ? (
-                    <p role="alert" className="flex flex-wrap items-start gap-2 text-xs text-warn-fg"><Icon name="alert" size={14} /> {drive.error} {drive.reconnect && <a href="/api/google/connect" className="font-semibold underline">Connect Google with Drive access</a>} Until then it opens in Drive&apos;s own player, and reviewers type the time when they comment.</p>
+                    <p role="alert" className="flex flex-wrap items-start gap-2 text-xs text-warn-fg"><Icon name="alert" size={14} /> {drive.error} {drive.reconnect && <a href="/api/google/connect" className="font-bold underline">Connect Google with Drive access</a>} Until then it opens in Drive&apos;s own player, and reviewers type the time when they comment.</p>
                   ) : drive.file?.kind !== "other" ? <p className="flex items-center gap-2 text-xs"><Icon name="check" size={14} /> {drive.file?.name}: it&apos;s {drive.file?.kind}, so it plays in the Hub&apos;s own player with automatic timestamps.</p>
                   : <p className="flex items-center gap-2 text-xs"><Icon name="check" size={14} /> {drive.file.name} is not a video or audio file, so it shows in Drive&apos;s viewer.</p>
                 )}
@@ -406,7 +406,7 @@ export function SubmitForm() {
             )}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {figmaLink && (
-                <button type="button" onClick={() => setPicker(true)} className={figmaLink.nodeId ? "rounded-lg border border-brand px-4 py-2 text-sm font-medium text-brand hover:bg-n-150" : "rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"}>
+                <button type="button" onClick={() => setPicker(true)} className={`btn btn-md ${figmaLink.nodeId ? "btn-secondary border-brand text-brand" : "btn-primary"}`}>
                   {figmaLink.nodeId ? "Add more frames from this file…" : "Choose frames from this file…"}
                 </button>
               )}
@@ -419,7 +419,7 @@ export function SubmitForm() {
             </div>
             {bulkOpen && source === "figma" && (
               <div className="mt-2 card p-4">
-                <label className="block text-sm font-semibold">Frame links, one per line
+                <label className="block text-sm font-bold">Frame links, one per line
                   <textarea rows={4} value={bulk} onChange={(e) => setBulk(e.target.value)} placeholder={"https://www.figma.com/design/…?node-id=12-34\nhttps://www.figma.com/design/…?node-id=12-35"} className={`${field} mt-2 font-mono text-xs font-normal`} />
                 </label>
                 {bulkErrors.length > 0 && <p role="alert" className="mt-2 text-xs text-bad-fg">These didn&apos;t look like Figma design links and were left in the box: {bulkErrors.length}.</p>}
@@ -432,7 +432,7 @@ export function SubmitForm() {
 
       {all.length > 0 && (
         <section className="mb-6" aria-label="In this submission">
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-bold">
             {isBatch ? `Batch of ${all.length}` : "1 item"}
             {isBatch && <Tag tone="info">Reviewers see these together</Tag>}
           </h2>
@@ -441,7 +441,7 @@ export function SubmitForm() {
               const staged = items.some((i) => i.key === it.key);
               return (
                 <li key={it.key} className="flex items-center gap-4 card p-2">
-                  <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-n-150 text-muted">
+                  <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-tight bg-n-150 text-muted">
                     {it.thumb
                       // eslint-disable-next-line @next/next/no-img-element
                       ? <img src={it.thumb} alt="" className="h-full w-full object-cover" />
@@ -449,11 +449,11 @@ export function SubmitForm() {
                   </span>
                   <span className="min-w-0 flex-1">
                     {staged && isBatch
-                      ? <input value={it.title} onChange={(e) => rename(it.key, e.target.value)} aria-label="Item name" className="w-full rounded border border-transparent px-2 py-0 text-sm font-medium hover:border-control focus:border-brand" />
+                      ? <input value={it.title} onChange={(e) => rename(it.key, e.target.value)} aria-label="Item name" className="w-full rounded-tight border border-transparent px-2 py-0 text-sm font-medium hover:border-control focus:border-brand" />
                       : <span className="block truncate px-2 text-sm font-medium">{itemTitle(it) || "Untitled"}</span>}
                     <span className="block truncate px-2 text-xs text-muted">{KIND_LABEL[it.assetKind]} · {it.source.label}{staged ? "" : " · in the link box"}</span>
                   </span>
-                  {staged && <button type="button" onClick={() => removeItem(it.key)} aria-label={`Remove ${it.title}`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-n-150"><Icon name="x" size={14} /></button>}
+                  {staged && <button type="button" onClick={() => removeItem(it.key)} aria-label={`Remove ${it.title}`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight hover:bg-n-150"><Icon name="x" size={14} /></button>}
                 </li>
               );
             })}
@@ -462,15 +462,15 @@ export function SubmitForm() {
       )}
 
       <section className="mb-6 grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-semibold sm:col-span-2">{isBatch ? "Batch name" : "Title"}
+        <label className="block text-sm font-bold sm:col-span-2">{isBatch ? "Batch name" : "Title"}
           <input className={`${field} mt-2 font-normal`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={isBatch ? defaultBatchTitle(all) : all[0]?.title ?? "Name this design"} />
         </label>
-        <div className="block text-sm font-semibold">
+        <div className="block text-sm font-bold">
           <label htmlFor="ticket-search">Jira ticket</label>
           <TicketPicker value={ticket} onChange={(p) => { setTicket(p); setTarget(""); }} viewerId="u-avery" />
         </div>
         {!isBatch && (
-          <label className="block text-sm font-semibold">Add as
+          <label className="block text-sm font-bold">Add as
             <select className={`${field} mt-2 font-normal`} value={target} onChange={(e) => setTarget(e.target.value)}>
               <option value="">A new design</option>
               {versionTargets.map((a) => <option key={a.id} value={a.id}>New version of “{a.name}”</option>)}
@@ -489,7 +489,7 @@ export function SubmitForm() {
           hint="Only these people see the approve button. Everyone else can comment or ask for changes. Approvers are added as reviewers."
         />
         <div>
-          <span className="text-sm font-semibold">Feedback needed by</span>
+          <span className="text-sm font-bold">Feedback needed by</span>
           <div className="mt-2 flex flex-wrap gap-2">
             <div className="w-48"><DatePicker ariaLabel="Date" value={dueDate} onChange={setDueDate} /></div>
             <input aria-label="Time" type="time" className={`${field} w-32 font-normal`} value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
@@ -498,7 +498,7 @@ export function SubmitForm() {
             </select>
           </div>
         </div>
-        <label className="block text-sm font-semibold">What feedback do you want?
+        <label className="block text-sm font-bold">What feedback do you want?
           <textarea rows={3} className={`${field} mt-2 font-normal`} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="e.g. Is the headline clear? Ignore the placeholder photo." />
         </label>
       </section>

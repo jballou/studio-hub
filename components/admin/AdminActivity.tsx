@@ -33,7 +33,7 @@ export function AdminActivity() {
     <main className="page">
       <div className="mb-4 flex items-center gap-4">
         <h1 className="text-2xl font-bold">Activity</h1>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search activity" className="ml-auto w-56 rounded-lg border border-control bg-white px-4 py-2 text-sm" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search activity" className="ml-auto w-56 rounded-tight border border-control bg-white px-4 py-2 text-sm" />
       </div>
       <p className="mb-4 text-sm text-muted">Who changed access or blocked work, newest first. The last 500 changes are kept.</p>
       {error && <Callout tone="bad" icon="alert">{error}</Callout>}

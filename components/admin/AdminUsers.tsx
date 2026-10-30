@@ -87,7 +87,7 @@ export function AdminUsers() {
   }
 
   const shown = (users ?? []).filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(q.trim().toLowerCase()));
-  const sel = "rounded-lg border border-control bg-white px-2 py-2 text-sm";
+  const sel = "rounded-tight border border-control bg-white px-2 py-2 text-sm";
 
   return (
     <main className="page">
@@ -97,7 +97,7 @@ export function AdminUsers() {
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
 
       <section className="mb-6 card p-4">
-        <h2 className="mb-2 text-sm font-semibold">Add someone before their first sign-in</h2>
+        <h2 className="mb-2 text-sm font-bold">Add someone before their first sign-in</h2>
         <form
           className="flex flex-wrap items-end gap-2"
           onSubmit={async (e) => {
@@ -105,10 +105,10 @@ export function AdminUsers() {
             if (await call("/api/admin/users", { method: "POST", body: JSON.stringify({ email, role }) })) setEmail("");
           }}
         >
-          <label className="min-w-64 flex-1 text-xs font-semibold">Work email
+          <label className="min-w-64 flex-1 text-xs font-bold">Work email
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@surveymonkey.com" type="email" className={`${sel} mt-2 w-full font-normal`} required />
           </label>
-          <label className="text-xs font-semibold">Role
+          <label className="text-xs font-bold">Role
             <select value={role} onChange={(e) => setRole(e.target.value as Role)} className={`${sel} mt-2 block font-normal`}>
               {ROLES.map((r) => <option key={r} value={r}>{cap(r)}</option>)}
             </select>
@@ -119,13 +119,13 @@ export function AdminUsers() {
       </section>
 
       <div className="mb-2 flex items-center gap-4">
-        <h2 className="text-sm font-semibold">People ({users?.length ?? "…"})</h2>
+        <h2 className="text-sm font-bold">People ({users?.length ?? "…"})</h2>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search people" className={`${sel} ml-auto w-52`} />
       </div>
       <div className="overflow-x-auto card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-n-150 text-xs text-n-800">
-            <tr><th className="px-4 py-2 font-semibold">Person</th><th className="px-4 py-2 font-semibold">Role</th><th className="px-4 py-2 font-semibold">Status</th><th className="px-4 py-2 font-semibold">Last sign-in</th><th className="px-4 py-2" /></tr>
+            <tr><th className="px-4 py-2 font-bold">Person</th><th className="px-4 py-2 font-bold">Role</th><th className="px-4 py-2 font-bold">Status</th><th className="px-4 py-2 font-bold">Last sign-in</th><th className="px-4 py-2" /></tr>
           </thead>
           <tbody>
             {users === null && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">Loading…</td></tr>}
@@ -162,7 +162,7 @@ export function AdminUsers() {
       <p className="mt-2 flex items-start gap-2 text-xs text-muted"><Icon name="alert" size={14} /> <span><b>Disable</b> blocks sign-in and API access right away. <b>Remove</b> only deletes the record; the person can sign back in as a requester. Locked admins come from the <code>ADMIN_EMAILS</code> setting so the app can never be left without an owner.</span></p>
 
       <section className="mt-8">
-        <h2 className="mb-2 text-sm font-semibold">Recent changes</h2>
+        <h2 className="mb-2 text-sm font-bold">Recent changes</h2>
         {audit.length === 0 ? <p className="text-sm text-muted">Nothing yet.</p> : (
           <ul className="divide-y divide-line card text-sm">
             {audit.map((a, i) => (

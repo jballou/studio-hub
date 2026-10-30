@@ -30,7 +30,7 @@ export function ThemeToggle({ vertical = false }: { vertical?: boolean }) {
     playSfx(next ? "night" : "day");
   };
 
-  const btn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150";
+  const btn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-n-150";
   return (
     <div className={`flex ${vertical ? "flex-col" : ""} items-center`}>
       <button onClick={toggleTheme} aria-pressed={dark} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} title={dark ? "Light mode" : "Dark mode"} className={btn}>

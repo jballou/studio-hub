@@ -19,10 +19,10 @@ const statusProps = (r: IssueRef) => ({ stage: "Submitted" as const, statusName:
 
 function Row({ r, here }: { r: IssueRef; here?: boolean }) {
   return (
-    <div className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 text-sm ${here ? "bg-brand-soft" : "hover:bg-n-150"}`}>
+    <div className={`flex flex-wrap items-center gap-2 rounded-tight px-2 py-2 text-sm ${here ? "bg-brand-soft" : "hover:bg-n-150"}`}>
       <IssueIcon level={r.level} typeName={r.typeName} />
       <span className="font-mono text-xs text-muted">{r.key}</span>
-      {here ? <span className="font-semibold">{r.title}</span> : <IssueLink r={r} className="min-w-0 flex-1 truncate font-medium" />}
+      {here ? <span className="font-bold">{r.title}</span> : <IssueLink r={r} className="min-w-0 flex-1 truncate font-medium" />}
       {here && <Tag tone="ok">This ticket</Tag>}
       {r.status && <StatusTag project={statusProps(r)} />}
       {!r.inHub && <span title="Opens in Jira" className="text-muted"><Icon name="link" size={12} /></span>}
@@ -80,19 +80,19 @@ export function RelationsCard({ project, rel }: { project: Project; rel: Relatio
     <>
       {hasTree && (
         <section className="card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Hierarchy</h2>
+          <h2 className="mb-4 text-lg font-bold">Hierarchy</h2>
           <ul>{tree(0)}</ul>
           {rel.children.length > 0 && (
             <div className="mt-4 border-t border-line pt-4">
               <div className="mb-2 flex justify-between text-xs text-muted"><span>{done} of {rel.children.length} {rel.children.length === 1 ? "item" : "items"} done</span><span>{pct}%</span></div>
-              <div role="meter" aria-label="Child items done" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="h-2 overflow-hidden rounded-full bg-n-150"><div className="h-full rounded-full bg-brand" style={{ width: `${Math.max(pct, 2)}%` }} /></div>
+              <div role="meter" aria-label="Child items done" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="h-2 overflow-hidden rounded-round bg-n-150"><div className="h-full rounded-round bg-brand" style={{ width: `${Math.max(pct, 2)}%` }} /></div>
             </div>
           )}
         </section>
       )}
       {rel.links.length > 0 && (
         <section className="card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Linked work</h2>
+          <h2 className="mb-4 text-lg font-bold">Linked work</h2>
           <div className="space-y-4">
             {LINK_GROUPS.map((g) => {
               const items = rel.links.filter((l) => l.kind === g.kind);

@@ -31,7 +31,7 @@ const FLASH: Record<string, { tone: "ok" | "warn" | "bad"; text: string }> = {
 };
 
 const clock = (ms: number) => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-const field = "rounded-lg border border-control bg-white px-4 py-2 text-sm";
+const field = "rounded-tight border border-control bg-white px-4 py-2 text-sm";
 
 function BackupTag({ t }: { t: PersonalTask }) {
   if (t.backup === "synced") return <Tag tone="ok">In Google Tasks</Tag>;
@@ -208,9 +208,9 @@ export function MyDay() {
               action={
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
+                    <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-tight border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
                     <button onClick={() => setShift(0)} className="btn btn-sm btn-secondary">Today</button>
-                    <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-n-150"><Icon name="chevronRight" size={12} /></button>
+                    <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-tight border border-control hover:bg-n-150"><Icon name="chevronRight" size={12} /></button>
                   </div>
                   <div className="seg" role="group" aria-label="Timeline length">
                     {WINDOWS.map((w) => <button key={w.id} onClick={() => { setWin(w.id); setShift(0); }} aria-pressed={win === w.id} className="seg-item">{w.label}</button>)}
@@ -220,8 +220,8 @@ export function MyDay() {
             >
               {bars.length === 0 ? <p className="py-6 text-center text-sm text-muted">No tickets with dates in this window.</p> : <Gantt bars={shownBars} days={days} today={today!} start={winStart} />}
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
-                {STATUS_META.filter((m) => m.key !== "tasks").map((m) => <span key={m.key} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: m.color }} aria-hidden />{m.label}</span>)}
-                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm border-[1.5px] border-bad-fg" aria-hidden />Past deadline</span>
+                {STATUS_META.filter((m) => m.key !== "tasks").map((m) => <span key={m.key} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-tight" style={{ background: m.color }} aria-hidden />{m.label}</span>)}
+                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-tight border-[1.5px] border-bad-fg" aria-hidden />Past deadline</span>
               </div>
               <MoreButton total={bars.length} shown={shownBars.length} expanded={showAllBars} onToggle={() => setShowAllBars(!showAllBars)} noun="tickets" limit={6} />
               {undated > 0 && <p className="mt-2 text-xs text-muted">{undated} {undated === 1 ? "ticket has" : "tickets have"} no deadline, so {undated === 1 ? "it isn't" : "they aren't"} on the timeline.</p>}
@@ -238,7 +238,7 @@ export function MyDay() {
                 ]}
               />
               <div className="mt-4 border-t border-line pt-4">
-                <div className="mb-2 flex items-baseline justify-between text-sm"><span className="font-semibold">On-time score</span>{score && score.score !== null && <span className="text-xs text-muted">{score.onTime} on time · {score.late} late</span>}</div>
+                <div className="mb-2 flex items-baseline justify-between text-sm"><span className="font-bold">On-time score</span>{score && score.score !== null && <span className="text-xs text-muted">{score.onTime} on time · {score.late} late</span>}</div>
                 <ScoreMeter score={score?.score ?? null} compact />
               </div>
             </Card>
@@ -301,7 +301,7 @@ export function MyDay() {
 
             <Card title="Reminders" hint={google?.connected ? "From Google Calendar and your timed tasks" : undefined}>
               {google && !google.connected && isJira && (
-                <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-dashed border-control p-4 text-sm">
+                <div className="mb-4 flex flex-wrap items-center gap-4 rounded-tight border border-dashed border-control p-4 text-sm">
                   <Icon name="calendar" size={18} />
                   <span className="min-w-0 flex-1">{google.configured ? "Connect Google to plan around your meetings and back up tasks." : "Google isn't set up for this app yet."}</span>
                   {google.configured && <a href="/api/google/connect" className="btn btn-md btn-primary">Connect Google</a>}
@@ -313,9 +313,9 @@ export function MyDay() {
                 <div className="mb-4"><Callout tone="bad" icon="alert">{eventsErr.message}</Callout></div>
               ) : null}
               {next && (
-                <div className="mb-4 rounded-xl border border-line p-4">
+                <div className="mb-4 rounded-loose border border-line p-4">
                   <p className="text-muted eyebrow">Next up</p>
-                  <p className="mt-2 font-semibold">{next.label}</p>
+                  <p className="mt-2 font-bold">{next.label}</p>
                   <p className="text-sm text-muted">Today, {clock(next.at)} – {clock(next.end!)}{next.at <= now ? " (happening now)" : ""}</p>
                   {next.link && <a href={next.link} target="_blank" rel="noreferrer" className="btn btn-md btn-primary mt-4">Open meeting</a>}
                 </div>
@@ -329,7 +329,7 @@ export function MyDay() {
                   {shownSchedule.map((r, i) => {
                     const past = !r.allDay && (r.end ?? r.at) < now;
                     return (
-                      <li key={i} className={`flex items-center gap-2 rounded-lg border border-line px-4 py-2 text-sm ${past ? "opacity-55" : ""}`}>
+                      <li key={i} className={`flex items-center gap-2 rounded-tight border border-line px-4 py-2 text-sm ${past ? "opacity-55" : ""}`}>
                         <span className="w-[4.75rem] shrink-0 text-xs tabular-nums text-muted">{r.allDay ? "All day" : clock(r.at)}</span>
                         <span className="min-w-0 flex-1 truncate font-medium">{r.label}</span>
                         <Tag tone={r.kind === "meeting" ? "info" : "progress"}>{r.kind === "meeting" ? "Meeting" : "Task"}</Tag>
@@ -345,8 +345,8 @@ export function MyDay() {
               {activity === null ? <p className="text-sm text-muted">Loading…</p> : activity.length === 0 ? <p className="text-sm text-muted">No recent changes.</p> : (
                 <ul className="space-y-2">
                   {activity.slice(0, 5).map((a) => (
-                    <li key={a.id} className="flex items-start gap-4 rounded-lg border border-line p-2">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-n-150 text-xs font-bold" aria-hidden>{a.who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+                    <li key={a.id} className="flex items-start gap-4 rounded-tight border border-line p-2">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-round bg-n-150 text-xs font-bold" aria-hidden>{a.who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
                       <div className="min-w-0 flex-1 text-sm">
                         <p><b>{a.mine ? "You" : a.who}</b> {a.what}</p>
                         <p className="truncate"><Link href={`/projects/${a.key}`} className="text-muted hover:underline">{a.key} · {a.title}</Link></p>
@@ -388,7 +388,7 @@ function Tile({ label, n, note, tone, onClick }: { label: string; n: number; not
       {...(onClick ? { onClick, type: "button" as const, "aria-haspopup": "dialog" as const, title: "See the list" } : {})}
       className={`flex h-full flex-col items-start card p-4 text-left ${onClick ? "card-hover cursor-pointer focus-visible:outline-offset-2" : ""}`}
     >
-      <div className="text-sm font-semibold">{label}</div>
+      <div className="text-sm font-bold">{label}</div>
       <div className="mt-2 flex items-center gap-2">
         <span className={`text-3xl font-bold tabular-nums ${tone === "bad" ? "text-bad-fg" : ""}`}>{n}</span>
         {tone === "bad" && n > 0 && <Tag tone="bad" icon="alert">Attention</Tag>}
@@ -422,25 +422,25 @@ function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKin
   const when = (p: Project) => {
     if (kind === "done") return p.resolvedAt ? <span>Closed {new Date(`${p.resolvedAt}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : null;
     const late = pastDueDays(p, today);
-    if (late !== null) return <span className="font-semibold text-bad-fg">Past due · {pastDueWords(late)}</span>;
+    if (late !== null) return <span className="font-bold text-bad-fg">Past due · {pastDueWords(late)}</span>;
     return p.deadline ? <span>Due {new Date(`${p.deadline}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : <span>No deadline</span>;
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={copy.title} onMouseDown={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-white p-6 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label={copy.title} onMouseDown={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-loose border border-line bg-white p-6 shadow-xl">
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-bold">{copy.title}</h2>
             <p className="text-sm text-muted">{day} · {plural(total, "item", "items")} ({plural(items.tickets.length, "Jira ticket", "Jira tickets")}, {plural(items.tasks.length, "task", "tasks")})</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-n-150"><Icon name="x" size={16} /></button>
+          <button onClick={onClose} aria-label="Close" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight hover:bg-n-150"><Icon name="x" size={16} /></button>
         </div>
         {total === 0 ? (
-          <p className="mt-4 rounded-lg border border-dashed border-control p-4 text-center text-sm text-muted">{copy.empty}</p>
+          <p className="mt-4 rounded-tight border border-dashed border-control p-4 text-center text-sm text-muted">{copy.empty}</p>
         ) : (
           <ul className="mt-4 space-y-2">
             {items.tasks.map((t) => (
-              <li key={t.id} className="flex items-start gap-2 rounded-lg border border-line px-4 py-2 text-sm">
+              <li key={t.id} className="flex items-start gap-2 rounded-tight border border-line px-4 py-2 text-sm">
                 {kind === "done"
                   ? <span className="mt-0 text-ok-fg" aria-label="Done"><Icon name="check" size={16} /></span>
                   : <input type="checkbox" checked={false} onChange={() => onDone(t)} aria-label={`Mark "${t.title}" done`} className="mt-2 h-4 w-4 shrink-0 accent-brand" />}
@@ -448,14 +448,14 @@ function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKin
                   <div className={`font-medium ${kind === "done" ? "text-muted line-through" : ""}`}>{t.title}</div>
                   <div className="mt-0 flex flex-wrap items-center gap-2 text-xs text-muted">
                     <Tag tone="progress" icon="task">My task</Tag>
-                    <span className={kind === "overdue" ? "font-semibold text-bad-fg" : ""}>{dueText(t, tz)}</span>
+                    <span className={kind === "overdue" ? "font-bold text-bad-fg" : ""}>{dueText(t, tz)}</span>
                     <BackupTag t={t} />
                   </div>
                 </div>
               </li>
             ))}
             {items.tickets.map((p) => (
-              <li key={p.jiraKey} className="flex items-start gap-2 rounded-lg border border-line px-4 py-2 text-sm">
+              <li key={p.jiraKey} className="flex items-start gap-2 rounded-tight border border-line px-4 py-2 text-sm">
                 <span className="mt-0"><IssueIcon level={p.issueType?.level ?? 0} typeName={p.issueType?.name} /></span>
                 <div className="min-w-0 flex-1">
                   <Link href={`/projects/${p.jiraKey}`} className="font-medium hover:underline">{p.title}</Link>
@@ -501,18 +501,18 @@ function AddTaskDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (d: { t
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
-      <form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Add a task" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md space-y-4 rounded-xl border border-line bg-white p-6 shadow-xl">
+      <form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Add a task" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-md space-y-4 rounded-loose border border-line bg-white p-6 shadow-xl">
         <h2 className="text-lg font-bold">Add a task</h2>
         <p className="text-sm text-muted">Private to you. It shows on your calendar and is backed up to Google Tasks, never added to Jira.</p>
-        <label className="block text-sm font-semibold">Task
+        <label className="block text-sm font-bold">Task
           <input autoFocus value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} maxLength={200} placeholder="e.g. Send exports to Riley" className={`${field} mt-2 w-full font-normal`} />
         </label>
         <div className="flex flex-wrap gap-4">
-          <label className="text-sm font-semibold">Due date<div className="mt-2 w-48"><DatePicker value={d.date} onChange={(v) => setD({ ...d, date: v, time: v ? d.time : "" })} placeholder="No date" /></div></label>
-          <label className="text-sm font-semibold">Time<input type="time" value={d.time} disabled={!d.date} onChange={(e) => setD({ ...d, time: e.target.value })} className={`${field} mt-2 block font-normal disabled:opacity-40`} /></label>
+          <label className="text-sm font-bold">Due date<div className="mt-2 w-48"><DatePicker value={d.date} onChange={(v) => setD({ ...d, date: v, time: v ? d.time : "" })} placeholder="No date" /></div></label>
+          <label className="text-sm font-bold">Time<input type="time" value={d.time} disabled={!d.date} onChange={(e) => setD({ ...d, time: e.target.value })} className={`${field} mt-2 block font-normal disabled:opacity-40`} /></label>
         </div>
         {d.time && (
-          <label className="block text-sm font-semibold">Time zone
+          <label className="block text-sm font-bold">Time zone
             <select value={d.tz} onChange={(e) => setD({ ...d, tz: e.target.value })} className={`${field} mt-2 block w-full font-normal`}>
               {timezoneOptions(d.tz).map((z) => <option key={z.id} value={z.id}>{z.label}</option>)}
             </select>
@@ -531,15 +531,15 @@ function FocusRow({ f, today, slot, planned, onDone, canPlan, onPlanned }: { f: 
   const hot = f.reason.startsWith("Overdue");
   const stageIdx = f.kind === "ticket" ? STAGES_ORDER.indexOf(f.project.stage) + 1 : 0;
   return (
-    <li className="rounded-lg border border-line px-4 py-2">
+    <li className="rounded-tight border border-line px-4 py-2">
       <div className="flex items-start gap-2">
         {onDone
           ? <input type="checkbox" checked={false} onChange={onDone} aria-label={`Mark "${f.title}" done`} className="mt-2 h-4 w-4 shrink-0 accent-brand" />
           : <span className="mt-0 shrink-0"><IssueIcon level={f.kind === "ticket" ? f.project.issueType?.level ?? 0 : 0} typeName={f.kind === "ticket" ? f.project.issueType?.name : undefined} size={18} /></span>}
         <div className="min-w-0 flex-1">
           {f.kind === "ticket"
-            ? <Link href={`/projects/${f.key}`} className="font-semibold hover:underline">{f.title}</Link>
-            : <span className="font-semibold">{f.title}</span>}
+            ? <Link href={`/projects/${f.key}`} className="font-bold hover:underline">{f.title}</Link>
+            : <span className="font-bold">{f.title}</span>}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Tag tone={hot ? "bad" : f.reason.includes("Blocked") ? "warn" : "info"}>{f.reason}</Tag>
             {f.kind === "ticket" && needsStartDate(f.project) && <NoStartTag />}
@@ -557,16 +557,16 @@ function FocusRow({ f, today, slot, planned, onDone, canPlan, onPlanned }: { f: 
 function TaskRow({ t, tz, today, onToggle, onDelete }: { t: PersonalTask; tz: string; today: string | null; onToggle: () => void; onDelete: () => void }) {
   const overdue = !t.done && !!t.date && !!today && t.date < today;
   return (
-    <li className="flex items-start gap-2 rounded-lg border border-line px-4 py-2 text-sm">
+    <li className="flex items-start gap-2 rounded-tight border border-line px-4 py-2 text-sm">
       <input type="checkbox" checked={t.done} onChange={onToggle} aria-label={t.done ? `Mark "${t.title}" not done` : `Mark "${t.title}" done`} className="mt-2 h-4 w-4 accent-brand" />
       <div className="min-w-0 flex-1">
         <div className={`font-medium ${t.done ? "text-muted line-through" : ""}`}>{t.title}</div>
         <div className="mt-0 flex flex-wrap items-center gap-2 text-xs text-muted">
-          <span className={overdue ? "font-semibold text-bad-fg" : ""}>{dueText(t, tz)}</span>
+          <span className={overdue ? "font-bold text-bad-fg" : ""}>{dueText(t, tz)}</span>
           <BackupTag t={t} />
         </div>
       </div>
-      <button onClick={onDelete} aria-label={`Delete "${t.title}"`} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg hover:bg-n-150"><Icon name="x" size={14} /></button>
+      <button onClick={onDelete} aria-label={`Delete "${t.title}"`} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-tight hover:bg-n-150"><Icon name="x" size={14} /></button>
     </li>
   );
 }

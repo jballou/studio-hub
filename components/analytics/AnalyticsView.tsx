@@ -17,7 +17,7 @@ const RANGES = [{ id: 90, label: "Last 90 days" }, { id: 180, label: "Last 6 mon
 function Tile({ label, value, note, tone }: { label: string; value: string; note: string; tone?: "warn" }) {
   return (
     <div className="flex h-full flex-col items-start card p-4">
-      <div className="text-sm font-semibold">{label}</div>
+      <div className="text-sm font-bold">{label}</div>
       <div className={`mt-2 text-3xl font-bold tabular-nums ${tone === "warn" ? "text-warn-fg" : ""}`}>{value}</div>
       <div className="mt-2 text-xs text-muted">{note}</div>
     </div>
@@ -29,8 +29,8 @@ function Bar({ value, max, label, color }: { value: number | null; max: number; 
   return (
     <div className="min-w-32">
       <div className="text-sm font-medium tabular-nums">{label}</div>
-      <div className="mt-2 h-2 rounded-full bg-n-150" aria-hidden="true">
-        {value !== null && max > 0 && <div className="h-2 rounded-full" style={{ width: `${Math.max(4, (value / max) * 100)}%`, background: color }} />}
+      <div className="mt-2 h-2 rounded-round bg-n-150" aria-hidden="true">
+        {value !== null && max > 0 && <div className="h-2 rounded-round" style={{ width: `${Math.max(4, (value / max) * 100)}%`, background: color }} />}
       </div>
     </div>
   );
@@ -39,11 +39,11 @@ function Bar({ value, max, label, color }: { value: number | null; max: number; 
 function Breakdown({ rows, heading }: { rows: Stats[]; heading: string }) {
   const maxOpen = Math.max(0, ...rows.map((r) => r.openAvg ?? 0));
   const maxWork = Math.max(0, ...rows.map((r) => r.workAvg ?? 0));
-  if (rows.length === 0) return <p className="rounded-xl border border-dashed border-control p-8 text-center text-sm text-muted">No closed tickets in this period.</p>;
+  if (rows.length === 0) return <p className="rounded-loose border border-dashed border-control p-8 text-center text-sm text-muted">No closed tickets in this period.</p>;
   return (
     <div className="overflow-x-auto card">
       <table className="w-full min-w-[40rem] text-left text-sm">
-        <thead className="border-b border-line bg-n-100 text-xs font-semibold text-muted">
+        <thead className="border-b border-line bg-n-100 text-xs font-bold text-muted">
           <tr>
             <th scope="col" className="p-4">{heading}</th>
             <th scope="col" className="p-4">Closed</th>
@@ -116,7 +116,7 @@ export function AnalyticsView() {
             ))}
           </div>
           <label className="sr-only" htmlFor="range">Period</label>
-          <select id="range" value={range} onChange={(e) => setRange(Number(e.target.value))} className="rounded-lg border border-control bg-white px-4 py-2 text-sm">
+          <select id="range" value={range} onChange={(e) => setRange(Number(e.target.value))} className="rounded-tight border border-control bg-white px-4 py-2 text-sm">
             {RANGES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
           </select>
         </div>
@@ -130,7 +130,7 @@ export function AnalyticsView() {
           {all.n > 0 && all.coverage !== null && all.coverage < 0.8 && (
             <div className="mb-4">
               <Callout tone="warn" icon="calendarDays">
-                Only {percentLabel(all.coverage)} of the {all.n} tickets closed in this period had a start date, so real-work time is based on {all.workN} of them. The more tickets have a start date, the more reliable it gets. <Link href="/my-day" className="font-semibold underline">Plan work in My Day</Link>.
+                Only {percentLabel(all.coverage)} of the {all.n} tickets closed in this period had a start date, so real-work time is based on {all.workN} of them. The more tickets have a start date, the more reliable it gets. <Link href="/my-day" className="font-bold underline">Plan work in My Day</Link>.
               </Callout>
             </div>
           )}
@@ -157,7 +157,7 @@ export function AnalyticsView() {
           </section>
 
           {missing.length > 0 && (
-            <section className="mt-6 rounded-xl border border-warn-line bg-white p-4" aria-labelledby="miss-h">
+            <section className="mt-6 rounded-loose border border-warn-line bg-white p-4" aria-labelledby="miss-h">
               <h2 id="miss-h" className="mb-4 text-lg font-bold">Open work without a start date</h2>
               <ul className="divide-y divide-line">
                 {missing.slice(0, 10).map((p) => (

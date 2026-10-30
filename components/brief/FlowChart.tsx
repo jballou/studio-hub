@@ -90,16 +90,16 @@ export function FlowChart({
               onClick={() => onSelect(n.id)}
               aria-pressed={sel}
               aria-label={`${n.label || n.prompt}. ${QTYPE_LABEL[n.qtype]}${n.id === flow.start ? ". First question" : ""}`}
-              className={`absolute flex flex-col justify-between rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${sel ? "border-brand ring-2 ring-brand/40" : bad ? "border-bad-fg" : "border-control"}`}
+              className={`absolute flex flex-col justify-between rounded-loose border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${sel ? "border-brand ring-2 ring-brand/40" : bad ? "border-bad-fg" : "border-control"}`}
               style={{ left: p.x + PAD, top: p.y + PAD, width: NODE_W, height: NODE_H }}
             >
               <span className="flex items-center gap-2 text-muted eyebrow">
-                {n.id === flow.start && <span className="rounded bg-brand px-2 py-px text-n-50">Start</span>}
+                {n.id === flow.start && <span className="rounded-tight bg-brand px-2 py-px text-n-50">Start</span>}
                 {QTYPE_LABEL[n.qtype]}
                 {!n.required && <span className="font-normal normal-case">· optional</span>}
-                {(n.branches?.length ?? 0) > 0 && <span className="ml-auto rounded-full bg-info-bg px-2 py-px normal-case text-info-fg">{n.branches!.length} {n.branches!.length === 1 ? "rule" : "rules"}</span>}
+                {(n.branches?.length ?? 0) > 0 && <span className="ml-auto rounded-round bg-info-bg px-2 py-px normal-case text-info-fg">{n.branches!.length} {n.branches!.length === 1 ? "rule" : "rules"}</span>}
               </span>
-              <span className="line-clamp-2 text-sm font-semibold">{n.prompt || <em className="text-bad-fg">No question text</em>}</span>
+              <span className="line-clamp-2 text-sm font-bold">{n.prompt || <em className="text-bad-fg">No question text</em>}</span>
             </button>
           );
         })}

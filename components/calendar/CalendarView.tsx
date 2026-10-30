@@ -17,15 +17,15 @@ type View = "month" | "week" | "list";
 type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 
 const byTime = (a: CalendarItem, b: CalendarItem) => (a.time ?? 1e9) - (b.time ?? 1e9) || a.title.localeCompare(b.title);
-const sel = "rounded-lg border border-control bg-white px-2 py-2 text-sm";
-const iconBtn = "relative flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-n-150";
-const badge = "absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-2 text-xs font-bold text-n-50";
+const sel = "rounded-tight border border-control bg-white px-2 py-2 text-sm";
+const iconBtn = "relative flex h-8 w-8 items-center justify-center rounded-tight border border-control bg-white hover:bg-n-150";
+const badge = "absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-round bg-brand px-2 text-xs font-bold text-n-50";
 
 function Pill({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-control bg-white py-0 pl-4 pr-2">
+    <span className="inline-flex items-center gap-2 rounded-round border border-control bg-white py-0 pl-4 pr-2">
       {children}
-      <button onClick={onRemove} aria-label="Remove filter" className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-n-150"><Icon name="x" size={12} /></button>
+      <button onClick={onRemove} aria-label="Remove filter" className="flex h-5 w-5 items-center justify-center rounded-round hover:bg-n-150"><Icon name="x" size={12} /></button>
     </span>
   );
 }
@@ -35,7 +35,7 @@ function Chip({ item, onOpen }: { item: CalendarItem; onOpen: () => void }) {
     <button
       onClick={onOpen}
       title={`${TYPE_SHORT[item.type]}: ${item.title}`}
-      className="flex w-full items-center gap-2 truncate rounded border border-line bg-white py-0 pl-2 pr-2 text-left text-xs hover:bg-n-150"
+      className="flex w-full items-center gap-2 truncate rounded-tight border border-line bg-white py-0 pl-2 pr-2 text-left text-xs hover:bg-n-150"
       style={{ borderLeft: `3px solid ${TYPE_BAR[item.type]}` }}
     >
       <b className="shrink-0">{TYPE_SHORT[item.type]}</b>
@@ -168,7 +168,7 @@ export function CalendarView() {
           <button onClick={() => move(-1)} aria-label="Previous" className={iconBtn}><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
           <button onClick={() => setCursor(todayIso())} className="btn btn-md btn-secondary">Today</button>
           <button onClick={() => move(1)} aria-label="Next" className={iconBtn}><Icon name="chevronRight" size={14} /></button>
-          <span className="ml-2 text-lg font-semibold">{label}</span>
+          <span className="ml-2 text-lg font-bold">{label}</span>
         </div>
 
         <div className="ml-auto flex items-center gap-2" ref={barRef}>
@@ -182,7 +182,7 @@ export function CalendarView() {
                 onKeyDown={(e) => { if (e.key === "Escape") { setQ(""); setSearchOpen(false); } }}
                 onBlur={() => !q && setSearchOpen(false)}
                 placeholder="Search items"
-                className="w-52 rounded-lg border border-control bg-white py-2 pl-8 pr-8 text-sm"
+                className="w-52 rounded-tight border border-control bg-white py-2 pl-8 pr-8 text-sm"
               />
               <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"><Icon name="search" size={14} /></span>
               {q && <button onClick={() => { setQ(""); setSearchOpen(false); }} aria-label="Clear search" className="absolute right-1.5 top-1/2 -translate-y-1/2"><Icon name="x" size={14} /></button>}
@@ -197,16 +197,16 @@ export function CalendarView() {
               {types.size > 0 && <span className={badge}>{types.size}</span>}
             </button>
             {menu === "tags" && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-line bg-white p-2 shadow-lg">
+              <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-loose border border-line bg-white p-2 shadow-lg">
                 {ITEM_TYPES.map((t) => (
-                  <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-n-150">
+                  <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded-tight px-2 py-2 text-sm hover:bg-n-150">
                     <input type="checkbox" checked={types.has(t.id)} onChange={() => toggleType(t.id)} />
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: TYPE_BAR[t.id] }} aria-hidden />
+                    <span className="h-2.5 w-2.5 rounded-round" style={{ background: TYPE_BAR[t.id] }} aria-hidden />
                     <span className="flex-1">{t.label}</span>
                     <span className="text-xs text-muted">{typeCount(t.id)}</span>
                   </label>
                 ))}
-                {types.size > 0 && <button onClick={() => setTypes(new Set())} className="mt-2 w-full rounded-lg px-2 py-2 text-left text-sm font-medium text-brand hover:bg-n-150">Show all types</button>}
+                {types.size > 0 && <button onClick={() => setTypes(new Set())} className="mt-2 w-full rounded-tight px-2 py-2 text-left text-sm font-medium text-brand hover:bg-n-150">Show all types</button>}
               </div>
             )}
           </div>
@@ -217,11 +217,11 @@ export function CalendarView() {
               {otherFilters > 0 && <span className={badge}>{otherFilters}</span>}
             </button>
             {menu === "filter" && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-4 rounded-xl border border-line bg-white p-4 shadow-lg">
-                <label className="block text-xs font-semibold">Owner<select className={`${sel} mt-2 w-full font-normal`} value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Any owner</option>{owners.map((o) => <option key={o}>{o}</option>)}</select></label>
-                <label className="block text-xs font-semibold">Campaign<select className={`${sel} mt-2 w-full font-normal`} value={campaign} onChange={(e) => setCampaign(e.target.value)}><option value="">Any campaign</option>{campaigns.map((o) => <option key={o}>{o}</option>)}</select></label>
-                <label className="block text-xs font-semibold">Status<select className={`${sel} mt-2 w-full font-normal`} value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Any status</option>{STATUSES.map((o) => <option key={o}>{o}</option>)}</select></label>
-                <label className="block text-xs font-semibold">Source<select className={`${sel} mt-2 w-full font-normal`} value={source} onChange={(e) => setSource(e.target.value)}><option value="">Any source</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+              <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-4 rounded-loose border border-line bg-white p-4 shadow-lg">
+                <label className="block text-xs font-bold">Owner<select className={`${sel} mt-2 w-full font-normal`} value={owner} onChange={(e) => setOwner(e.target.value)}><option value="">Any owner</option>{owners.map((o) => <option key={o}>{o}</option>)}</select></label>
+                <label className="block text-xs font-bold">Campaign<select className={`${sel} mt-2 w-full font-normal`} value={campaign} onChange={(e) => setCampaign(e.target.value)}><option value="">Any campaign</option>{campaigns.map((o) => <option key={o}>{o}</option>)}</select></label>
+                <label className="block text-xs font-bold">Status<select className={`${sel} mt-2 w-full font-normal`} value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Any status</option>{STATUSES.map((o) => <option key={o}>{o}</option>)}</select></label>
+                <label className="block text-xs font-bold">Source<select className={`${sel} mt-2 w-full font-normal`} value={source} onChange={(e) => setSource(e.target.value)}><option value="">Any source</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
                 {otherFilters > 0 && <button onClick={() => { setOwner(""); setCampaign(""); setStatus(""); setSource(""); }} className="text-sm font-medium text-brand hover:underline">Clear filters</button>}
               </div>
             )}
@@ -245,9 +245,9 @@ export function CalendarView() {
           <div className="relative">
             <button onClick={() => setMenu(menu === "more" ? null : "more")} aria-label="More options" aria-expanded={menu === "more"} className={iconBtn}><Icon name="more" size={16} /></button>
             {menu === "more" && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-line bg-white p-2 text-sm shadow-lg">
-                <button onClick={() => { load(); setMenu(null); }} className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left hover:bg-n-150"><Icon name="refresh" size={14} /> Reload sources</button>
-                <Link href="/calendar/sources" className="flex w-full items-center gap-2 rounded-lg px-4 py-2 hover:bg-n-150"><Icon name="link" size={14} /> Sources ({sources.length})</Link>
+              <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-loose border border-line bg-white p-2 text-sm shadow-lg">
+                <button onClick={() => { load(); setMenu(null); }} className="flex w-full items-center gap-2 rounded-tight px-4 py-2 text-left hover:bg-n-150"><Icon name="refresh" size={14} /> Reload sources</button>
+                <Link href="/calendar/sources" className="flex w-full items-center gap-2 rounded-tight px-4 py-2 hover:bg-n-150"><Icon name="link" size={14} /> Sources ({sources.length})</Link>
               </div>
             )}
           </div>
@@ -279,8 +279,8 @@ export function CalendarView() {
       {noDateWarnings.length > 0 && <p className="mb-4 text-xs text-muted">{noDateWarnings.join(" · ")}</p>}
 
       {view === "month" && (
-        <div className="overflow-hidden rounded-xl border border-line bg-white">
-          <div className="grid grid-cols-7 border-b border-line bg-n-150 text-xs font-semibold text-n-800">
+        <div className="overflow-hidden rounded-loose border border-line bg-white">
+          <div className="grid grid-cols-7 border-b border-line bg-n-150 text-xs font-bold text-n-800">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <div key={d} className="px-2 py-2">{d}</div>)}
           </div>
           <div className="grid grid-cols-7">
@@ -290,7 +290,7 @@ export function CalendarView() {
               return (
                 <div key={d} className={`min-h-28 border-b border-r border-line p-2 ${inMonth ? "" : "bg-n-150/60"}`}>
                   <div className="mb-2 flex items-center">
-                    <span className={`flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs ${d === today ? "bg-brand font-bold text-n-50" : inMonth ? "font-medium" : "text-n-650"}`}>{fromIso(d).getDate()}</span>
+                    <span className={`flex h-6 min-w-6 items-center justify-center rounded-round px-2 text-xs ${d === today ? "bg-brand font-bold text-n-50" : inMonth ? "font-medium" : "text-n-650"}`}>{fromIso(d).getDate()}</span>
                   </div>
                   <div className="space-y-2">
                     {list.slice(0, 3).map((i) => <Chip key={i.id + d} item={i} onOpen={() => open(i.id)} />)}
@@ -306,11 +306,11 @@ export function CalendarView() {
       {view === "week" && (
         <div className="grid grid-cols-7 gap-2">
           {week.map((d) => (
-            <section key={d} className={`min-h-64 rounded-xl border bg-white p-2 ${d === today ? "border-brand" : "border-line"}`}>
+            <section key={d} className={`min-h-64 rounded-tight border bg-white p-2 ${d === today ? "border-brand" : "border-line"}`}>
               <header className="mb-2 flex items-baseline gap-2 text-sm"><b>{dayLabel(d, { weekday: "short" })}</b><span className="text-muted">{fromIso(d).getDate()}</span></header>
               <div className="space-y-2">
                 {(byDay.get(d) ?? []).map((i) => (
-                  <button key={i.id + d} onClick={() => open(i.id)} className="block w-full rounded-lg border border-line p-2 text-left text-xs hover:bg-n-150" style={{ borderLeft: `3px solid ${TYPE_BAR[i.type]}` }}>
+                  <button key={i.id + d} onClick={() => open(i.id)} className="block w-full rounded-tight border border-line p-2 text-left text-xs hover:bg-n-150" style={{ borderLeft: `3px solid ${TYPE_BAR[i.type]}` }}>
                     <span className="mb-2 flex items-center gap-2"><Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>{i.time != null && <span className="text-muted">{formatTime(i.time)}</span>}</span>
                     <span className="block font-medium">{i.title}</span>
                     {i.channel && <span className="text-muted">{i.channel}</span>}
@@ -324,7 +324,7 @@ export function CalendarView() {
 
       {view === "list" && (
         <div className="space-y-6">
-          {listMonths.length === 0 && <p className="rounded-xl border border-dashed border-control bg-white/60 p-8 text-center text-sm text-muted">No items match these filters.</p>}
+          {listMonths.length === 0 && <p className="rounded-loose border border-dashed border-control bg-white/60 p-8 text-center text-sm text-muted">No items match these filters.</p>}
           {listMonths.map((m) => {
             const expanded = !folded.has(m.key);
             const isNow = m.key === today.slice(0, 7);
@@ -342,7 +342,7 @@ export function CalendarView() {
                   <div className="mt-4 space-y-6">
                     {m.days.map(([d, list]) => (
                       <div key={d}>
-                        <h3 className={`mb-2 text-sm font-semibold ${d === today ? "text-brand" : "text-n-800"}`}>{dayLabel(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}{d === today && " · Today"}</h3>
+                        <h3 className={`mb-2 text-sm font-bold ${d === today ? "text-brand" : "text-n-800"}`}>{dayLabel(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}{d === today && " · Today"}</h3>
                         <ul className="space-y-2">
                           {list.map((i) => (
                             <li key={i.id}>

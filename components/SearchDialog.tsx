@@ -53,7 +53,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-label="Search"
-        className="w-full max-w-lg overflow-hidden rounded-xl border border-line bg-white shadow-xl"
+        className="w-full max-w-lg overflow-hidden rounded-loose border border-line bg-white shadow-xl"
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
@@ -72,7 +72,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             aria-label="Search projects and designs"
             className="min-w-0 flex-1 bg-transparent text-sm outline-none"
           />
-          <kbd className="rounded border border-line px-2 text-xs text-muted">esc</kbd>
+          <kbd className="rounded-tight border border-line px-2 text-xs text-muted">esc</kbd>
         </div>
         <ul className="max-h-80 overflow-y-auto p-2">
           {hits.length === 0 && <li className="p-4 text-center text-sm text-muted">No matches.</li>}
@@ -81,7 +81,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
               <button
                 onMouseEnter={() => setActive(i)}
                 onClick={() => go(h)}
-                className={`flex w-full flex-col rounded-lg px-4 py-2 text-left ${i === active ? "bg-brand-soft" : ""}`}
+                className={`flex w-full flex-col rounded-tight px-4 py-2 text-left ${i === active ? "bg-brand-soft" : ""}`}
               >
                 <span className="text-sm font-medium">{h.title}</span>
                 <span className="text-xs text-muted">{h.sub}</span>

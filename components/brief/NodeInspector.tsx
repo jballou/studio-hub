@@ -4,8 +4,8 @@ import { Icon } from "@/components/ui/Icon";
 import { moveRule, renameField, updateNode } from "@/lib/brief/edit";
 import { OP_LABEL, QTYPE_LABEL, RESERVED_FIELDS, optionsOf, type Branch, type Flow, type Op, type QNode, type QType } from "@/lib/brief/flow";
 
-const input = "w-full rounded-lg border border-control bg-white px-4 py-2 text-sm";
-const lbl = "block text-xs font-semibold";
+const input = "w-full rounded-tight border border-control bg-white px-4 py-2 text-sm";
+const lbl = "block text-xs font-bold";
 const snippet = (n: QNode) => `${n.label || n.prompt.slice(0, 28) || n.id}`;
 
 /** Edit one question: its wording, answer type, options, and where it leads. */
@@ -69,15 +69,15 @@ export function NodeInspector({
 
       {hasOptions && (
         <section>
-          <h3 className="mb-2 text-xs font-semibold">Options</h3>
+          <h3 className="mb-2 text-xs font-bold">Options</h3>
           <ul className="space-y-2">
             {options.map((o, i) => (
               <li key={o.id} className="space-y-2">
                 <div className="flex gap-2">
                   <input aria-label={`Option ${i + 1}`} value={o.label} onChange={(e) => set({ options: options.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} className={input} />
-                  <button type="button" aria-label="Move option up" disabled={i === 0} onClick={() => { const c = [...options]; [c[i - 1], c[i]] = [c[i], c[i - 1]]; set({ options: c }); }} className="rounded-lg border border-control px-2 disabled:opacity-30"><span className="inline-block -rotate-90"><Icon name="chevronRight" size={12} /></span></button>
-                  <button type="button" aria-label="Move option down" disabled={i === options.length - 1} onClick={() => { const c = [...options]; [c[i + 1], c[i]] = [c[i], c[i + 1]]; set({ options: c }); }} className="rounded-lg border border-control px-2 disabled:opacity-30"><span className="inline-block rotate-90"><Icon name="chevronRight" size={12} /></span></button>
-                  <button type="button" aria-label={`Remove option ${o.label}`} onClick={() => set({ options: options.filter((_, j) => j !== i) })} className="rounded-lg border border-control px-2 text-bad-fg"><Icon name="x" size={12} /></button>
+                  <button type="button" aria-label="Move option up" disabled={i === 0} onClick={() => { const c = [...options]; [c[i - 1], c[i]] = [c[i], c[i - 1]]; set({ options: c }); }} className="rounded-tight border border-control px-2 disabled:opacity-30"><span className="inline-block -rotate-90"><Icon name="chevronRight" size={12} /></span></button>
+                  <button type="button" aria-label="Move option down" disabled={i === options.length - 1} onClick={() => { const c = [...options]; [c[i + 1], c[i]] = [c[i], c[i + 1]]; set({ options: c }); }} className="rounded-tight border border-control px-2 disabled:opacity-30"><span className="inline-block rotate-90"><Icon name="chevronRight" size={12} /></span></button>
+                  <button type="button" aria-label={`Remove option ${o.label}`} onClick={() => set({ options: options.filter((_, j) => j !== i) })} className="rounded-tight border border-control px-2 text-bad-fg"><Icon name="x" size={12} /></button>
                 </div>
                 {isType && (
                   <input aria-label={`Jira issue type id for ${o.label}`} value={o.jiraIssueTypeId ?? ""} onChange={(e) => set({ options: options.map((x, j) => (j === i ? { ...x, jiraIssueTypeId: e.target.value.trim() || undefined } : x)) })} placeholder="Jira issue type ID (e.g. 18868)" className={`${input} font-mono text-xs`} />
@@ -89,7 +89,7 @@ export function NodeInspector({
         </section>
       )}
 
-      <section className="space-y-4 rounded-xl bg-n-150 p-4">
+      <section className="space-y-4 rounded-loose bg-n-150 p-4">
         <h3 className="text-n-800 eyebrow">Where it goes next</h3>
         <label className={lbl}>Usually ask
           <select value={node.next ?? ""} onChange={(e) => set({ next: e.target.value || null })} className={`${input} mt-2 font-normal`}>
@@ -99,7 +99,7 @@ export function NodeInspector({
         </label>
 
         <div>
-          <p className="mb-2 text-xs font-semibold">But first, check these rules</p>
+          <p className="mb-2 text-xs font-bold">But first, check these rules</p>
           {branches.length === 0 && <p className="text-xs text-muted">No rules. Everyone gets the question above.</p>}
           <ol className="space-y-2">
             {branches.map((b, i) => {
@@ -107,8 +107,8 @@ export function NodeInspector({
               const needsValue = b.when.op !== "notEmpty" && b.when.op !== "empty";
               const choices = target ? optionsOf(target) : [];
               return (
-                <li key={i} className="space-y-2 rounded-lg border border-line bg-white p-2">
-                  <div className="flex items-center gap-2 text-xs"><span className="font-semibold">If</span>
+                <li key={i} className="space-y-2 rounded-tight border border-line bg-white p-2">
+                  <div className="flex items-center gap-2 text-xs"><span className="font-bold">If</span>
                     <select aria-label="Rule: question" value={b.when.field} onChange={(e) => setBranch(i, { when: { field: e.target.value, value: undefined } })} className={`${input} !py-2`}>
                       {!target && <option value={b.when.field}>{b.when.field} (missing)</option>}
                       {flow.nodes.map((n) => <option key={n.id} value={n.field}>{snippet(n)}</option>)}
@@ -127,7 +127,7 @@ export function NodeInspector({
                       <input aria-label="Rule: value" value={b.when.value ?? ""} onChange={(e) => setBranch(i, { when: { value: e.target.value } })} className={`${input} !py-2 text-xs`} />
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 text-xs"><span className="font-semibold">ask</span>
+                  <div className="flex items-center gap-2 text-xs"><span className="font-bold">ask</span>
                     <select aria-label="Rule: go to" value={b.goto} onChange={(e) => setBranch(i, { goto: e.target.value })} className={`${input} !py-2`}>
                       {!flow.nodes.some((n) => n.id === b.goto) && <option value={b.goto}>(missing)</option>}
                       {others.map((n) => <option key={n.id} value={n.id}>{snippet(n)}</option>)}
@@ -158,7 +158,7 @@ export function NodeInspector({
         </label>
         <p className="mt-2 text-xs text-muted">
           Rules refer to answers by this key; renaming updates them for you. Special keys the ticket uses:{" "}
-          {RESERVED_FIELDS.map((f) => <code key={f} className="mr-2 rounded bg-n-150 px-2">{f}</code>)}
+          {RESERVED_FIELDS.map((f) => <code key={f} className="mr-2 rounded-tight bg-n-150 px-2">{f}</code>)}
           (request type, title, due date, stakeholders).
         </p>
       </section>

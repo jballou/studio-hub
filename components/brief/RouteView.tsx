@@ -14,9 +14,9 @@ function Card({ item, n, selectedId, onSelect, problemIds, shared, startId }: { 
     <div>
       <button
         type="button" onClick={() => onSelect(node.id)} aria-pressed={sel}
-        className={`flex w-full items-start gap-4 rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${sel ? "border-brand ring-2 ring-brand/40" : problemIds.has(node.id) ? "border-bad-fg" : "border-line hover:border-control"}`}
+        className={`flex w-full items-start gap-4 rounded-loose border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${sel ? "border-brand ring-2 ring-brand/40" : problemIds.has(node.id) ? "border-bad-fg" : "border-line hover:border-control"}`}
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-n-150 text-xs font-bold tabular-nums">{n}</span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-round bg-n-150 text-xs font-bold tabular-nums">{n}</span>
         <span className="min-w-0 flex-1">
           <span className="block font-medium">{node.prompt || <em className="text-bad-fg">No question text</em>}</span>
           <span className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">

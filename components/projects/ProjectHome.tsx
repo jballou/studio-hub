@@ -55,7 +55,7 @@ function NameLink({ id, name }: { id: string; name: string }) {
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <section className="card p-6">
-      <div className="mb-4 flex items-center"><h2 className="text-lg font-semibold">{title}</h2><span className="ml-auto">{action}</span></div>
+      <div className="mb-4 flex items-center"><h2 className="text-lg font-bold">{title}</h2><span className="ml-auto">{action}</span></div>
       {children}
     </section>
   );
@@ -151,7 +151,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         {needsStartDate(project) && <NoStartTag />}
         <div className="ml-auto flex items-center gap-4">
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>
-            {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-full ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
+            {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-round ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
           </div>
           <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="btn btn-md btn-primary">Submit for feedback</Link>
           <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="btn btn-md btn-secondary">Open in Jira</a>
@@ -175,7 +175,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             className={`-mb-px flex items-center gap-2 border-b-2 pb-2 text-sm font-medium ${tab === id ? "border-brand text-brand" : "border-transparent text-n-800 hover:text-ink"}`}
           >
             {label}
-            {n ? <span className="rounded-full bg-brand px-2 text-xs text-n-50">{n}</span> : null}
+            {n ? <span className="rounded-round bg-brand px-2 text-xs text-n-50">{n}</span> : null}
           </button>
         ))}
       </div>
@@ -184,14 +184,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-6">
             {late !== null && (
-              <section role="alert" aria-label="Past due" className="rounded-xl border border-bad-line bg-bad-bg p-4 text-bad-fg">
-                <h2 className="flex items-center gap-2 text-lg font-semibold"><Icon name="alert" size={18} /> Past due by {pastDueWords(late)}</h2>
+              <section role="alert" aria-label="Past due" className="rounded-loose border border-bad-line bg-bad-bg p-4 text-bad-fg">
+                <h2 className="flex items-center gap-2 text-lg font-bold"><Icon name="alert" size={18} /> Past due by {pastDueWords(late)}</h2>
                 <p className="mt-2 text-sm">The deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })} and this ticket is still {project.statusName ?? project.stage}.</p>
               </section>
             )}
             {(block || project.flag === "blocked") && (
-              <section className="rounded-xl border border-bad-line bg-bad-bg p-6 text-bad-fg" aria-label="Blocked">
-                <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold"><Icon name="close" size={18} /> {block ? `Blocked by ${block.blockedBy.name}` : "Blocked in Jira, but nobody is named"}</h2>
+              <section className="rounded-loose border border-bad-line bg-bad-bg p-6 text-bad-fg" aria-label="Blocked">
+                <h2 className="mb-2 flex items-center gap-2 text-lg font-bold"><Icon name="close" size={18} /> {block ? `Blocked by ${block.blockedBy.name}` : "Blocked in Jira, but nobody is named"}</h2>
                 {block ? (
                   <>
                     <p className="text-sm">{block.reason}</p>
@@ -210,8 +210,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             )}
 
             {openBlockers(rel).length > 0 && (
-              <section role="status" aria-label="Linked blockers" className="rounded-xl border border-warn-line bg-warn-bg p-4 text-warn-fg">
-                <h2 className="flex items-center gap-2 text-base font-semibold"><Icon name="block" size={16} /> Waiting on linked work</h2>
+              <section role="status" aria-label="Linked blockers" className="rounded-loose border border-warn-line bg-warn-bg p-4 text-warn-fg">
+                <h2 className="flex items-center gap-2 text-base font-bold"><Icon name="block" size={16} /> Waiting on linked work</h2>
                 <p className="mt-2 text-sm">{openBlockers(rel).map((l, i) => <span key={l.key}>{i > 0 && ", "}<IssueLink r={l} className="font-medium underline" /> ({l.status})</span>)} {openBlockers(rel).length === 1 ? "is" : "are"} linked as blocking this ticket and not finished yet.</p>
               </section>
             )}
@@ -222,7 +222,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                 <div><dt className="inline text-muted">Type: </dt><dd className="inline-flex items-center gap-2 align-middle"><IssueIcon level={project.issueType?.level ?? 0} typeName={project.issueType?.name} size={14} />{project.issueType?.name ?? project.type}</dd></div>
                 {project.startDate !== undefined && <div><dt className="inline text-muted">Start date: </dt><dd className="inline">{project.startDate ? dayLabel(project.startDate, { month: "short", day: "numeric", year: "numeric" }) : "Not set"}</dd></div>}
                 <div><dt className="inline text-muted">Date submitted: </dt><dd className="inline">{dayLabel(project.submittedAt, { month: "short", day: "numeric", year: "numeric" })}</dd></div>
-                <div><dt className="inline text-muted">Deadline: </dt><dd className={`inline ${late !== null ? "font-semibold text-bad-fg" : ""}`}>{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}{late !== null ? ` (${pastDueWords(late)} late)` : ""}</dd></div>
+                <div><dt className="inline text-muted">Deadline: </dt><dd className={`inline ${late !== null ? "font-bold text-bad-fg" : ""}`}>{project.deadline ? dayLabel(project.deadline, { month: "short", day: "numeric", year: "numeric" }) : "None set"}{late !== null ? ` (${pastDueWords(late)} late)` : ""}</dd></div>
                 <div className="sm:col-span-2"><dt className="inline text-muted">Collaborators: </dt><dd className="inline">{collaborators.length ? collaborators.map((c, i) => <span key={c.id}>{i > 0 && ", "}<NameLink id={c.id} name={c.name} /></span>) : "None yet"}</dd></div>
               </dl>
             </Card>
@@ -233,8 +233,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                   <li key={s} className="flex flex-1 flex-col items-center text-center text-xs" aria-current={i === current ? "step" : undefined}>
                     <div className="flex w-full items-center">
                       <span className={`h-0.5 flex-1 ${i === 0 ? "bg-transparent" : i <= current ? "bg-brand" : "bg-n-200"}`} />
-                      <span className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${i < current ? "border-brand bg-brand text-n-50" : i === current ? "border-brand bg-white text-brand" : "border-n-200 bg-white text-n-650"}`}>
-                        {i < current ? <Icon name="check" size={14} /> : <span className="font-semibold">{i + 1}</span>}
+                      <span className={`flex h-7 w-7 items-center justify-center rounded-round border-2 ${i < current ? "border-brand bg-brand text-n-50" : i === current ? "border-brand bg-white text-brand" : "border-n-200 bg-white text-n-650"}`}>
+                        {i < current ? <Icon name="check" size={14} /> : <span className="font-bold">{i + 1}</span>}
                       </span>
                       <span className={`h-0.5 flex-1 ${i === STAGES.length - 1 ? "bg-transparent" : i < current ? "bg-brand" : "bg-n-200"}`} />
                     </div>
@@ -244,7 +244,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
               </ol>
               <p className="mt-4 text-sm text-muted">
                 {project.statusName && <>Jira status: <b className="text-ink">{project.statusName}</b>{project.deadline ? " · " : ""}</>}
-                {project.deadline && (late !== null ? <span className="font-semibold text-bad-fg">Past due: deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</span> : <>Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</>)}
+                {project.deadline && (late !== null ? <span className="font-bold text-bad-fg">Past due: deadline was {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</span> : <>Deadline {dayLabel(project.deadline, { weekday: "long", month: "long", day: "numeric" })}</>)}
               </p>
             </Card>
 
@@ -254,7 +254,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
               {project.briefSections?.length ? (
                 <div className="space-y-4">
                   {project.briefSections.map((x) => (
-                    <div key={x.label}><h3 className="text-sm font-semibold">{x.label}</h3><p className="mt-0 whitespace-pre-wrap text-sm">{x.value}</p></div>
+                    <div key={x.label}><h3 className="text-sm font-bold">{x.label}</h3><p className="mt-0 whitespace-pre-wrap text-sm">{x.value}</p></div>
                   ))}
                 </div>
               ) : brief.length === 0 ? (
@@ -267,7 +267,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                 <div className="space-y-4">
                   {brief.map((s) => (
                     <div key={s.key}>
-                      <h3 className="text-sm font-semibold">{s.label}</h3>
+                      <h3 className="text-sm font-bold">{s.label}</h3>
                       <p className="mt-0 whitespace-pre-wrap text-sm">{project.brief?.[s.key] as string}</p>
                     </div>
                   ))}
@@ -279,8 +279,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           <aside className="space-y-6">
             <div>
               <h2 className="mb-2 text-muted eyebrow">Current project phase</h2>
-              <div className="rounded-xl bg-n-150 p-4 text-sm">
-                <p className="mb-2 font-semibold">{shownStage}</p>
+              <div className="rounded-loose bg-n-150 p-4 text-sm">
+                <p className="mb-2 font-bold">{shownStage}</p>
                 <ul className="list-disc space-y-2 pl-6">{PHASE_TIPS[shownStage].map((t) => <li key={t}>{t}</li>)}</ul>
               </div>
             </div>
@@ -296,7 +296,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
 
       {tab === "designs" && (
         assets.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-control bg-white/60 p-10 text-center">
+          <div className="rounded-tight border border-dashed border-control bg-white/60 p-10 text-center">
             <p className="mb-4 text-sm text-muted">Nothing has been shared for feedback yet.</p>
             <Link href={`/submit?ticket=${project.jiraKey}`} className="btn btn-md btn-primary">Submit for feedback</Link>
           </div>
@@ -317,7 +317,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
 
       {tab === "calendar" && (
         items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-control bg-white/60 p-10 text-center text-sm text-muted">No calendar items are linked to {project.jiraKey}. Add its Jira key to a row in a calendar source.</p>
+          <p className="rounded-tight border border-dashed border-control bg-white/60 p-10 text-center text-sm text-muted">No calendar items are linked to {project.jiraKey}. Add its Jira key to a row in a calendar source.</p>
         ) : (
           <ul className="space-y-2">
             {items.map((i) => (

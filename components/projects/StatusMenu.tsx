@@ -75,13 +75,13 @@ export function StatusMenu({ project, canChange, onChanged }: { project: Project
         aria-expanded={open}
         aria-label={`Status: ${project.statusName ?? project.stage}. Change status`}
         title={blocked ? "Blocked. Use “Mark as unblocked” to move it on." : "Change status (updates Jira)"}
-        className="flex items-center gap-2 rounded-full hover:opacity-80"
+        className="flex items-center gap-2 rounded-round hover:opacity-80"
       >
         <StatusTag project={project} />
         <Icon name="chevronDown" size={14} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-2 w-64 rounded-xl border border-line bg-white py-2 shadow-lg">
+        <div className="absolute left-0 top-full z-30 mt-2 w-64 rounded-loose border border-line bg-white py-2 shadow-lg">
           {blocked ? (
             <p className="px-4 py-2 text-sm text-muted">This ticket is blocked. Use “Mark as unblocked” to choose its next status.</p>
           ) : pending ? (

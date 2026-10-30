@@ -53,17 +53,17 @@ export function Welcome() {
     <>
       <ShaderBackground />
       <main className="paper grid min-h-screen place-items-center p-4">
-        <div className="w-full max-w-lg rounded-3xl border border-white/60 bg-white/80 p-8 shadow-2xl backdrop-blur-xl [html[data-theme=dark]_&]:border-white/10 [html[data-theme=dark]_&]:bg-[#151c18]/80">
+        <div className="w-full max-w-lg rounded-loose border border-white/60 bg-white/80 p-8 shadow-2xl backdrop-blur-xl [html[data-theme=dark]_&]:border-white/10 [html[data-theme=dark]_&]:bg-[#151c18]/80">
           <Logo size={48} className="mb-4 shadow-md" />
           <h1 className="text-2xl font-bold">You&apos;re in. Connect your tools?</h1>
           <p className="mb-6 mt-2 text-sm text-muted">Optional, and you can do it later from My Day.</p>
           {flash && <div className="mb-4"><Callout tone={flash.tone} icon={flash.tone === "ok" ? "check" : "alert"}>{flash.text}</Callout></div>}
 
           <ul className="space-y-4">
-            <li className="flex items-start gap-4 rounded-2xl border border-line bg-white p-4">
-              <span className="mt-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-info-bg text-info-fg"><Icon name="calendar" size={18} /></span>
+            <li className="flex items-start gap-4 rounded-loose border border-line bg-white p-4">
+              <span className="mt-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-tight bg-info-bg text-info-fg"><Icon name="calendar" size={18} /></span>
               <div className="min-w-0 flex-1">
-                <h2 className="font-semibold">Google Calendar and Tasks</h2>
+                <h2 className="font-bold">Google Calendar and Tasks</h2>
                 <p className="text-sm text-muted">See today&apos;s meetings on My Day, and back up your own tasks to a Google Tasks list. The app only reads your calendar.</p>
                 <div className="mt-2">
                   {google === null ? <span className="text-sm text-muted">Checking…</span>
@@ -73,10 +73,10 @@ export function Welcome() {
                 </div>
               </div>
             </li>
-            <li className="flex items-start gap-4 rounded-2xl border border-line bg-white p-4">
-              <span className="mt-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-progress-bg text-progress-fg"><Icon name="link" size={18} /></span>
+            <li className="flex items-start gap-4 rounded-loose border border-line bg-white p-4">
+              <span className="mt-0 flex h-9 w-9 shrink-0 items-center justify-center rounded-tight bg-progress-bg text-progress-fg"><Icon name="link" size={18} /></span>
               <div className="min-w-0 flex-1">
-                <h2 className="font-semibold">Figma</h2>
+                <h2 className="font-bold">Figma</h2>
                 <p className="text-sm text-muted">Connected once for the whole team, so there&apos;s nothing for you to do. It lets you pick frames with thumbnails when you submit for feedback.</p>
                 <div className="mt-2">
                   {figma === null ? <span className="text-sm text-muted">Checking…</span>

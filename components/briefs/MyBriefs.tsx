@@ -27,7 +27,7 @@ function Stepper({ p }: { p: Project }) {
     <ol className="flex items-center" aria-label={`Progress: step ${at + 1} of ${BRIEF_STEPS.length}, ${BRIEF_STEPS[at]}`}>
       {BRIEF_STEPS.map((s, i) => (
         <li key={s} className="flex flex-1 items-center last:flex-none" aria-current={i === at ? "step" : undefined}>
-          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${i < at || p.group === "closed" ? "border-brand bg-brand text-n-50" : i === at ? "border-brand bg-white text-brand" : "border-n-200 bg-white text-n-650"}`} title={s}>
+          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-round border-2 text-xs font-bold ${i < at || p.group === "closed" ? "border-brand bg-brand text-n-50" : i === at ? "border-brand bg-white text-brand" : "border-n-200 bg-white text-n-650"}`} title={s}>
             {i < at || p.group === "closed" ? <Icon name="check" size={11} /> : i + 1}
           </span>
           {i < BRIEF_STEPS.length - 1 && <span className={`h-0.5 flex-1 ${i < at ? "bg-brand" : "bg-n-200"}`} />}
@@ -44,7 +44,7 @@ function BriefCard({ p, today, people }: { p: Project; today: string; people: Ma
   const who = p.collaboratorNames?.[0] ?? people.get(p.collaboratorIds[0] ?? "");
   const text = excerpt(p);
   return (
-    <li className={`group relative flex flex-col rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${input ? "border-warn-line" : late !== null ? "border-bad-line" : "border-line"}`}>
+    <li className={`group relative flex flex-col rounded-loose border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${input ? "border-warn-line" : late !== null ? "border-bad-line" : "border-line"}`}>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <IssueIcon level={p.issueType?.level ?? 0} typeName={p.issueType?.name} size={18} />
         <span className="text-xs font-medium text-muted">{p.issueType?.name ?? p.type}</span>
@@ -72,15 +72,15 @@ function BriefCard({ p, today, people }: { p: Project; today: string; people: Ma
       <div className="mt-4 flex items-center gap-4 border-t border-line pt-4 text-sm">
         {who ? (
           <span className="flex min-w-0 items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-n-150 text-xs font-bold" aria-hidden>{who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
-            <span className="truncate text-muted">With <b className="font-semibold text-ink">{who}</b></span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-round bg-n-150 text-xs font-bold" aria-hidden>{who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
+            <span className="truncate text-muted">With <b className="font-bold text-ink">{who}</b></span>
           </span>
         ) : <span className="text-muted">Waiting to be picked up</span>}
         <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
           <Icon name="calendar" size={13} />
           {p.group === "closed" ? <span className="text-muted">{p.resolvedAt ? `Delivered ${dayLabel(p.resolvedAt)}` : "Delivered"}</span>
-            : late !== null ? <span className="font-semibold text-bad-fg">Was due {dayLabel(p.deadline)}</span>
-            : left !== null ? <span className={left <= 2 ? "font-semibold text-warn-fg" : "text-muted"}>{left === 0 ? "Due today" : left === 1 ? "Due tomorrow" : `Due ${dayLabel(p.deadline)} · ${left} days`}</span>
+            : late !== null ? <span className="font-bold text-bad-fg">Was due {dayLabel(p.deadline)}</span>
+            : left !== null ? <span className={left <= 2 ? "font-bold text-warn-fg" : "text-muted"}>{left === 0 ? "Due today" : left === 1 ? "Due tomorrow" : `Due ${dayLabel(p.deadline)} · ${left} days`}</span>
             : <span className="text-muted">No deadline</span>}
         </span>
       </div>
@@ -137,7 +137,7 @@ export function MyBriefs() {
       )}
 
       {briefs === null ? <p className="mt-6 text-sm text-muted">Loading your briefs…</p> : briefs.length === 0 && !error ? (
-        <section className="mt-6 rounded-3xl border border-dashed border-control bg-white/70 p-12 text-center">
+        <section className="mt-6 rounded-loose border border-dashed border-control bg-white/70 p-12 text-center">
           <Logo size={64} className="mx-auto mb-4 shadow-md" />
           <h2 className="text-xl font-bold">No briefs yet</h2>
           <p className="mx-auto mb-6 mt-2 max-w-md text-sm text-muted">Start a brief and answer a few questions. The creative team picks it up, and you can follow it here. Briefs you create in Jira show up here too.</p>
@@ -147,8 +147,8 @@ export function MyBriefs() {
         <>
           <div className="mt-6 grid grid-cols-3 gap-4">
             {([["In progress", counts.active, "active"], ["Needs your input", counts.input, "input"], ["Delivered", counts.delivered, "delivered"]] as const).map(([label, n, f]) => (
-              <button key={f} onClick={() => setFilter(f)} className={`rounded-xl border bg-white p-4 text-left hover:border-brand ${filter === f ? "border-brand ring-2 ring-brand-soft" : "border-line"}`}>
-                <div className="text-sm font-semibold">{label}</div>
+              <button key={f} onClick={() => setFilter(f)} className={`rounded-loose border bg-white p-4 text-left hover:border-brand ${filter === f ? "border-brand ring-2 ring-brand-soft" : "border-line"}`}>
+                <div className="text-sm font-bold">{label}</div>
                 <div className={`text-3xl font-bold tabular-nums ${f === "input" && n > 0 ? "text-warn-fg" : ""}`}>{n}</div>
               </button>
             ))}
@@ -166,7 +166,7 @@ export function MyBriefs() {
           </div>
 
           {shown.length === 0 ? (
-            <p className="mt-6 rounded-xl border border-dashed border-control p-8 text-center text-sm text-muted">Nothing here right now.</p>
+            <p className="mt-6 rounded-loose border border-dashed border-control p-8 text-center text-sm text-muted">Nothing here right now.</p>
           ) : (
             <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {shown.map((p) => <BriefCard key={p.jiraKey} p={p} today={today!} people={people} />)}

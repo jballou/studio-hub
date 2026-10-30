@@ -175,15 +175,15 @@ export function VideoViewer({
   const bar = (
   <div className="flex flex-wrap items-start gap-x-2 gap-y-2 text-ink">
     <span className="flex h-8 items-center gap-0">
-      <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Skip dir={-1} /></button>
-      <button onClick={toggle} aria-label={playing ? "Pause" : "Play"} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150">
+      <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150"><Skip dir={-1} /></button>
+      <button onClick={toggle} aria-label={playing ? "Pause" : "Play"} className="flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150">
         <span className={playing ? "" : "translate-x-px"}><Icon name={playing ? "pause" : "play"} size={20} fill /></span>
       </button>
-      <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"><Skip dir={1} /></button>
+      <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150"><Skip dir={1} /></button>
       {!audio && (
         <>
-          <button onClick={() => step(-1)} className="h-8 rounded-md px-2 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Back one frame">‹1f</button>
-          <button onClick={() => step(1)} className="h-8 rounded-md px-2 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Forward one frame">1f›</button>
+          <button onClick={() => step(-1)} className="h-8 rounded-tight px-2 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Back one frame">‹1f</button>
+          <button onClick={() => step(1)} className="h-8 rounded-tight px-2 text-xs font-medium text-muted hover:bg-n-150 hover:text-ink" aria-label="Forward one frame">1f›</button>
         </>
       )}
     </span>
@@ -198,7 +198,7 @@ export function VideoViewer({
         aria-valuemax={Math.round(duration)}
         aria-valuenow={Math.round(ms / 1000)}
         aria-valuetext={`${formatTime(ms)} of ${formatTime(total)}`}
-        className="group absolute inset-x-0 top-0 h-8 cursor-pointer touch-none rounded outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className="group absolute inset-x-0 top-0 h-8 cursor-pointer touch-none rounded-tight outline-none focus-visible:ring-2 focus-visible:ring-brand"
         onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging(true); scrub(e.clientX); }}
         onPointerMove={(e) => { if (e.buttons) scrub(e.clientX); }}
         onPointerUp={() => setDragging(false)}
@@ -210,11 +210,11 @@ export function VideoViewer({
           else if (e.key === "End") { e.preventDefault(); seekTo(duration); }
         }}
       >
-        <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-n-200">
-          <div className="absolute inset-y-0 left-0 rounded-full bg-brand" style={{ width: `${pct}%` }} />
+        <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-round bg-n-200">
+          <div className="absolute inset-y-0 left-0 rounded-round bg-brand" style={{ width: `${pct}%` }} />
         </div>
         <div
-          className={`absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand bg-white shadow transition-transform ${dragging ? "scale-125" : "group-hover:scale-110"}`}
+          className={`absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-round border-2 border-brand bg-white shadow transition-transform ${dragging ? "scale-125" : "group-hover:scale-110"}`}
           style={{ left: `${pct}%` }}
         />
       </div>
@@ -241,7 +241,7 @@ export function VideoViewer({
       <button
         onClick={() => { const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length]; setRate(next); if (videoRef.current) videoRef.current.playbackRate = next; }}
         aria-label={`Playback speed ${rate}x. Click to change.`}
-        className="h-7 min-w-9 rounded-md px-2 text-xs font-semibold hover:bg-n-150"
+        className="h-7 min-w-9 rounded-tight px-2 text-xs font-bold hover:bg-n-150"
       >{rate}x</button>
     </span>
   </div>
@@ -252,7 +252,7 @@ export function VideoViewer({
     // One card: artwork on top, controls attached below.
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-6">
-        <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-line bg-white shadow-lg">
+        <div className="w-full max-w-3xl overflow-hidden rounded-loose border border-line bg-white shadow-lg">
           <div className="flex h-52 flex-col items-center justify-center gap-2 bg-n-150 text-ink">
             {failed ? (
               <span className="px-6 text-center text-sm">Audio could not be loaded. Check the file still exists and your browser can play its format.</span>
@@ -290,7 +290,7 @@ export function VideoViewer({
         </p>
       ) : (
       <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-4">
-        <div className="pointer-events-auto w-full max-w-3xl rounded-2xl border border-line bg-white px-4 pb-4 pt-2 shadow-lg">
+        <div className="pointer-events-auto w-full max-w-3xl rounded-loose border border-line bg-white px-4 pb-4 pt-2 shadow-lg">
           {bar}
         </div>
       </div>
@@ -325,7 +325,7 @@ function MapPin({ initials, creative, resolved, selected }: { initials: string; 
       >
         <span className="h-0 w-0 border-x-[5px] border-b-[6px] border-x-transparent" style={{ borderBottomColor: fill }} />
         <span
-          className="-mt-px flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-n-50 shadow-md ring-2 ring-white"
+          className="-mt-px flex h-7 w-7 items-center justify-center rounded-round text-xs font-bold text-n-50 shadow-md ring-2 ring-white"
           style={{ background: fill, outline: selected ? "2px solid var(--color-ink)" : "none", outlineOffset: 1 }}
         >
           {initials.slice(0, 2)}

@@ -10,8 +10,8 @@ import { ITEM_TYPES, type CalendarItem } from "@/lib/calendar/types";
 import { STATUS_TONE, TYPE_SHORT, TYPE_TONE } from "./meta";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
-const primary = "rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark";
-const secondary = "rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-n-150";
+const primary = "btn btn-md btn-primary";
+const secondary = "btn btn-md btn-secondary";
 
 type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 
@@ -56,7 +56,7 @@ export function ItemPanel({
         className="fixed right-0 top-0 z-40 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-white p-6 shadow-xl"
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       >
-        <button onClick={onClose} aria-label="Close" className="mb-2 flex h-8 w-8 items-center justify-center self-end rounded-full hover:bg-n-150"><Icon name="x" size={16} /></button>
+        <button onClick={onClose} aria-label="Close" className="mb-2 flex h-8 w-8 items-center justify-center self-end rounded-round hover:bg-n-150"><Icon name="x" size={16} /></button>
 
         {panel.kind === "day" && (
           <>
@@ -64,7 +64,7 @@ export function ItemPanel({
             <ul className="space-y-2">
               {dayItems.map((i) => (
                 <li key={i.id}>
-                  <button onClick={() => onPick(i.id)} className="flex w-full items-center gap-2 rounded-xl border border-line p-4 text-left text-sm hover:border-brand">
+                  <button onClick={() => onPick(i.id)} className="flex w-full items-center gap-2 rounded-loose border border-line p-4 text-left text-sm hover:border-brand">
                     <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
                     <span className="min-w-0 flex-1 truncate font-medium">{i.title}</span>
                   </button>

@@ -27,7 +27,7 @@ function Mentions({ text, users }: { text: string; users: User[] }) {
     <>
       {parts.map((p, i) =>
         p.startsWith("@") && all.some((u) => `@${u.name}` === p)
-          ? <span key={i} className="rounded bg-brand-soft px-0 font-medium text-ink">{p}</span>
+          ? <span key={i} className="rounded-tight bg-brand-soft px-0 font-medium text-ink">{p}</span>
           : <span key={i}>{p}</span>,
       )}
     </>
@@ -51,7 +51,7 @@ function EditForm({ initial, severity: sev0, onSave, onCancel }: { initial: stri
       <textarea
         autoFocus value={body} rows={3} onChange={(e) => setBody(e.target.value)} aria-label="Edit comment"
         onKeyDown={(e) => { if (e.key === "Escape") onCancel(); if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save(); }}
-        className="w-full resize-none rounded-lg border border-control px-4 py-2 text-sm"
+        className="w-full resize-none rounded-tight border border-control px-4 py-2 text-sm"
       />
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <SeverityPicker value={sev} onChange={setSev} />
@@ -99,11 +99,11 @@ function ThreadCard({
     <div
       ref={ref}
       onClick={onSelect}
-      className={`cursor-pointer rounded-xl border bg-white p-4 text-sm shadow-sm ${selected ? "border-brand" : "border-line"} ${resolved ? "opacity-75" : ""}`}
+      className={`cursor-pointer rounded-loose border bg-white p-4 text-sm shadow-sm ${selected ? "border-brand" : "border-line"} ${resolved ? "opacity-75" : ""}`}
     >
       <div className="flex items-center gap-2">
         <Avatar user={author} />
-        <span className="font-semibold">{author?.name ?? "Unknown"}</span>
+        <span className="font-bold">{author?.name ?? "Unknown"}</span>
         {unread && <UnreadDot />}
         {first.severity !== undefined && <SeverityBadge level={first.severity} />}
         <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
@@ -112,7 +112,7 @@ function ThreadCard({
               onClick={() => onStatus(resolved ? "open" : "resolved")}
               aria-label={resolved ? "Reopen comment" : "Resolve comment"}
               title={resolved ? "Resolved. Click to reopen" : "Mark as resolved"}
-              className={`flex h-7 w-7 items-center justify-center rounded-full ${resolved ? "bg-brand text-n-50" : "text-n-700 hover:bg-n-150"}`}
+              className={`flex h-7 w-7 items-center justify-center rounded-round ${resolved ? "bg-brand text-n-50" : "text-n-700 hover:bg-n-150"}`}
             >
               <Icon name={resolved ? "check" : "delivered"} size={resolved ? 14 : 18} />
             </button>
@@ -124,7 +124,7 @@ function ThreadCard({
 
       <div className="mt-2 flex items-center gap-2 text-xs text-muted">
         {thread.anchor && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-2 font-bold text-n-50" title="Pin number on the design">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-round bg-brand px-2 font-bold text-n-50" title="Pin number on the design">
             {thread.number}
           </span>
         )}
@@ -144,7 +144,7 @@ function ThreadCard({
             <li key={c.id}>
               <div className="flex items-center gap-2 text-xs text-muted">
                 <Avatar user={byId(c.authorId)} size={24} />
-                <span className="font-semibold text-ink">{byId(c.authorId)?.name ?? "Unknown"}</span>
+                <span className="font-bold text-ink">{byId(c.authorId)?.name ?? "Unknown"}</span>
                 <span>{ago(c.createdAt)}</span>
                 {c.editedAt && <span title={`Edited ${ago(c.editedAt)}`}>· Edited</span>}
                 {c.severity !== undefined && <SeverityBadge level={c.severity} />}
@@ -161,7 +161,7 @@ function ThreadCard({
       )}
 
       {thread.pushError && (
-        <div role="alert" className="mt-4 flex items-start gap-2 rounded-lg border border-bad-line bg-bad-bg px-2 py-2 text-xs text-bad-fg">
+        <div role="alert" className="mt-4 flex items-start gap-2 rounded-tight border border-bad-line bg-bad-bg px-2 py-2 text-xs text-bad-fg">
           <Icon name="close" size={14} />
           <span><strong>Not pushed to Jira.</strong> {thread.pushError}</span>
         </div>
@@ -196,7 +196,7 @@ function ThreadCard({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={`Reply as ${me.name}`}
-            className="min-w-0 flex-1 rounded-lg border border-control px-4 py-2 text-sm"
+            className="min-w-0 flex-1 rounded-tight border border-control px-4 py-2 text-sm"
           />
           <button className="btn btn-md btn-primary">Post</button>
         </form>
@@ -249,7 +249,7 @@ export function CommentList({
     <aside className="flex w-[420px] shrink-0 flex-col">
       <div className="space-y-4 p-4 pb-2">
         {request && (
-          <details open className="group rounded-xl border border-line bg-brand-soft/60 text-sm">
+          <details open className="group rounded-tight border border-line bg-brand-soft/60 text-sm">
             <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2 font-medium">
               <Icon name="feedback" size={16} />
               <span className="min-w-0 flex-1 truncate">{request.from} asked for your feedback{request.due ? ` by ${request.due}` : ""}</span>
@@ -285,7 +285,7 @@ export function CommentList({
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto p-4 pt-2">
         {threads.length === 0 && (
-          <p className="rounded-xl border border-dashed border-control bg-white/60 p-6 text-center text-sm text-muted">
+          <p className="rounded-loose border border-dashed border-control bg-white/60 p-6 text-center text-sm text-muted">
             No comments yet. Click anywhere on the design, then type your comment.
           </p>
         )}
@@ -374,12 +374,12 @@ export function Composer({
 
   return (
     <div
-      className="relative mx-auto w-full max-w-2xl rounded-xl border border-line bg-white p-4 shadow-md"
+      className="relative mx-auto w-full max-w-2xl rounded-loose border border-line bg-white p-4 shadow-md"
       onFocusCapture={() => setFocused(true)}
       onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false); }}
     >
       {suggestions.length > 0 && (
-        <ul className="absolute bottom-full left-3 right-3 mb-2 rounded-lg border border-line bg-white shadow">
+        <ul className="absolute bottom-full left-3 right-3 mb-2 rounded-tight border border-line bg-white shadow">
           {suggestions.map((u) => (
             <li key={u.id}>
               <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-n-150" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
@@ -406,7 +406,7 @@ export function Composer({
           onClick={() => { setBody((b) => `${b}@`); area.current?.focus(); }}
           aria-label="Mention someone"
           title="Mention someone"
-          className="flex h-7 w-7 items-center justify-center rounded text-n-800 hover:bg-n-150"
+          className="flex h-7 w-7 items-center justify-center rounded-tight text-n-800 hover:bg-n-150"
         >
           <Icon name="at" size={16} />
         </button>
@@ -435,7 +435,7 @@ export function Composer({
                 placeholder="1:23"
                 aria-label="Time in the file, like 1:23"
                 aria-invalid={needsTime && typed.trim() !== ""}
-                className="w-16 rounded border border-control px-2 py-0 font-mono disabled:opacity-40"
+                className="w-16 rounded-tight border border-control px-2 py-0 font-mono disabled:opacity-40"
               />
             ) : (
               <span className="font-mono">{formatTime(draft?.capturedMs ?? 0)}</span>

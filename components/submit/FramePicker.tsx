@@ -72,7 +72,7 @@ export function FramePicker({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onCancel}>
-      <div role="dialog" aria-modal="true" aria-label="Import frames" onMouseDown={(e) => e.stopPropagation()} className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-3xl bg-white p-6 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label="Import frames" onMouseDown={(e) => e.stopPropagation()} className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-loose bg-white p-6 shadow-xl">
         <h2 className="text-2xl font-bold">Import frames</h2>
 
         {res === null && <p className="py-16 text-center text-sm text-muted">Loading frames from Figma…</p>}
@@ -87,18 +87,18 @@ export function FramePicker({
         {file && (
           <>
             <div className="mt-4 flex flex-wrap items-center gap-4">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-n-150 text-xs font-bold" aria-hidden>F</span>
-              <h3 className="min-w-0 flex-1 truncate text-xl font-semibold">{file.name}</h3>
+              <span className="flex h-8 w-8 items-center justify-center rounded-tight bg-n-150 text-xs font-bold" aria-hidden>F</span>
+              <h3 className="min-w-0 flex-1 truncate text-xl font-bold">{file.name}</h3>
               <span className="text-sm text-muted" aria-live="polite">{count} out of {all.length} frames selected</span>
               <button onClick={() => setPicked((s) => new Set([...s, ...selectable.map((f) => f.id)]))} className="btn btn-md btn-secondary border-2">Select all</button>
-              <button onClick={() => setPicked(new Set())} className="px-4 py-2 text-sm font-semibold text-brand hover:underline">Clear</button>
+              <button onClick={() => setPicked(new Set())} className="px-4 py-2 text-sm font-bold text-brand hover:underline">Clear</button>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <select aria-label="Page" value={page} onChange={(e) => { setPage(e.target.value); setVisible(THUMB_CHUNK); }} className="rounded-lg border border-control bg-white px-2 py-2 text-sm">
+              <select aria-label="Page" value={page} onChange={(e) => { setPage(e.target.value); setVisible(THUMB_CHUNK); }} className="rounded-tight border border-control bg-white px-2 py-2 text-sm">
                 <option value="all">All pages ({all.length})</option>
                 {file.pages.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.frames.length})</option>)}
               </select>
-              <input aria-label="Search frames" value={q} onChange={(e) => { setQ(e.target.value); setVisible(THUMB_CHUNK); }} placeholder="Search frames" className="min-w-48 flex-1 rounded-lg border border-control bg-white px-4 py-2 text-sm" />
+              <input aria-label="Search frames" value={q} onChange={(e) => { setQ(e.target.value); setVisible(THUMB_CHUNK); }} placeholder="Search frames" className="min-w-48 flex-1 rounded-tight border border-control bg-white px-4 py-2 text-sm" />
             </div>
             <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2" onScroll={(e) => { const el = e.currentTarget; if (el.scrollTop + el.clientHeight > el.scrollHeight - 300) setVisible((v) => Math.min(v + THUMB_CHUNK, shown.length)); }}>
               {shown.length === 0 ? <p className="py-10 text-center text-sm text-muted">No frames match.</p> : (
@@ -109,13 +109,13 @@ export function FramePicker({
                     return (
                       <li key={f.id}>
                         <label className={`block ${added ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
-                          <span className={`relative block aspect-video overflow-hidden rounded-xl border-2 bg-n-150 ${on ? "border-brand" : "border-line hover:border-control"}`}>
+                          <span className={`relative block aspect-video overflow-hidden rounded-loose border-2 bg-n-150 ${on ? "border-brand" : "border-line hover:border-control"}`}>
                             <input type="checkbox" checked={on || added} disabled={added} onChange={() => toggle(f.id)} aria-label={`${f.name}${added ? " (already added)" : ""}`} className="absolute left-2 top-2 z-10 h-5 w-5 accent-brand" />
                             {thumbs[f.id]
                               // eslint-disable-next-line @next/next/no-img-element
                               ? <img src={thumbs[f.id]} alt="" loading="lazy" className="h-full w-full object-contain" />
                               : <span className="flex h-full w-full items-center justify-center text-xs text-muted">{f.id in thumbs ? "No preview" : i < visible ? "Loading…" : ""}</span>}
-                            {added && <span className="absolute bottom-2 right-2 rounded-full bg-white px-2 py-0 text-xs font-medium">Added</span>}
+                            {added && <span className="absolute bottom-2 right-2 rounded-round bg-white px-2 py-0 text-xs font-medium">Added</span>}
                           </span>
                           <span className="mt-2 block truncate text-sm font-medium">{f.name}</span>
                           <span className="block truncate text-xs text-muted">{f.section ? `${f.section} · ` : ""}{f.w}×{f.h}{page === "all" ? ` · ${f.page}` : ""}</span>
@@ -130,8 +130,8 @@ export function FramePicker({
         )}
 
         <div className="mt-6 flex items-center gap-4">
-          <button onClick={onBack} className="px-4 py-2 text-sm font-semibold text-brand hover:underline">Back</button>
-          <button onClick={onCancel} className="ml-auto px-4 py-2 text-sm font-semibold text-brand hover:underline">Cancel</button>
+          <button onClick={onBack} className="px-4 py-2 text-sm font-bold text-brand hover:underline">Back</button>
+          <button onClick={onCancel} className="ml-auto px-4 py-2 text-sm font-bold text-brand hover:underline">Cancel</button>
           <button onClick={doImport} disabled={!file || count === 0} className="btn btn-md btn-primary">
             {count > 0 ? `Import ${count} ${count === 1 ? "frame" : "frames"}` : "Import frames"}
           </button>

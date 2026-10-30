@@ -7,7 +7,7 @@ import { PlanWork } from "@/components/projects/PlanWork";
 import { dueLabel } from "@/lib/board";
 import type { Project } from "@/lib/types";
 
-const DUE_TONE = { bad: "text-bad-fg font-semibold", warn: "text-warn-fg font-semibold", muted: "text-muted" } as const;
+const DUE_TONE = { bad: "text-bad-fg font-bold", warn: "text-warn-fg font-bold", muted: "text-muted" } as const;
 
 /**
  * Open tickets assigned to you with no Start date. A start date is what makes "how long does work really take" measurable,
@@ -17,7 +17,7 @@ export function PlanWorkCard({ tickets, today, onPlanned }: { tickets: Project[]
   if (tickets.length === 0) return null;
   const sorted = [...tickets].sort((a, b) => (a.deadline || "9999").localeCompare(b.deadline || "9999") || a.jiraKey.localeCompare(b.jiraKey));
   return (
-    <section aria-labelledby="plan-h" className="mt-4 rounded-xl border border-warn-line bg-white p-4">
+    <section aria-labelledby="plan-h" className="mt-4 rounded-loose border border-warn-line bg-white p-4">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 id="plan-h" className="text-base font-bold">Plan work</h2>
         <Tag tone="warn" icon="calendarDays">{tickets.length} without a start date</Tag>

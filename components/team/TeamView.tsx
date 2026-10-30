@@ -20,15 +20,15 @@ const VIEW_KEY = "team-view";
 const LIMIT = 100;
 const COLS = COLUMNS.filter((c) => c.id !== "done");
 const initialsOf = (n: string) => n.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-const DUE_TONE = { bad: "text-bad-fg font-semibold", warn: "text-warn-fg font-semibold", muted: "text-muted" } as const;
+const DUE_TONE = { bad: "text-bad-fg font-bold", warn: "text-warn-fg font-bold", muted: "text-muted" } as const;
 const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", o);
 
 function Person({ name, count }: { name: string; count?: number }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
-      <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-dark text-xs font-bold text-n-50">{initialsOf(name)}</span>
+      <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-round bg-brand-dark text-xs font-bold text-n-50">{initialsOf(name)}</span>
       <span className="min-w-0">
-        <span className="block truncate text-sm font-semibold">{name}</span>
+        <span className="block truncate text-sm font-bold">{name}</span>
         {count !== undefined && <span className="block text-xs text-muted">{count} open</span>}
       </span>
     </span>
@@ -39,7 +39,7 @@ function Person({ name, count }: { name: string; count?: number }) {
 function Card({ p, today }: { p: Project; today: string }) {
   const due = dueLabel(p.deadline, today);
   return (
-    <Link href={`/projects/${p.jiraKey}`} className="block rounded-lg border border-line bg-white p-2 text-sm shadow-sm hover:border-brand">
+    <Link href={`/projects/${p.jiraKey}`} className="block rounded-tight border border-line bg-white p-2 text-sm shadow-sm hover:border-brand">
       <span className="line-clamp-2 font-medium">{p.title}</span>
       <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs">
         <span className="font-mono text-muted">{p.jiraKey.replace("MKTGCRTV-", "#")}</span>
@@ -53,7 +53,7 @@ function Card({ p, today }: { p: Project; today: string }) {
 function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Project[]; members: Person[]; today: string; canAssign: boolean; busy: string | null; onAssign: (p: Project, id: string) => void }) {
   const [open, setOpen] = useState(true);
   return (
-    <section aria-labelledby="queue-h" className="mb-6 rounded-2xl border border-line bg-white p-4">
+    <section aria-labelledby="queue-h" className="mb-6 rounded-loose border border-line bg-white p-4">
       <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-2 text-left">
         <span className={`transition-transform ${open ? "rotate-90" : ""}`}><Icon name="chevronRight" size={16} /></span>
         <h2 id="queue-h" className="text-base font-bold">Unassigned queue</h2>
@@ -71,7 +71,7 @@ function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Proj
                 <select
                   aria-label={`Assign ${p.title}`} value="" disabled={busy === p.jiraKey || members.length === 0}
                   onChange={(e) => e.target.value && onAssign(p, e.target.value)}
-                  className="rounded-lg border border-control bg-white px-2 py-2 text-sm disabled:opacity-50"
+                  className="rounded-tight border border-control bg-white px-2 py-2 text-sm disabled:opacity-50"
                 >
                   <option value="">{busy === p.jiraKey ? "Assigning…" : members.length ? "Assign to…" : "No team members yet"}</option>
                   {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -87,7 +87,7 @@ function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Proj
 
 function Kanban({ lanes, today }: { lanes: Lane[]; today: string }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-white">
+    <div className="overflow-x-auto rounded-tight border border-line bg-white">
       <div className="min-w-[56rem]">
         <div className="grid border-b border-line bg-n-100 text-muted eyebrow" style={{ gridTemplateColumns: `12rem repeat(${COLS.length}, minmax(0, 1fr))` }}>
           <span className="p-4">Person</span>
@@ -121,12 +121,12 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
   const todayIdx = days.indexOf(today);
   const cols = `13rem repeat(${n}, minmax(0, 1fr))`;
   return (
-    <div className="rounded-2xl border border-line bg-white p-4">
+    <div className="rounded-loose border border-line bg-white p-4">
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-        <button onClick={() => setStart(addDay(start, -span))} aria-label="Earlier" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
-        <button onClick={() => setStart(addDay(start, span))} aria-label="Later" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><Icon name="chevronRight" size={14} /></button>
+        <button onClick={() => setStart(addDay(start, -span))} aria-label="Earlier" className="flex h-8 w-8 items-center justify-center rounded-round border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
+        <button onClick={() => setStart(addDay(start, span))} aria-label="Later" className="flex h-8 w-8 items-center justify-center rounded-round border border-control hover:bg-n-150"><Icon name="chevronRight" size={14} /></button>
         <button onClick={() => setStart(mondayOf(today))} className="btn btn-md btn-secondary">Today</button>
-        <span className="font-semibold">{fmt(start, { month: "short", day: "numeric" })} – {fmt(days[n - 1], { month: "short", day: "numeric", year: "numeric" })}</span>
+        <span className="font-bold">{fmt(start, { month: "short", day: "numeric" })} – {fmt(days[n - 1], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto flex gap-2">
           {WINDOWS.map((w) => <button key={w.id} onClick={() => setSpan(w.id)} aria-pressed={span === w.id} className="chip">{w.label}</button>)}
         </span>
@@ -155,7 +155,7 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
                         <Link
                           href={`/projects/${b.key}`}
                           title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.startDate || b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}
-                          className="flex h-7 items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium text-ink"
+                          className="flex h-7 items-center gap-2 overflow-hidden rounded-tight px-2 text-xs font-medium text-ink"
                           style={{ gridColumn: `${b.from + 2} / ${b.to + 3}`, background: `color-mix(in srgb, ${b.color} 22%, var(--card))`, borderLeft: b.clippedLeft ? undefined : `3px solid ${b.color}`, outline: b.late ? "1.5px solid #8a3734" : undefined }}
                         >
                           {b.clippedLeft && <span aria-hidden>◂</span>}
@@ -181,17 +181,17 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
   const week = workWeek(monday);
   const cols = "12rem repeat(5, minmax(0, 1fr))";
   return (
-    <div className="rounded-2xl border border-line bg-white p-4">
+    <div className="rounded-loose border border-line bg-white p-4">
       <div className="mb-4 flex items-center gap-2 text-sm">
-        <button onClick={() => setMonday(addDay(monday, -7))} aria-label="Previous week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
-        <button onClick={() => setMonday(addDay(monday, 7))} aria-label="Next week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><Icon name="chevronRight" size={14} /></button>
+        <button onClick={() => setMonday(addDay(monday, -7))} aria-label="Previous week" className="flex h-8 w-8 items-center justify-center rounded-round border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
+        <button onClick={() => setMonday(addDay(monday, 7))} aria-label="Next week" className="flex h-8 w-8 items-center justify-center rounded-round border border-control hover:bg-n-150"><Icon name="chevronRight" size={14} /></button>
         <button onClick={() => setMonday(mondayOf(today))} className="btn btn-md btn-secondary">This week</button>
-        <span className="font-semibold">{fmt(week[0], { month: "short", day: "numeric" })} – {fmt(week[4], { month: "short", day: "numeric", year: "numeric" })}</span>
+        <span className="font-bold">{fmt(week[0], { month: "short", day: "numeric" })} – {fmt(week[4], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto text-xs text-muted">Shown on the day each ticket is due</span>
       </div>
       <div className="overflow-x-auto">
         <div className="min-w-[56rem]">
-          <div className="grid border-b border-line pb-2 text-xs font-semibold" style={{ gridTemplateColumns: cols }}>
+          <div className="grid border-b border-line pb-2 text-xs font-bold" style={{ gridTemplateColumns: cols }}>
             <span className="sr-only">Person</span><span aria-hidden />
             {week.map((d) => <span key={d} className={`px-2 ${d === today ? "text-brand" : "text-muted"}`}>{fmt(d, { weekday: "short", month: "short", day: "numeric" })}</span>)}
           </div>
@@ -205,7 +205,7 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
                   <ul key={d} aria-label={`${l.name}, ${fmt(d, { weekday: "long", month: "long", day: "numeric" })}`} className={`min-h-16 space-y-2 border-l border-line p-2 ${d === today ? "bg-brand-soft/30" : ""}`}>
                     {placed.filter((x) => x.at?.day === d).map(({ p, at }) => (
                       <li key={p.jiraKey}>
-                        <Link href={`/projects/${p.jiraKey}`} title={`${p.title} (${p.jiraKey})`} className={`block truncate rounded-md border px-2 py-2 text-xs font-medium hover:border-brand ${p.flag === "blocked" ? "border-bad-line bg-bad-bg text-bad-fg" : d < today ? "border-warn-line bg-warn-bg text-warn-fg" : "border-line bg-white"}`}>
+                        <Link href={`/projects/${p.jiraKey}`} title={`${p.title} (${p.jiraKey})`} className={`block truncate rounded-tight border px-2 py-2 text-xs font-medium hover:border-brand ${p.flag === "blocked" ? "border-bad-line bg-bad-bg text-bad-fg" : d < today ? "border-warn-line bg-warn-bg text-warn-fg" : "border-line bg-white"}`}>
                           {at?.weekend && <span className="mr-2 text-xs uppercase text-muted">{at.weekend}</span>}{p.title}
                         </Link>
                       </li>
@@ -280,7 +280,7 @@ export function TeamView() {
         <>
           <Queue list={unassigned} members={members} today={today} canAssign={me?.role === "creative"} busy={busy} onAssign={assign} />
           {lanes.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-control p-10 text-center text-sm text-muted">No creative team members found yet. People appear here once they&apos;ve signed in and are set as creative in Team &amp; access.</p>
+            <p className="rounded-tight border border-dashed border-control p-10 text-center text-sm text-muted">No creative team members found yet. People appear here once they&apos;ve signed in and are set as creative in Team &amp; access.</p>
           ) : view === "kanban" ? <Kanban lanes={lanes} today={today} /> : view === "gantt" ? <Gantt lanes={lanes} today={today} /> : <CalendarGrid lanes={lanes} today={today} />}
         </>
       )}

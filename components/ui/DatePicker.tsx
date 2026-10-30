@@ -20,8 +20,8 @@ const label = (s: string) => { const p = parse(s); return p ? new Date(p.y, p.m,
  * Date field with a calendar popover. Value is "YYYY-MM-DD" (or "" for none), like a native date input.
  * Arrow keys move by day and week, PageUp/PageDown by month, Esc closes.
  */
-export function DatePicker({ value, onChange, min, max, placeholder = "Select a date", ariaLabel, className = "", autoFocus = false, align = "left" }: {
-  value: string; onChange: (v: string) => void; min?: string; max?: string; placeholder?: string; ariaLabel?: string; className?: string; autoFocus?: boolean; /** which edge of the field the calendar lines up with */ align?: "left" | "right";
+export function DatePicker({ value, onChange, min, max, placeholder = "Select a date", ariaLabel, className = "", autoFocus = false, align = "left", size = "md" }: {
+  value: string; onChange: (v: string) => void; min?: string; max?: string; placeholder?: string; ariaLabel?: string; className?: string; autoFocus?: boolean; /** which edge of the field the calendar lines up with */ align?: "left" | "right"; size?: "sm" | "md";
 }) {
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState<string>("");
@@ -72,18 +72,18 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
       <button
         ref={trigger} type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined}
         onClick={() => (open ? setOpen(false) : openIt())}
-        className={`flex w-full items-center gap-2 rounded-lg border border-control bg-white px-4 py-2 text-left text-sm font-normal hover:border-brand ${className}`}
+        className={`btn btn-secondary ${size === "sm" ? "btn-sm" : "btn-md"} w-full justify-start font-normal ${className}`}
       >
         <Icon name="calendarDays" size={16} />
         <span className={value ? "" : "text-muted"}>{value ? label(value) : placeholder}</span>
       </button>
 
       {open && (
-        <div id={id} role="dialog" aria-label="Choose a date" onKeyDown={onKey} className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-50 mt-2 w-[19rem] rounded-3xl border border-line bg-white p-4 shadow-xl`}>
-          <div className="flex items-center rounded-full bg-n-100 p-2">
-            <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={16} /></span></button>
-            <span className="flex-1 text-center text-sm font-semibold" aria-live="polite">{MONTHS[view.m]} {view.y}</span>
-            <button type="button" onClick={() => go(1)} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-n-150"><Icon name="chevronRight" size={16} /></button>
+        <div id={id} role="dialog" aria-label="Choose a date" onKeyDown={onKey} className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-50 mt-2 w-[19rem] rounded-loose border border-line bg-white p-4 shadow-xl`}>
+          <div className="flex items-center rounded-round bg-n-100 p-2">
+            <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-round bg-white shadow-sm hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={16} /></span></button>
+            <span className="flex-1 text-center text-sm font-bold" aria-live="polite">{MONTHS[view.m]} {view.y}</span>
+            <button type="button" onClick={() => go(1)} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-round bg-white shadow-sm hover:bg-n-150"><Icon name="chevronRight" size={16} /></button>
           </div>
 
           <div ref={grid} role="grid" className="mt-4 grid grid-cols-7 gap-y-2 text-center" aria-label={`${MONTHS[view.m]} ${view.y}`}>
@@ -98,7 +98,7 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
                   key={s} type="button" role="gridcell" data-day={s} tabIndex={s === focus ? 0 : -1} disabled={off} aria-selected={sel} aria-current={s === today ? "date" : undefined}
                   aria-label={new Date(p.y, p.m, p.d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                   onClick={() => pick(s)}
-                  className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm transition ${
+                  className={`mx-auto flex h-9 w-9 items-center justify-center rounded-round text-sm transition ${
                     sel ? "bg-brand font-bold text-n-50 shadow-sm"
                     : off ? "text-n-500 opacity-40"
                     : `hover:bg-n-150 ${inMonth ? "text-ink" : "text-n-500"} ${s === today ? "font-bold ring-2 ring-brand ring-inset" : ""}`
@@ -111,8 +111,8 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => { onChange(""); close(); }} className="rounded-full border border-line py-2 text-sm font-medium hover:bg-n-150">Clear</button>
-            <button type="button" onClick={() => pick(today)} disabled={disabled(today)} className="rounded-full bg-brand py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Today</button>
+            <button type="button" onClick={() => { onChange(""); close(); }} className="rounded-round border border-line py-2 text-sm font-medium hover:bg-n-150">Clear</button>
+            <button type="button" onClick={() => pick(today)} disabled={disabled(today)} className="rounded-round bg-brand py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Today</button>
           </div>
         </div>
       )}

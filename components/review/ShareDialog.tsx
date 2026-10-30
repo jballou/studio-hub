@@ -71,7 +71,7 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
   const rows = rowsOf(asset, users);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={`Share ${asset.name}`} onMouseDown={(e) => e.stopPropagation()} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-line bg-white p-6 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label={`Share ${asset.name}`} onMouseDown={(e) => e.stopPropagation()} className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-loose border border-line bg-white p-6 shadow-xl">
         <h2 className="text-xl font-bold">Share “{asset.name}”</h2>
 
         {canManage && (
@@ -80,7 +80,7 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
             {adding.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <label className="flex items-center gap-2 text-sm">As
-                  <select value={role} onChange={(e) => setRole(e.target.value as "reviewer" | "approver")} className="rounded-lg border border-control bg-white px-2 py-2 text-sm">
+                  <select value={role} onChange={(e) => setRole(e.target.value as "reviewer" | "approver")} className="rounded-tight border border-control bg-white px-2 py-2 text-sm">
                     <option value="reviewer">Reviewer (can comment)</option>
                     <option value="approver">Approver (can also approve)</option>
                   </select>
@@ -92,26 +92,26 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
         )}
         {error && <p role="alert" className="mt-2 text-sm text-bad-fg">{error}</p>}
 
-        <h3 className="mb-2 mt-6 text-sm font-semibold">People with access</h3>
+        <h3 className="mb-2 mt-6 text-sm font-bold">People with access</h3>
         <ul className="max-h-64 divide-y divide-line overflow-y-auto">
           {rows.map((r) => (
             <li key={r.id} className="flex items-center gap-4 py-2">
-              <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-dark text-xs font-bold text-n-50">{initialsOf(r.name)}</span>
+              <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-round bg-brand-dark text-xs font-bold text-n-50">{initialsOf(r.name)}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{r.name}</span>
                 {r.email && <span className="block truncate text-xs text-muted">{r.email}</span>}
               </span>
               <span className="text-sm text-muted">{r.role}</span>
               {canManage && r.role !== "Owner" && (
-                <button onClick={() => run(() => repo.share(asset.id, { remove: [r.id] }))} disabled={busy} aria-label={`Remove ${r.name}`} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150 disabled:opacity-40"><Icon name="x" size={14} /></button>
+                <button onClick={() => run(() => repo.share(asset.id, { remove: [r.id] }))} disabled={busy} aria-label={`Remove ${r.name}`} className="flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150 disabled:opacity-40"><Icon name="x" size={14} /></button>
               )}
             </li>
           ))}
         </ul>
 
-        <h3 className="mb-2 mt-6 text-sm font-semibold">General access</h3>
+        <h3 className="mb-2 mt-6 text-sm font-bold">General access</h3>
         <div className="flex items-center gap-4">
-          <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${asset.linkAccess ? "bg-brand-soft text-brand" : "bg-n-150 text-n-800"}`}><Icon name={asset.linkAccess ? "users" : "eyeOff"} size={18} /></span>
+          <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-round ${asset.linkAccess ? "bg-brand-soft text-brand" : "bg-n-150 text-n-800"}`}><Icon name={asset.linkAccess ? "users" : "eyeOff"} size={18} /></span>
           <span className="min-w-0 flex-1">
             {canManage ? (
               <select
@@ -119,7 +119,7 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
                 value={asset.linkAccess ? "link" : "restricted"}
                 disabled={busy}
                 onChange={(e) => run(() => repo.share(asset.id, { linkAccess: e.target.value === "link" }))}
-                className="-ml-2 rounded-lg border border-transparent bg-transparent px-2 py-0 text-sm font-medium hover:bg-n-150"
+                className="-ml-2 rounded-tight border border-transparent bg-transparent px-2 py-0 text-sm font-medium hover:bg-n-150"
               >
                 <option value="restricted">Restricted</option>
                 <option value="link">Anyone at SurveyMonkey with the link</option>

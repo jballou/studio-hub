@@ -22,12 +22,12 @@ export function UploadZone({ uploads, onFiles, onCancel, hint }: { uploads: Uplo
         onDragOver={(e) => e.preventDefault()}
         onDragLeave={() => { depth.current = Math.max(0, depth.current - 1); if (!depth.current) setOver(false); }}
         onDrop={(e) => { e.preventDefault(); depth.current = 0; setOver(false); onFiles(Array.from(e.dataTransfer.files)); }}
-        className={`flex flex-col items-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${over ? "border-brand bg-brand-soft" : "border-control bg-white"}`}
+        className={`flex flex-col items-center rounded-loose border-2 border-dashed px-6 py-10 text-center transition ${over ? "border-brand bg-brand-soft" : "border-control bg-white"}`}
       >
-        <span className={`mb-4 flex h-11 w-11 items-center justify-center rounded-full ${over ? "bg-brand text-n-50" : "bg-n-150 text-n-800"}`}><Icon name="upload" size={22} /></span>
+        <span className={`mb-4 flex h-11 w-11 items-center justify-center rounded-round ${over ? "bg-brand text-n-50" : "bg-n-150 text-n-800"}`}><Icon name="upload" size={22} /></span>
         <p className="text-sm">
           Drag &amp; drop or{" "}
-          <button type="button" onClick={() => input.current?.click()} className="font-semibold text-brand underline-offset-2 hover:underline">choose files</button>{" "}
+          <button type="button" onClick={() => input.current?.click()} className="font-bold text-brand underline-offset-2 hover:underline">choose files</button>{" "}
           to upload
         </p>
         <p className="mt-2 text-xs text-muted">{hint ?? "Image, video, audio or PDF. Add as many as you like."}</p>
@@ -39,18 +39,18 @@ export function UploadZone({ uploads, onFiles, onCancel, hint }: { uploads: Uplo
           {uploads.map((u) => {
             const pct = Math.round(u.progress * 100);
             return (
-              <li key={u.id} className="rounded-xl bg-n-150 p-4">
+              <li key={u.id} className="rounded-loose bg-n-150 p-4">
                 <div className="flex items-center gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand bg-white text-brand"><Icon name="brief" size={20} /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight border border-brand bg-white text-brand"><Icon name="brief" size={20} /></span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">{u.name}</span>
+                    <span className="block truncate text-sm font-bold">{u.name}</span>
                     <span className="block text-xs text-muted">{formatBytes(u.size)}{u.secondsLeft !== null && pct < 100 ? ` · ${u.secondsLeft <= 1 ? "almost done" : `${u.secondsLeft} seconds left`}` : ""}</span>
                   </span>
                   <span className="text-xs tabular-nums text-muted">{pct}%</span>
-                  <button type="button" onClick={() => onCancel(u.id)} aria-label={`Cancel upload of ${u.name}`} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white"><Icon name="x" size={16} /></button>
+                  <button type="button" onClick={() => onCancel(u.id)} aria-label={`Cancel upload of ${u.name}`} className="flex h-8 w-8 items-center justify-center rounded-tight hover:bg-white"><Icon name="x" size={16} /></button>
                 </div>
-                <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`${u.name} upload`} className="mt-2 h-1.5 overflow-hidden rounded-full bg-white">
-                  <div className="h-full rounded-full bg-brand transition-[width] duration-150" style={{ width: `${pct}%` }} />
+                <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={`${u.name} upload`} className="mt-2 h-1.5 overflow-hidden rounded-round bg-white">
+                  <div className="h-full rounded-round bg-brand transition-[width] duration-150" style={{ width: `${pct}%` }} />
                 </div>
               </li>
             );

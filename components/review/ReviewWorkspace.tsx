@@ -222,15 +222,15 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   );
 
   const src = localSrc ?? version.src;
-  const btn = "rounded-full border border-control px-4 py-2 text-sm font-medium hover:bg-n-150 disabled:opacity-40";
+  const btn = "btn btn-sm btn-secondary";
 
   return (
     <div className="paper flex h-[calc(100vh-16px)] flex-col">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-white px-6 py-2 text-sm">
-        <Link href="/review" aria-label="Back to Review" title="Back to Review" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-n-150">
+        <Link href="/review" aria-label="Back to Review" title="Back to Review" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-round hover:bg-n-150">
           <span className="rotate-180"><Icon name="chevronRight" size={18} /></span>
         </Link>
-        <h1 className="min-w-0 truncate font-semibold">
+        <h1 className="min-w-0 truncate font-bold">
           <Link href={`/projects/${asset.projectKey}`} className="font-mono text-brand hover:underline" title="Open project">{asset.projectKey}</Link> · {asset.name}
         </h1>
         <StageTag stage={stage} />
@@ -259,7 +259,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           <button
             onClick={async () => { setCopied(await copyText(reviewLink(asset))); setTimeout(() => setCopied(false), 1500); }}
             aria-label={copied ? "Link copied" : "Copy link"} title={copied ? "Link copied" : "Copy link"}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-n-150"
+            className="flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150"
           >
             <Icon name={copied ? "check" : "link"} size={18} />
           </button>
@@ -272,7 +272,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
                 { kind: "custom" as const, node: <p className="eyebrow text-muted">Demo controls</p> },
                 { kind: "custom" as const, node: (
                   <label className="flex items-center justify-between gap-2 text-xs">Viewing as
-                    <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded border border-control px-2 py-2">
+                    <select value={me.id} onChange={(e) => { setMeId(e.target.value); setSelectedId(null); }} className="rounded-tight border border-control px-2 py-2">
                       {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
                     </select>
                   </label>
@@ -284,7 +284,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
                   </label>
                 ) },
                 ...(kind === "video" ? [{ kind: "custom" as const, node: (
-                  <label className="block cursor-pointer rounded border border-control px-2 py-2 text-center text-xs hover:bg-n-150">
+                  <label className="block cursor-pointer rounded-tight border border-control px-2 py-2 text-center text-xs hover:bg-n-150">
                     Load a local video file
                     <input type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setLocalSrc(URL.createObjectURL(f)); }} />
                   </label>
@@ -301,7 +301,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           <select
             value={version.id}
             onChange={(e) => { setVersionId(e.target.value); setSelectedId(null); resetDraft(); setLocalSrc(null); setZoom("fit"); }}
-            className="appearance-none rounded-full border border-control bg-white py-2 pl-4 pr-10 text-sm"
+            className="appearance-none rounded-round border border-control bg-white py-2 pl-4 pr-10 text-sm"
           >
             {versions.map((v) => <option key={v.id} value={v.id}>Version {v.number}</option>)}
           </select>

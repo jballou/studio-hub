@@ -157,7 +157,7 @@ export function AnnotationLayer({
             <div
               key={it.id}
               onPointerDown={startMove}
-              className="pointer-events-auto absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-bold shadow"
+              className="pointer-events-auto absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-round text-xs font-bold shadow"
               style={{
                 left: `${it.anchor.x * 100}%`, top: `${it.anchor.y * 100}%`, background: color, color: ink,
                 outline: selected || it.isDraft ? `3px solid ${ring}` : "2px solid white",
@@ -183,7 +183,7 @@ export function AnnotationLayer({
             }}
           >
             <span
-              className="absolute -left-0.5 -top-6 rounded px-2 py-0 text-xs font-bold"
+              className="absolute -left-0.5 -top-6 rounded-tight px-2 py-0 text-xs font-bold"
               style={{ background: color, color: ink }}
             >
               {label}

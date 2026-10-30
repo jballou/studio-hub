@@ -63,7 +63,7 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
   const today = localDay();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={(e) => { e.stopPropagation(); onClose(); }} onClick={(e) => e.stopPropagation()}>
-      <div role="dialog" aria-modal="true" aria-label={`Plan work on ${project.jiraKey}`} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-line bg-white p-6 shadow-xl">
+      <div role="dialog" aria-modal="true" aria-label={`Plan work on ${project.jiraKey}`} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-loose border border-line bg-white p-6 shadow-xl">
         <h2 className="text-lg font-bold">Plan work</h2>
         <p className="mb-4 mt-2 text-sm text-muted">{project.jiraKey} · {project.title}. When does work start?{project.deadline ? ` Due ${project.deadline}.` : ""}</p>
         {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
@@ -76,8 +76,8 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
               <Icon name="calendarDays" size={16} /> Choose a start date
             </button>
           ) : (
-            <div className="rounded-lg border border-control p-4">
-              <label className="block text-sm font-semibold">Start date
+            <div className="rounded-tight border border-control p-4">
+              <label className="block text-sm font-bold">Start date
                 <div className="mt-2"><DatePicker autoFocus value={date} max={project.deadline || undefined} onChange={setDate} /></div>
               </label>
               <button disabled={busy || !date} onClick={() => save(date)} className="btn btn-md btn-primary mt-2 w-full">{busy ? "Saving…" : "Save start date"}</button>
