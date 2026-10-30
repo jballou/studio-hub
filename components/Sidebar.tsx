@@ -24,7 +24,7 @@ const ITEMS: Item[] = [
   { href: "/my-day", label: "My Day", icon: "dashboardAdd", match: (p) => p.startsWith("/my-day") },
   { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
   { href: "/projects", label: "Projects", icon: "folderFilled", match: (p) => p === "/projects" || p === "/projects/new" },
-  { href: "/team", label: "Team", icon: "users", match: (p) => p.startsWith("/team"), forCreatives: true },
+  { href: "/team", label: "Team", icon: "usersRound", match: (p) => p.startsWith("/team"), forCreatives: true },
   { href: "/calendar", label: "Calendar", icon: "calendarEdit", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "chat", match: (p) => p.startsWith("/review") },
   { href: "/blocking", label: "Waiting on you", icon: "danger", match: (p) => p.startsWith("/blocking") },

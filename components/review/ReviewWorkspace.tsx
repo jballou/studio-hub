@@ -254,7 +254,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           )}
           <span className="mx-2 h-5 w-px bg-line" aria-hidden="true" />
           <button onClick={() => setShareOpen(true)} title={asset.linkAccess ? "Anyone at SurveyMonkey with the link can open this" : "Only people you add can open this"} className="btn btn-sm btn-ghost">
-            <Icon name={asset.linkAccess ? "users" : "lock"} size={16} /> Share
+            <Icon name={asset.linkAccess ? "usersRound" : "lock"} size={16} /> Share
           </button>
           <button
             onClick={async () => { setCopied(await copyText(reviewLink(asset))); setTimeout(() => setCopied(false), 1500); }}

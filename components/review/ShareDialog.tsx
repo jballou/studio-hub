@@ -111,7 +111,7 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
 
         <h3 className="mb-2 mt-6 text-sm font-bold">General access</h3>
         <div className="flex items-center gap-4">
-          <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-round ${asset.linkAccess ? "bg-brand-soft text-brand" : "bg-n-150 text-n-800"}`}><Icon name={asset.linkAccess ? "users" : "eyeOff"} size={18} /></span>
+          <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-round ${asset.linkAccess ? "bg-brand-soft text-brand" : "bg-n-150 text-n-800"}`}><Icon name={asset.linkAccess ? "usersRound" : "eyeOff"} size={18} /></span>
           <span className="min-w-0 flex-1">
             {canManage ? (
               <select
