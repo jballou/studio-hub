@@ -55,12 +55,12 @@ export function AdminSettings() {
           <legend className="sr-only">Look-back period</legend>
           <div className="flex flex-wrap gap-2">
             {LOOKBACK_PRESETS.map((n) => (
-              <label key={n} className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${choice === String(n) ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+              <label key={n} className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${choice === String(n) ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
                 <input type="radio" name="lookback" className="sr-only" checked={choice === String(n)} onChange={() => setChoice(String(n))} />
                 {n} days{n === 90 ? " (default)" : ""}
               </label>
             ))}
-            <label className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${choice === CUSTOM ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+            <label className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${choice === CUSTOM ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
               <input type="radio" name="lookback" className="sr-only" checked={choice === CUSTOM} onChange={() => setChoice(CUSTOM)} />
               Custom
             </label>

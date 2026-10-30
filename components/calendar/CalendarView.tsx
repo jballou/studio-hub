@@ -18,7 +18,7 @@ type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 
 const byTime = (a: CalendarItem, b: CalendarItem) => (a.time ?? 1e9) - (b.time ?? 1e9) || a.title.localeCompare(b.title);
 const sel = "rounded-lg border border-control bg-white px-2 py-2 text-sm";
-const iconBtn = "relative flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-brand-soft";
+const iconBtn = "relative flex h-8 w-8 items-center justify-center rounded-lg border border-control bg-white hover:bg-n-150";
 const badge = "absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-2 text-xs font-bold text-n-50";
 
 function Pill({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
@@ -35,7 +35,7 @@ function Chip({ item, onOpen }: { item: CalendarItem; onOpen: () => void }) {
     <button
       onClick={onOpen}
       title={`${TYPE_SHORT[item.type]}: ${item.title}`}
-      className="flex w-full items-center gap-2 truncate rounded border border-line bg-white py-0 pl-2 pr-2 text-left text-xs hover:bg-brand-soft"
+      className="flex w-full items-center gap-2 truncate rounded border border-line bg-white py-0 pl-2 pr-2 text-left text-xs hover:bg-n-150"
       style={{ borderLeft: `3px solid ${TYPE_BAR[item.type]}` }}
     >
       <b className="shrink-0">{TYPE_SHORT[item.type]}</b>
@@ -199,14 +199,14 @@ export function CalendarView() {
             {menu === "tags" && (
               <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-line bg-white p-2 shadow-lg">
                 {ITEM_TYPES.map((t) => (
-                  <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-brand-soft">
+                  <label key={t.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-n-150">
                     <input type="checkbox" checked={types.has(t.id)} onChange={() => toggleType(t.id)} />
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: TYPE_BAR[t.id] }} aria-hidden />
                     <span className="flex-1">{t.label}</span>
                     <span className="text-xs text-muted">{typeCount(t.id)}</span>
                   </label>
                 ))}
-                {types.size > 0 && <button onClick={() => setTypes(new Set())} className="mt-2 w-full rounded-lg px-2 py-2 text-left text-sm font-medium text-brand hover:bg-brand-soft">Show all types</button>}
+                {types.size > 0 && <button onClick={() => setTypes(new Set())} className="mt-2 w-full rounded-lg px-2 py-2 text-left text-sm font-medium text-brand hover:bg-n-150">Show all types</button>}
               </div>
             )}
           </div>
@@ -246,8 +246,8 @@ export function CalendarView() {
             <button onClick={() => setMenu(menu === "more" ? null : "more")} aria-label="More options" aria-expanded={menu === "more"} className={iconBtn}><Icon name="more" size={16} /></button>
             {menu === "more" && (
               <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-line bg-white p-2 text-sm shadow-lg">
-                <button onClick={() => { load(); setMenu(null); }} className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left hover:bg-brand-soft"><Icon name="refresh" size={14} /> Reload sources</button>
-                <Link href="/calendar/sources" className="flex w-full items-center gap-2 rounded-lg px-4 py-2 hover:bg-brand-soft"><Icon name="link" size={14} /> Sources ({sources.length})</Link>
+                <button onClick={() => { load(); setMenu(null); }} className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-left hover:bg-n-150"><Icon name="refresh" size={14} /> Reload sources</button>
+                <Link href="/calendar/sources" className="flex w-full items-center gap-2 rounded-lg px-4 py-2 hover:bg-n-150"><Icon name="link" size={14} /> Sources ({sources.length})</Link>
               </div>
             )}
           </div>
@@ -310,7 +310,7 @@ export function CalendarView() {
               <header className="mb-2 flex items-baseline gap-2 text-sm"><b>{dayLabel(d, { weekday: "short" })}</b><span className="text-muted">{fromIso(d).getDate()}</span></header>
               <div className="space-y-2">
                 {(byDay.get(d) ?? []).map((i) => (
-                  <button key={i.id + d} onClick={() => open(i.id)} className="block w-full rounded-lg border border-line p-2 text-left text-xs hover:bg-brand-soft" style={{ borderLeft: `3px solid ${TYPE_BAR[i.type]}` }}>
+                  <button key={i.id + d} onClick={() => open(i.id)} className="block w-full rounded-lg border border-line p-2 text-left text-xs hover:bg-n-150" style={{ borderLeft: `3px solid ${TYPE_BAR[i.type]}` }}>
                     <span className="mb-2 flex items-center gap-2"><Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>{i.time != null && <span className="text-muted">{formatTime(i.time)}</span>}</span>
                     <span className="block font-medium">{i.title}</span>
                     {i.channel && <span className="text-muted">{i.channel}</span>}

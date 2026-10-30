@@ -160,7 +160,7 @@ export function FlowEditor() {
                 <button onClick={() => setScale(0.6)} className="rounded px-2 py-2 hover:bg-n-150">Fit</button>
               </>
             )}
-            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-auto rounded bg-brand-soft px-4 py-2 font-medium hover:bg-brand-soft/70">+ Question</button>
+            <button onClick={() => { const r = addAfter(draft, selected); setDraft(r.flow); setSelected(r.id); }} className="ml-auto rounded bg-brand-soft px-4 py-2 font-medium hover:bg-n-150">+ Question</button>
           </div>
           {view === "types"
             ? <RouteView flow={draft} selectedId={selected} onSelect={setSelected} problemIds={problemIds} />

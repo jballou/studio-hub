@@ -3,6 +3,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { TopBar } from "@/components/Shell";
+import { SegIndicator } from "@/components/SegIndicator";
 
 export const metadata: Metadata = {
   title: "Brand Creative Hub",
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Suspense>
         <div className="shell my-2 mr-2 flex min-h-[calc(100vh-16px)] min-w-0 flex-1 flex-col overflow-clip rounded-3xl border border-line bg-paper shadow-sm first:ml-2">
           <Suspense fallback={null}><TopBar /></Suspense>
+          <SegIndicator />
           <div className="paper flex min-w-0 flex-1 flex-col">{children}</div>
         </div>
       </body>

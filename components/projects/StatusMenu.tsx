@@ -61,7 +61,7 @@ export function StatusMenu({ project, canChange, onChanged }: { project: Project
       <p className="px-4 pb-2 pt-2 text-muted eyebrow">{title}</p>
       <ul role="none">
         {items.map((s) => (
-          <li key={s.name} role="none"><button role="menuitem" disabled={busy} onClick={() => choose(s)} className="block w-full px-4 py-2 text-left text-sm hover:bg-brand-soft disabled:opacity-50">{s.name}</button></li>
+          <li key={s.name} role="none"><button role="menuitem" disabled={busy} onClick={() => choose(s)} className="block w-full px-4 py-2 text-left text-sm hover:bg-n-150 disabled:opacity-50">{s.name}</button></li>
         ))}
       </ul>
     </li>

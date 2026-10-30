@@ -81,9 +81,9 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
       {open && (
         <div id={id} role="dialog" aria-label="Choose a date" onKeyDown={onKey} className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-50 mt-2 w-[19rem] rounded-3xl border border-line bg-white p-4 shadow-xl`}>
           <div className="flex items-center rounded-full bg-n-100 p-2">
-            <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={16} /></span></button>
+            <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={16} /></span></button>
             <span className="flex-1 text-center text-sm font-semibold" aria-live="polite">{MONTHS[view.m]} {view.y}</span>
-            <button type="button" onClick={() => go(1)} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-brand-soft"><Icon name="chevronRight" size={16} /></button>
+            <button type="button" onClick={() => go(1)} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-n-150"><Icon name="chevronRight" size={16} /></button>
           </div>
 
           <div ref={grid} role="grid" className="mt-4 grid grid-cols-7 gap-y-2 text-center" aria-label={`${MONTHS[view.m]} ${view.y}`}>
@@ -101,7 +101,7 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
                   className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm transition ${
                     sel ? "bg-brand font-bold text-n-50 shadow-sm"
                     : off ? "text-n-500 opacity-40"
-                    : `hover:bg-brand-soft ${inMonth ? "text-ink" : "text-n-500"} ${s === today ? "font-bold ring-2 ring-brand ring-inset" : ""}`
+                    : `hover:bg-n-150 ${inMonth ? "text-ink" : "text-n-500"} ${s === today ? "font-bold ring-2 ring-brand ring-inset" : ""}`
                   }`}
                 >
                   {p.d}
@@ -111,7 +111,7 @@ export function DatePicker({ value, onChange, min, max, placeholder = "Select a 
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => { onChange(""); close(); }} className="rounded-full border border-line py-2 text-sm font-medium hover:bg-n-100">Clear</button>
+            <button type="button" onClick={() => { onChange(""); close(); }} className="rounded-full border border-line py-2 text-sm font-medium hover:bg-n-150">Clear</button>
             <button type="button" onClick={() => pick(today)} disabled={disabled(today)} className="rounded-full bg-brand py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Today</button>
           </div>
         </div>

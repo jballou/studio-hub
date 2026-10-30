@@ -367,7 +367,7 @@ export function SubmitForm() {
                 <legend className="text-sm font-semibold">What kind of file is it?</legend>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {([["other", "Image, PDF or other"], ["video", "Video"], ["audio", "Audio"]] as const).map(([id, label]) => (
-                    <label key={id} className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${driveType === id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+                    <label key={id} className={`cursor-pointer rounded-full border px-4 py-2 text-sm ${driveType === id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-n-150"}`}>
                       <input type="radio" name="drive-type" className="sr-only" checked={driveType === id} onChange={() => setDriveType(id)} />{label}
                     </label>
                   ))}
@@ -406,7 +406,7 @@ export function SubmitForm() {
             )}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {figmaLink && (
-                <button type="button" onClick={() => setPicker(true)} className={figmaLink.nodeId ? "rounded-lg border border-brand px-4 py-2 text-sm font-medium text-brand hover:bg-brand-soft" : "rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"}>
+                <button type="button" onClick={() => setPicker(true)} className={figmaLink.nodeId ? "rounded-lg border border-brand px-4 py-2 text-sm font-medium text-brand hover:bg-n-150" : "rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"}>
                   {figmaLink.nodeId ? "Add more frames from this file…" : "Choose frames from this file…"}
                 </button>
               )}

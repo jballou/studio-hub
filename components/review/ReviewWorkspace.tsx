@@ -222,7 +222,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   );
 
   const src = localSrc ?? version.src;
-  const btn = "rounded-full border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-40";
+  const btn = "rounded-full border border-control px-4 py-2 text-sm font-medium hover:bg-n-150 disabled:opacity-40";
 
   return (
     <div className="paper flex h-[calc(100vh-16px)] flex-col">
@@ -284,7 +284,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
                   </label>
                 ) },
                 ...(kind === "video" ? [{ kind: "custom" as const, node: (
-                  <label className="block cursor-pointer rounded border border-control px-2 py-2 text-center text-xs hover:bg-brand-soft">
+                  <label className="block cursor-pointer rounded border border-control px-2 py-2 text-center text-xs hover:bg-n-150">
                     Load a local video file
                     <input type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setLocalSrc(URL.createObjectURL(f)); }} />
                   </label>

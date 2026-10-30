@@ -237,7 +237,7 @@ export function Sidebar() {
                 onClick={() => signOut({ callbackUrl: "/signin" })}
                 aria-label="Sign out"
                 title="Sign out"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-100"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
               >
                 <Icon name="logOut" size={18} />
               </button>

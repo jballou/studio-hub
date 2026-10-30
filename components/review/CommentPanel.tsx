@@ -112,7 +112,7 @@ function ThreadCard({
               onClick={() => onStatus(resolved ? "open" : "resolved")}
               aria-label={resolved ? "Reopen comment" : "Resolve comment"}
               title={resolved ? "Resolved. Click to reopen" : "Mark as resolved"}
-              className={`flex h-7 w-7 items-center justify-center rounded-full ${resolved ? "bg-brand text-n-50" : "text-n-700 hover:bg-brand-soft"}`}
+              className={`flex h-7 w-7 items-center justify-center rounded-full ${resolved ? "bg-brand text-n-50" : "text-n-700 hover:bg-n-150"}`}
             >
               <Icon name={resolved ? "check" : "delivered"} size={resolved ? 14 : 18} />
             </button>
@@ -382,7 +382,7 @@ export function Composer({
         <ul className="absolute bottom-full left-3 right-3 mb-2 rounded-lg border border-line bg-white shadow">
           {suggestions.map((u) => (
             <li key={u.id}>
-              <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-brand-soft" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
+              <button className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-n-150" onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}>
                 <Avatar user={{ id: u.id, name: u.name, initials: u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase(), role: "requester" }} size={24} /> {u.name}
               </button>
             </li>
@@ -406,7 +406,7 @@ export function Composer({
           onClick={() => { setBody((b) => `${b}@`); area.current?.focus(); }}
           aria-label="Mention someone"
           title="Mention someone"
-          className="flex h-7 w-7 items-center justify-center rounded text-n-800 hover:bg-brand-soft"
+          className="flex h-7 w-7 items-center justify-center rounded text-n-800 hover:bg-n-150"
         >
           <Icon name="at" size={16} />
         </button>

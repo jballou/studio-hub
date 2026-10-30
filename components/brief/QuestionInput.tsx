@@ -7,7 +7,7 @@ import type { Person } from "@/lib/types";
 
 const field = "w-full rounded-xl border border-control bg-white px-4 py-4 text-sm";
 const primary = "rounded-xl bg-brand px-6 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40";
-const ghost = "rounded-xl border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft";
+const ghost = "rounded-xl border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-n-150";
 
 /** One answer control, chosen by question type. Calls onSubmit with the finished answer. */
 export function QuestionInput({

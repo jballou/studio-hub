@@ -53,7 +53,7 @@ export function FilterPill({ label, value, onClear, children, width = "w-56" }: 
 /** One row in a filter popover: a check on the chosen one. */
 export function FilterOption({ label, selected, onSelect }: { label: string; selected: boolean; onSelect: () => void }) {
   return (
-    <button type="button" role="menuitemradio" aria-checked={selected} onClick={onSelect} className="flex w-full items-center gap-2 rounded-xl px-4 py-2 text-left text-sm hover:bg-brand-soft">
+    <button type="button" role="menuitemradio" aria-checked={selected} onClick={onSelect} className="flex w-full items-center gap-2 rounded-xl px-4 py-2 text-left text-sm hover:bg-n-150">
       <span className="flex h-4 w-4 shrink-0 items-center justify-center text-brand">{selected && <Icon name="check" size={14} />}</span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
     </button>

@@ -123,8 +123,8 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-4">
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-        <button onClick={() => setStart(addDay(start, -span))} aria-label="Earlier" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
-        <button onClick={() => setStart(addDay(start, span))} aria-label="Later" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
+        <button onClick={() => setStart(addDay(start, -span))} aria-label="Earlier" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
+        <button onClick={() => setStart(addDay(start, span))} aria-label="Later" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><Icon name="chevronRight" size={14} /></button>
         <button onClick={() => setStart(mondayOf(today))} className="btn btn-md btn-secondary">Today</button>
         <span className="font-semibold">{fmt(start, { month: "short", day: "numeric" })} – {fmt(days[n - 1], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto flex gap-2">
@@ -183,8 +183,8 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-4">
       <div className="mb-4 flex items-center gap-2 text-sm">
-        <button onClick={() => setMonday(addDay(monday, -7))} aria-label="Previous week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
-        <button onClick={() => setMonday(addDay(monday, 7))} aria-label="Next week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
+        <button onClick={() => setMonday(addDay(monday, -7))} aria-label="Previous week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
+        <button onClick={() => setMonday(addDay(monday, 7))} aria-label="Next week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-n-150"><Icon name="chevronRight" size={14} /></button>
         <button onClick={() => setMonday(mondayOf(today))} className="btn btn-md btn-secondary">This week</button>
         <span className="font-semibold">{fmt(week[0], { month: "short", day: "numeric" })} – {fmt(week[4], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto text-xs text-muted">Shown on the day each ticket is due</span>

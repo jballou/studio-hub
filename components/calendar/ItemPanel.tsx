@@ -11,7 +11,7 @@ import { STATUS_TONE, TYPE_SHORT, TYPE_TONE } from "./meta";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
 const primary = "rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark";
-const secondary = "rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft";
+const secondary = "rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-n-150";
 
 type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
 

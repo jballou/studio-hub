@@ -19,7 +19,7 @@ const statusProps = (r: IssueRef) => ({ stage: "Submitted" as const, statusName:
 
 function Row({ r, here }: { r: IssueRef; here?: boolean }) {
   return (
-    <div className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 text-sm ${here ? "bg-brand-soft" : "hover:bg-n-100"}`}>
+    <div className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 text-sm ${here ? "bg-brand-soft" : "hover:bg-n-150"}`}>
       <IssueIcon level={r.level} typeName={r.typeName} />
       <span className="font-mono text-xs text-muted">{r.key}</span>
       {here ? <span className="font-semibold">{r.title}</span> : <IssueLink r={r} className="min-w-0 flex-1 truncate font-medium" />}

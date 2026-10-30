@@ -63,7 +63,7 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
         aria-haspopup="dialog" aria-expanded={open}
         aria-label={badge > 0 ? `Notifications: ${badge} new` : "Notifications"}
         title={badge > 0 ? `${badge} new` : "Notifications"}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-100"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-n-800 hover:bg-n-150"
       >
         <Icon name="bell" size={18} />
         {badge > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-bad-fg px-0 text-xs font-bold leading-none text-n-50 ring-2 ring-white">{badge > 99 ? "99+" : badge}</span>}
@@ -90,7 +90,7 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
                 const m = message(n);
                 return (
                   <li key={n.id}>
-                    <button onClick={() => go(n)} className={`flex w-full items-start gap-4 border-b border-line px-4 py-4 text-left last:border-b-0 hover:bg-n-100 ${n.readAt ? "" : "bg-brand-soft/40"}`}>
+                    <button onClick={() => go(n)} className={`flex w-full items-start gap-4 border-b border-line px-4 py-4 text-left last:border-b-0 hover:bg-n-150 ${n.readAt ? "" : "bg-brand-soft/40"}`}>
                       <span aria-hidden="true" className={`mt-2 h-2 w-2 shrink-0 rounded-full ${n.readAt ? "bg-transparent" : "bg-brand"}`} />
                       <span className="min-w-0 flex-1 text-sm">
                         <span className="font-semibold">{m.who}</span> {m.what}

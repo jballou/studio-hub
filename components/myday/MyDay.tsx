@@ -208,9 +208,9 @@ export function MyDay() {
               action={
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
+                    <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
                     <button onClick={() => setShift(0)} className="btn btn-sm btn-secondary">Today</button>
-                    <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={12} /></button>
+                    <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-n-150"><Icon name="chevronRight" size={12} /></button>
                   </div>
                   <div className="seg" role="group" aria-label="Timeline length">
                     {WINDOWS.map((w) => <button key={w.id} onClick={() => { setWin(w.id); setShift(0); }} aria-pressed={win === w.id} className="seg-item">{w.label}</button>)}
@@ -545,10 +545,10 @@ function FocusRow({ f, today, slot, planned, onDone, canPlan, onPlanned }: { f: 
             {f.kind === "ticket" && needsStartDate(f.project) && <NoStartTag />}
             {f.kind === "ticket" ? <span className="text-xs text-muted">{f.key} · {f.project.statusName ?? f.project.stage}{f.project.statusName ? "" : ` (${stageIdx}/${STAGES_ORDER.length})`}</span> : <Tag tone="progress">Task</Tag>}
           </div>
-          {f.kind === "ticket" && canPlan && needsStartDate(f.project) && <div className="mt-2"><PlanWork project={f.project} onPlanned={onPlanned} /></div>}
           {f.kind === "ticket" && <div className="mt-2"><TimelineMeter t={timeline(f.project, today)} label={`Time used on ${f.title}`} /></div>}
           {planned && slot && <p className="mt-2 text-xs text-muted">Suggested: {clock(slot.start)} – {clock(Math.min(slot.end, slot.start + 90 * 6e4))} ({hm(Math.min(90, minutes(slot.end - slot.start)))})</p>}
         </div>
+        {f.kind === "ticket" && canPlan && needsStartDate(f.project) && <div className="shrink-0"><PlanWork project={f.project} onPlanned={onPlanned} /></div>}
       </div>
     </li>
   );

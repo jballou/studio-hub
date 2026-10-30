@@ -1,6 +1,5 @@
 "use client";
 
-import { useId } from "react";
 import Link from "next/link";
 import type { GanttBar, Timeline } from "@/lib/myday/plan";
 
@@ -21,33 +20,19 @@ function arc(from: number, to: number): string {
   return `M ${pt(ro, a0)} A ${ro} ${ro} 0 ${large} 1 ${pt(ro, a1)} L ${pt(ri, b1)} A ${ri} ${ri} 0 ${large} 0 ${pt(ri, b0)} Z`;
 }
 
-/** Texture laid over a segment's color so the parts differ by more than hue: stripes, fine stripes, dots. */
-function Texture({ id, color, kind }: { id: string; color: string; kind: number }) {
-  return (
-    <pattern id={id} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform={kind === 0 ? "rotate(45)" : kind === 1 ? "rotate(-45)" : undefined}>
-      <rect width="7" height="7" fill={color} />
-      {kind === 2
-        ? <circle cx="3.5" cy="3.5" r="1.1" fill="#fff" fillOpacity="0.55" />
-        : <line x1="0" y1="0" x2="0" y2="7" stroke="#fff" strokeOpacity={kind === 0 ? 0.28 : 0.5} strokeWidth={kind === 0 ? 1.5 : 2} />}
-    </pattern>
-  );
-}
-
 /** Half-circle gauge: share finished, with the three parts in the legend so color is never the only cue. */
 export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; caption: string }) {
-  const uid = useId().replace(/:/g, "");
   const shown = parts.filter((s) => s.count > 0);
   const total = shown.reduce((n, s) => n + s.count, 0);
   const free = 180 - GAP_DEG * Math.max(shown.length - 1, 0);
   return (
     <div>
       <svg viewBox="0 0 200 112" role="img" aria-label={`${pct}% complete. ${parts.map((s) => `${s.label}: ${s.count}`).join(". ")}`} className="mx-auto block w-full max-w-[18rem] overflow-visible">
-        <defs>{parts.map((s, i) => <Texture key={s.key} id={`${uid}-${s.key}`} color={s.color} kind={i} />)}</defs>
         {total === 0 && <path d={arc(0, 180)} fill="var(--color-n-150)" stroke="var(--color-n-150)" strokeWidth={INSET * 2} strokeLinejoin="round" />}
         {shown.map((s, i) => {
           const before = shown.slice(0, i).reduce((n, x) => n + (x.count / total) * free + GAP_DEG, 0);
           return (
-            <path key={s.key} d={arc(before, before + (s.count / total) * free)} fill={`url(#${uid}-${s.key})`} stroke={s.color} strokeWidth={INSET * 2} strokeLinejoin="round" className="transition-opacity hover:opacity-80">
+            <path key={s.key} d={arc(before, before + (s.count / total) * free)} fill={s.color} stroke={s.color} strokeWidth={INSET * 2} strokeLinejoin="round" className="transition-opacity hover:opacity-80">
               <title>{`${s.label}: ${s.count}`}</title>
             </path>
           );
@@ -56,9 +41,9 @@ export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; cap
       </svg>
       <p className="mt-2 text-center text-sm text-muted">{caption}</p>
       <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
-        {parts.map((s, i) => (
+        {parts.map((s) => (
           <li key={s.key} className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><defs><Texture id={`${uid}-l-${s.key}`} color={s.color} kind={i} /></defs><rect width="14" height="14" rx="4" fill={`url(#${uid}-l-${s.key})`} /></svg>
+            <span className="h-3 w-3 rounded-sm" style={{ background: s.color }} aria-hidden />
             {s.label} <b className="tabular-nums">{s.count}</b>
           </li>
         ))}

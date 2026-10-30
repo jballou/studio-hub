@@ -62,7 +62,7 @@ export function UnblockDialog({
       <legend className="mb-2 text-muted eyebrow">{title}</legend>
       <div className="grid gap-2 sm:grid-cols-2">
         {items.map((s) => (
-          <label key={s.name} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm ${picked === s.name ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-brand-soft"}`}>
+          <label key={s.name} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm ${picked === s.name ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-n-150"}`}>
             <input type="radio" name="status" checked={picked === s.name} onChange={() => setPicked(s.name)} className="accent-brand" />
             {s.name}
           </label>
