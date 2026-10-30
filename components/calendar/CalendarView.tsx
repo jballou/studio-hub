@@ -233,15 +233,6 @@ export function CalendarView() {
             ))}
           </div>
 
-          {view === "list" && (
-            <>
-              <button onClick={flip} aria-label={`Order: ${order} first. Click to reverse.`} className="btn btn-md btn-secondary">
-                <span className={order === "oldest" ? "rotate-180" : ""}><Icon name="chevronDown" size={14} /></span> {order === "newest" ? "Newest first" : "Oldest first"}
-              </button>
-              <button onClick={() => setFolded(allFolded ? new Set() : new Set(listMonths.map((m) => m.key)))} className="btn btn-md btn-secondary">{allFolded ? "Expand all" : "Collapse all"}</button>
-            </>
-          )}
-
           <div className="relative">
             <button onClick={() => setMenu(menu === "more" ? null : "more")} aria-label="More options" aria-expanded={menu === "more"} className={iconBtn}><Icon name="more" size={16} /></button>
             {menu === "more" && (
@@ -324,6 +315,14 @@ export function CalendarView() {
 
       {view === "list" && (
         <div className="space-y-6">
+          <div className="flex items-center justify-end gap-2">
+            <button onClick={flip} aria-label={`Order: ${order} first. Click to reverse.`} title={order === "newest" ? "Newest first. Click to reverse" : "Oldest first. Click to reverse"} className="btn btn-icon btn-secondary">
+              <span className={order === "oldest" ? "rotate-180" : ""}><Icon name="arrowDown" size={16} /></span>
+            </button>
+            <button onClick={() => setFolded(allFolded ? new Set() : new Set(listMonths.map((m) => m.key)))} aria-label={allFolded ? "Expand all months" : "Collapse all months"} title={allFolded ? "Expand all" : "Collapse all"} className="btn btn-icon btn-secondary">
+              <Icon name={allFolded ? "chevronsUpDown" : "chevronsDownUp"} size={16} />
+            </button>
+          </div>
           {listMonths.length === 0 && <p className="rounded-loose border border-dashed border-control bg-white/60 p-8 text-center text-sm text-muted">No items match these filters.</p>}
           {listMonths.map((m) => {
             const expanded = !folded.has(m.key);
