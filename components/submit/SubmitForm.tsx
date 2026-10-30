@@ -411,19 +411,19 @@ export function SubmitForm() {
                 </button>
               )}
               {pending && (
-                <button type="button" onClick={addPending} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">+ Add to batch</button>
+                <button type="button" onClick={addPending} className="btn btn-md btn-secondary">+ Add to batch</button>
               )}
               {source === "figma" && (
                 <button type="button" onClick={() => setBulkOpen(!bulkOpen)} aria-expanded={bulkOpen} className="text-sm font-medium text-brand hover:underline">Add several links</button>
               )}
             </div>
             {bulkOpen && source === "figma" && (
-              <div className="mt-2 rounded-xl border border-line bg-white p-4">
+              <div className="mt-2 card p-4">
                 <label className="block text-sm font-semibold">Frame links, one per line
                   <textarea rows={4} value={bulk} onChange={(e) => setBulk(e.target.value)} placeholder={"https://www.figma.com/design/…?node-id=12-34\nhttps://www.figma.com/design/…?node-id=12-35"} className={`${field} mt-2 font-mono text-xs font-normal`} />
                 </label>
                 {bulkErrors.length > 0 && <p role="alert" className="mt-2 text-xs text-bad-fg">These didn&apos;t look like Figma design links and were left in the box: {bulkErrors.length}.</p>}
-                <button type="button" onClick={addBulk} disabled={!bulk.trim()} className="mt-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Add links</button>
+                <button type="button" onClick={addBulk} disabled={!bulk.trim()} className="btn btn-md btn-primary mt-2">Add links</button>
               </div>
             )}
           </>
@@ -440,7 +440,7 @@ export function SubmitForm() {
             {all.map((it) => {
               const staged = items.some((i) => i.key === it.key);
               return (
-                <li key={it.key} className="flex items-center gap-4 rounded-xl border border-line bg-white p-2">
+                <li key={it.key} className="flex items-center gap-4 card p-2">
                   <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-n-150 text-muted">
                     {it.thumb
                       // eslint-disable-next-line @next/next/no-img-element
@@ -503,7 +503,7 @@ export function SubmitForm() {
         </label>
       </section>
 
-      <button onClick={submit} disabled={!valid || busy} className="rounded-lg bg-brand px-6 py-2 font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">
+      <button onClick={submit} disabled={!valid || busy} className="btn btn-md btn-primary">
         {busy ? "Sending…" : isBatch ? `Send ${all.length} items for feedback` : "Send for feedback"}
       </button>
       {!valid && <p className="mt-2 text-xs text-muted">Add a valid link or file, at least one reviewer, one approver, and a due date and time.</p>}

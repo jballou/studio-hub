@@ -56,8 +56,8 @@ function EditForm({ initial, severity: sev0, onSave, onCancel }: { initial: stri
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <SeverityPicker value={sev} onChange={setSev} />
         <div className="ml-auto flex gap-2">
-          <button onClick={onCancel} className="rounded-lg border border-control bg-white px-4 py-2 font-medium hover:bg-brand-soft">Cancel</button>
-          <button onClick={save} disabled={!body.trim()} className="rounded-lg bg-brand px-4 py-2 font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Save</button>
+          <button onClick={onCancel} className="btn btn-md btn-secondary">Cancel</button>
+          <button onClick={save} disabled={!body.trim()} className="btn btn-md btn-primary">Save</button>
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@ function ThreadCard({
             placeholder={`Reply as ${me.name}`}
             className="min-w-0 flex-1 rounded-lg border border-control px-4 py-2 text-sm"
           />
-          <button className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Post</button>
+          <button className="btn btn-md btn-primary">Post</button>
         </form>
       )}
     </div>
@@ -239,7 +239,7 @@ export function CommentList({
       key={t}
       onClick={() => onTab(t)}
       aria-pressed={tab === t}
-      className={`rounded-full px-4 py-2 text-sm font-medium ${tab === t ? "bg-brand-soft text-ink" : "bg-n-150 text-n-800 hover:bg-n-200"}`}
+      className="chip"
     >
       {label} <span className="text-xs text-muted">{counts[t]}</span>
     </button>
@@ -265,7 +265,7 @@ export function CommentList({
           {pill("all", "All")}{pill("open", "Open")}{pill("resolved", "Resolved")}
           <div className="ml-auto flex items-center gap-2">
             {unreadIds.size > 0 && onJumpUnread && (
-              <button onClick={onJumpUnread} className="flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-xs font-medium text-n-50 hover:bg-brand-dark">
+              <button onClick={onJumpUnread} className="btn btn-sm btn-primary">
                 {unreadIds.size} new <Icon name="chevronRight" size={12} />
               </button>
             )}
@@ -447,7 +447,7 @@ export function Composer({
         <button
           onClick={submit}
           disabled={!body.trim() || needsTime}
-          className="ml-auto rounded-lg bg-brand px-6 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650"
+          className="btn btn-md btn-primary ml-auto"
         >
           Post
         </button>

@@ -74,6 +74,52 @@
   @media (min-width: 768px) { padding: 32px; }
 }
 
+/* ---- Buttons: one system, three sizes, four looks ----
+   Sizes:  btn-sm (32px, chips and toolbars)  btn-md (40px, default)  btn-lg (48px, the one big action on a screen)
+   Looks:  btn-primary (solid green)  btn-secondary (outline)  btn-danger (outline red)  btn-ghost (no frame)
+   Icon only: btn-icon (32px) or btn-icon btn-icon-lg (40px). Text links keep .link. */
+@layer components {
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    white-space: nowrap; user-select: none; cursor: pointer;
+    border: 1px solid transparent; border-radius: 12px; font-weight: 500;
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  }
+  .btn:active:not(:disabled) { transform: translateY(1px) scale(0.99); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn-sm { height: 32px; padding: 0 16px; font-size: 12px; line-height: 20px; }
+  .btn-md { height: 40px; padding: 0 16px; font-size: 14px; line-height: 24px; }
+  .btn-lg { height: 48px; padding: 0 24px; font-size: 16px; line-height: 24px; font-weight: 600; border-radius: 16px; }
+  .btn-primary { background: var(--color-brand); color: var(--color-n-50); box-shadow: 0 1px 0 rgb(255 255 255 / 0.18) inset, 0 1px 2px rgb(8 40 25 / 0.2); }
+  .btn-primary:hover:not(:disabled) { background: var(--color-brand-dark); }
+  .btn-secondary { background: var(--card); border-color: var(--color-control); color: var(--color-ink); }
+  .btn-secondary:hover:not(:disabled) { background: var(--color-brand-soft); }
+  .btn-danger { background: var(--card); border-color: var(--color-bad-line); color: var(--color-bad-fg); }
+  .btn-danger:hover:not(:disabled) { background: var(--color-bad-bg); }
+  .btn-ghost { color: var(--color-ink); }
+  .btn-ghost:hover:not(:disabled) { background: var(--color-n-150); }
+  .btn-icon { width: 32px; height: 32px; padding: 0; border-radius: 10px; }
+  .btn-icon.btn-icon-lg { width: 40px; height: 40px; border-radius: 12px; }
+
+  /* Segmented control: a group of exclusive choices (views, ranges, tabs). Items use aria-pressed / aria-selected. */
+  .seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--color-control); border-radius: 12px; background: var(--card); }
+  .seg-item { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: 10px; font-size: 12px; line-height: 20px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms ease, color 120ms ease; }
+  .seg-item:hover { background: var(--color-n-150); }
+  .seg-item[aria-pressed="true"], .seg-item[aria-selected="true"], .seg-item[aria-current="true"] { background: var(--color-brand); color: var(--color-n-50); }
+  .seg-md .seg-item { height: 32px; padding: 0 16px; font-size: 14px; line-height: 24px; }
+
+  /* Chip: a filter or option pill. Selected via aria-pressed / aria-selected / data-on. chip-lg is the roomier wizard answer. */
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 16px; border: 1px solid var(--color-control); border-radius: 9999px; background: var(--card); font-size: 14px; line-height: 24px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease; }
+  .chip:hover { background: var(--color-brand-soft); }
+  .chip[aria-pressed="true"], .chip[aria-selected="true"], .chip[data-on="true"] { border-color: var(--color-brand); background: var(--color-brand-soft); }
+  .chip-lg { height: 40px; border-radius: 12px; }
+
+  /* Cards: soft corners, a hairline border and a faint lift. */
+  .card { background: var(--card); border: 1px solid var(--color-line); border-radius: 24px; box-shadow: 0 1px 2px rgb(30 40 35 / 0.04), 0 8px 24px -12px rgb(30 40 35 / 0.12); }
+  .card-hover { transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease; }
+  .card-hover:hover { border-color: var(--color-brand); box-shadow: 0 2px 4px rgb(30 40 35 / 0.06), 0 16px 32px -12px rgb(30 40 35 / 0.18); transform: translateY(-1px); }
+}
+
 /* While a dialog is open the page behind it doesn't scroll. */
 body:has([role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]) { overflow: hidden; }
 

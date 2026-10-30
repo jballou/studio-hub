@@ -125,14 +125,14 @@ export function MyBriefs() {
           <h1 className="text-2xl font-bold">{first ? `${first}'s briefs` : "My briefs"}</h1>
           <p className="text-sm text-muted">Everything you&apos;ve asked the creative team for, and where it stands.</p>
         </div>
-        <Link href="/projects/new" className="ml-auto flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> New brief</Link>
+        <Link href="/projects/new" className="btn btn-md btn-primary ml-auto"><Icon name="plus" size={16} /> New brief</Link>
       </div>
 
       <div className="mt-4"><StaleNotice /></div>
       {error && (
         <div className="mb-4 flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1"><Callout tone="bad" icon="alert">Couldn&apos;t load your briefs: {error}</Callout></div>
-          <button onClick={() => setTick((t) => t + 1)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Try again</button>
+          <button onClick={() => setTick((t) => t + 1)} className="btn btn-md btn-secondary">Try again</button>
         </div>
       )}
 
@@ -141,7 +141,7 @@ export function MyBriefs() {
           <Logo size={64} className="mx-auto mb-4 shadow-md" />
           <h2 className="text-xl font-bold">No briefs yet</h2>
           <p className="mx-auto mb-6 mt-2 max-w-md text-sm text-muted">Start a brief and answer a few questions. The creative team picks it up, and you can follow it here. Briefs you create in Jira show up here too.</p>
-          <Link href="/projects/new" className="inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Start a brief</Link>
+          <Link href="/projects/new" className="btn btn-md btn-primary"><Icon name="plus" size={16} /> Start a brief</Link>
         </section>
       ) : (
         <>
@@ -158,7 +158,7 @@ export function MyBriefs() {
             {FILTERS.map((f) => {
               const n = f.id === "all" ? counts.total : f.id === "active" ? counts.active : f.id === "input" ? counts.input : counts.delivered;
               return (
-                <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className={`rounded-full border px-4 py-2 text-sm ${filter === f.id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>
+                <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className="chip">
                   {f.label} <span className="text-muted">{n}</span>
                 </button>
               );

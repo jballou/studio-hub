@@ -90,7 +90,7 @@ export function FramePicker({
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-n-150 text-xs font-bold" aria-hidden>F</span>
               <h3 className="min-w-0 flex-1 truncate text-xl font-semibold">{file.name}</h3>
               <span className="text-sm text-muted" aria-live="polite">{count} out of {all.length} frames selected</span>
-              <button onClick={() => setPicked((s) => new Set([...s, ...selectable.map((f) => f.id)]))} className="rounded-full border-2 border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand-soft">Select all</button>
+              <button onClick={() => setPicked((s) => new Set([...s, ...selectable.map((f) => f.id)]))} className="btn btn-md btn-secondary border-2">Select all</button>
               <button onClick={() => setPicked(new Set())} className="px-4 py-2 text-sm font-semibold text-brand hover:underline">Clear</button>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -132,7 +132,7 @@ export function FramePicker({
         <div className="mt-6 flex items-center gap-4">
           <button onClick={onBack} className="px-4 py-2 text-sm font-semibold text-brand hover:underline">Back</button>
           <button onClick={onCancel} className="ml-auto px-4 py-2 text-sm font-semibold text-brand hover:underline">Cancel</button>
-          <button onClick={doImport} disabled={!file || count === 0} className="rounded-full bg-brand px-6 py-2 text-sm font-semibold text-n-50 enabled:hover:bg-brand-dark disabled:bg-n-200 disabled:text-n-650">
+          <button onClick={doImport} disabled={!file || count === 0} className="btn btn-md btn-primary">
             {count > 0 ? `Import ${count} ${count === 1 ? "frame" : "frames"}` : "Import frames"}
           </button>
         </div>

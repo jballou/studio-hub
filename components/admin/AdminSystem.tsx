@@ -37,13 +37,13 @@ export function AdminSystem() {
     <main className="page">
       <div className="mb-4 flex items-center gap-4">
         <h1 className="text-2xl font-bold">System</h1>
-        <button onClick={load} disabled={loading} className="ml-auto rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-40">{loading ? "Checking…" : "Re-check"}</button>
+        <button onClick={load} disabled={loading} className="btn btn-md btn-secondary ml-auto">{loading ? "Checking…" : "Re-check"}</button>
       </div>
       <p className="mb-4 text-sm text-muted">Is everything the app depends on connected? Shows names and counts only, never secret values. Useful when handing this over.</p>
       {error && <Callout tone="bad" icon="alert">{error}</Callout>}
       <ul className="space-y-2">
         {data?.checks.map((c) => (
-          <li key={c.id} className="flex items-start gap-4 rounded-xl border border-line bg-white p-4">
+          <li key={c.id} className="flex items-start gap-4 card p-4">
             <Tag tone={c.ok ? "ok" : "bad"} icon={c.ok ? "check" : "close"}>{c.ok ? "OK" : "Check"}</Tag>
             <div><p className="text-sm font-medium">{c.label}</p><p className="text-xs text-muted">{c.detail}</p></div>
           </li>

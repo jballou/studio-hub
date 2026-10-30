@@ -101,7 +101,7 @@ export function FlowEditor() {
         <Tag tone={isDefault ? "neutral" : "ok"}>{isDefault ? "Built-in questions" : `Version ${saved.version}`}</Tag>
         {dirty && <Tag tone="warn" icon="alert">Unsaved changes</Tag>}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <button onClick={() => setPreview(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Preview as a requester</button>
+          <button onClick={() => setPreview(true)} className="btn btn-md btn-secondary">Preview as a requester</button>
           {history.length > 0 && (
             <label className="text-sm">
               <span className="sr-only">Restore an earlier version</span>
@@ -111,19 +111,19 @@ export function FlowEditor() {
               </select>
             </label>
           )}
-          {me?.isAdmin && !isDefault && <button disabled={busy} onClick={() => { if (confirm("Go back to the built-in questions? Your version stays in history.")) guard(() => act(() => flowRepo.reset(), "Back to the built-in questions.")); }} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium text-bad-fg hover:bg-bad-bg">Reset to built-in</button>}
-          <button disabled={!dirty || busy} onClick={() => { setDraft(saved); setNotice(null); setError(null); }} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium enabled:hover:bg-brand-soft disabled:opacity-40">Discard</button>
-          <button disabled={!dirty || busy || problems.errors.length > 0} onClick={() => act(() => flowRepo.save(draft, saved.version), "Saved. New briefs use these questions now.")} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save changes"}</button>
+          {me?.isAdmin && !isDefault && <button disabled={busy} onClick={() => { if (confirm("Go back to the built-in questions? Your version stays in history.")) guard(() => act(() => flowRepo.reset(), "Back to the built-in questions.")); }} className="btn btn-md btn-danger">Reset to built-in</button>}
+          <button disabled={!dirty || busy} onClick={() => { setDraft(saved); setNotice(null); setError(null); }} className="btn btn-md btn-secondary">Discard</button>
+          <button disabled={!dirty || busy || problems.errors.length > 0} onClick={() => act(() => flowRepo.save(draft, saved.version), "Saved. New briefs use these questions now.")} className="btn btn-md btn-primary">{busy ? "Saving…" : "Save changes"}</button>
         </div>
       </div>
 
       <p className="mb-4 text-sm text-muted">This is the conversation a requester has when they start a brief. Click a question to edit it. &ldquo;By request type&rdquo; shows what each kind of request is asked; the full map shows every question and rule, where dashed lines send some answers somewhere else.</p>
 
-      {error && <div className="mb-4 flex flex-wrap items-center gap-2"><Callout tone="bad" icon="alert">{error}</Callout>{conflict && <button onClick={load} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Load the latest version</button>}</div>}
+      {error && <div className="mb-4 flex flex-wrap items-center gap-2"><Callout tone="bad" icon="alert">{error}</Callout>{conflict && <button onClick={load} className="btn btn-md btn-secondary">Load the latest version</button>}</div>}
       {notice && <div className="mb-4"><Callout tone="ok" icon="check">{notice}</Callout></div>}
 
       {(problems.errors.length > 0 || problems.warnings.length > 0) && (
-        <div className="mb-4 rounded-xl border border-line bg-white">
+        <div className="mb-4 card">
           <button onClick={() => setShowProblems((s) => !s)} aria-expanded={showProblems} className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm">
             {problems.errors.length > 0 && <Tag tone="bad" icon="close">{problems.errors.length} {problems.errors.length === 1 ? "problem" : "problems"} to fix before saving</Tag>}
             {problems.warnings.length > 0 && <Tag tone="warn" icon="alert">{problems.warnings.length} to check</Tag>}
@@ -139,7 +139,7 @@ export function FlowEditor() {
       )}
 
       <div className="flex min-h-[560px] flex-col gap-4 lg:flex-row">
-        <section aria-label="Question map" className="relative min-h-80 min-w-0 flex-1 overflow-auto rounded-xl border border-line bg-white" onPointerDown={(e) => {
+        <section aria-label="Question map" className="relative min-h-80 min-w-0 flex-1 overflow-auto card" onPointerDown={(e) => {
           if (view !== "map" || (e.target as HTMLElement).closest("button,select")) return;
           const el = e.currentTarget; const x = e.clientX, y = e.clientY, sl = el.scrollLeft, st = el.scrollTop;
           const move = (m: PointerEvent) => { el.scrollLeft = sl - (m.clientX - x); el.scrollTop = st - (m.clientY - y); };
@@ -167,7 +167,7 @@ export function FlowEditor() {
             : <div className="cursor-grab p-2 active:cursor-grabbing"><FlowChart flow={draft} selectedId={selected} onSelect={setSelected} scale={scale} problemIds={problemIds} /></div>}
         </section>
 
-        <aside aria-label="Question details" className="w-full shrink-0 overflow-y-auto rounded-xl border border-line bg-white p-4 lg:max-h-[calc(100vh-190px)] lg:w-[380px]">
+        <aside aria-label="Question details" className="w-full shrink-0 overflow-y-auto card p-4 lg:max-h-[calc(100vh-190px)] lg:w-[380px]">
           {node ? (
             <NodeInspector
               key={node.id}

@@ -46,7 +46,7 @@ export function SignInCard({ action, error, callbackUrl }: { action: (formData: 
             <p id="email-hint" className={`mt-2 min-h-5 text-xs ${showHint ? "font-medium text-bad-fg" : "text-muted"}`}>
               {showHint ? `Use your ${DOMAIN} address.` : `Only ${DOMAIN} accounts can sign in.`}
             </p>
-            <button className="mt-4 w-full rounded-xl bg-brand px-4 py-4 text-base font-semibold text-n-50 hover:bg-brand-dark focus-visible:outline-offset-4">Continue</button>
+            <button className="btn btn-lg btn-primary mt-4 w-full focus-visible:outline-offset-4">Continue</button>
           </form>
 
           <p className="mt-6 text-center text-xs text-muted">Atlassian will ask you to confirm it&apos;s you. Right after, you can optionally connect Google Calendar and Tasks.</p>

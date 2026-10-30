@@ -85,7 +85,7 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
                     <option value="approver">Approver (can also approve)</option>
                   </select>
                 </label>
-                <button onClick={add} disabled={busy} className="ml-auto rounded-full bg-brand px-6 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-50">{busy ? "Adding…" : "Add"}</button>
+                <button onClick={add} disabled={busy} className="btn btn-md btn-primary ml-auto">{busy ? "Adding…" : "Add"}</button>
               </div>
             )}
           </div>
@@ -130,10 +130,10 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
         </div>
 
         <div className="mt-6 flex items-center">
-          <button onClick={copy} className="flex items-center gap-2 rounded-full border border-control px-6 py-2 text-sm font-medium hover:bg-brand-soft">
+          <button onClick={copy} className="btn btn-md btn-secondary">
             <Icon name={copied ? "check" : "link"} size={16} /> {copied ? "Link copied" : "Copy link"}
           </button>
-          <button ref={closeBtn} onClick={onClose} className="ml-auto rounded-full bg-brand px-6 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Done</button>
+          <button ref={closeBtn} onClick={onClose} className="btn btn-md btn-primary ml-auto">Done</button>
         </div>
       </div>
     </div>

@@ -25,7 +25,7 @@ export function PlanWork({ project, onPlanned, size = "sm" }: { project: Pick<Pr
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
-        className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-brand font-medium text-brand hover:bg-brand-soft ${size === "md" ? "px-4 py-2 text-sm" : "px-2 py-2 text-xs"}`}
+        className={`btn btn-secondary border-brand text-brand ${size === "md" ? "btn-md" : "btn-sm"}`}
       >
         <Icon name="calendarDays" size={size === "md" ? 16 : 14} /> Plan work
       </button>
@@ -68,11 +68,11 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
         <p className="mb-4 mt-2 text-sm text-muted">{project.jiraKey} · {project.title}. When does work start?{project.deadline ? ` Due ${project.deadline}.` : ""}</p>
         {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
         <div className="space-y-2">
-          <button autoFocus disabled={busy} onClick={() => save(today)} className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-50">
+          <button autoFocus disabled={busy} onClick={() => save(today)} className="btn btn-md btn-primary w-full">
             Start today
           </button>
           {!picking ? (
-            <button disabled={busy} onClick={() => setPicking(true)} className="flex w-full items-center justify-center gap-2 rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">
+            <button disabled={busy} onClick={() => setPicking(true)} className="btn btn-md btn-secondary w-full">
               <Icon name="calendarDays" size={16} /> Choose a start date
             </button>
           ) : (
@@ -80,7 +80,7 @@ function PlanDialog({ project, onClose, onSaved }: { project: Pick<Project, "jir
               <label className="block text-sm font-semibold">Start date
                 <div className="mt-2"><DatePicker autoFocus value={date} max={project.deadline || undefined} onChange={setDate} /></div>
               </label>
-              <button disabled={busy || !date} onClick={() => save(date)} className="mt-2 w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save start date"}</button>
+              <button disabled={busy || !date} onClick={() => save(date)} className="btn btn-md btn-primary mt-2 w-full">{busy ? "Saving…" : "Save start date"}</button>
             </div>
           )}
         </div>

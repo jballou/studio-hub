@@ -19,8 +19,8 @@ export function ConfirmDialog({ title, body, confirmLabel, danger = false, busy 
         <h2 className="text-lg font-bold">{title}</h2>
         <p className="mt-2 text-sm text-muted">{body}</p>
         <div className="mt-6 flex justify-end gap-2">
-          <button ref={cancel} onClick={onCancel} className="rounded-full border border-control px-6 py-2 text-sm font-medium hover:bg-n-150">Cancel</button>
-          <button onClick={onConfirm} disabled={busy} className={`rounded-full px-6 py-2 text-sm font-medium text-n-50 disabled:opacity-60 ${danger ? "bg-bad-fg hover:opacity-90" : "bg-brand hover:bg-brand-dark"}`}>{busy ? "Working…" : confirmLabel}</button>
+          <button ref={cancel} onClick={onCancel} className="btn btn-md btn-secondary">Cancel</button>
+          <button onClick={onConfirm} disabled={busy} className={`btn btn-md ${danger ? "btn-primary !bg-bad-fg" : "btn-primary"}`}>{busy ? "Working…" : confirmLabel}</button>
         </div>
       </div>
     </div>

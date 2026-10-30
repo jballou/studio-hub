@@ -36,7 +36,7 @@ export function QuestionInput({
     return (
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
-          <button key={o.id} type="button" onClick={() => onSubmit(o.id)} className={`rounded-xl border px-4 py-2 text-sm font-medium hover:bg-brand-soft ${initial === o.id ? "border-brand bg-brand-soft" : "border-control bg-white"}`}>
+          <button key={o.id} type="button" onClick={() => onSubmit(o.id)} className="chip chip-lg" data-on={initial === o.id}>
             {o.label}
           </button>
         ))}
@@ -53,7 +53,7 @@ export function QuestionInput({
           {options.map((o) => {
             const on = multi.includes(o.id);
             return (
-              <button key={o.id} type="button" aria-pressed={on} onClick={() => setMulti(on ? multi.filter((x) => x !== o.id) : [...multi, o.id])} className={`rounded-xl border px-4 py-2 text-sm font-medium ${on ? "border-brand bg-brand-soft" : "border-control bg-white hover:bg-n-150"}`}>
+              <button key={o.id} type="button" aria-pressed={on} onClick={() => setMulti(on ? multi.filter((x) => x !== o.id) : [...multi, o.id])} className="chip chip-lg">
                 {on && "✓ "}{o.label}
               </button>
             );

@@ -69,7 +69,7 @@ export function SourcesView() {
         {sources.map((s) => {
           const r = results[s.id];
           return (
-            <li key={s.id} className="flex items-center gap-4 rounded-xl border border-line bg-white p-4">
+            <li key={s.id} className="flex items-center gap-4 card p-4">
               <Tag tone={s.kind === "jira" ? "info" : "ok"}>{s.kind === "jira" ? "Jira" : "Google Sheet"}</Tag>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{s.name}</span>
@@ -85,7 +85,7 @@ export function SourcesView() {
         })}
       </ul>
 
-      <section className="rounded-xl border border-line bg-white p-6">
+      <section className="card p-6">
         <h2 className="mb-4 text-lg font-semibold">Add a Google Sheet</h2>
         <div className="space-y-4">
           <label className="block text-sm font-semibold">Name
@@ -109,8 +109,8 @@ export function SourcesView() {
           <p className="text-xs text-muted">Columns are matched by header name. Needs a date and a title; owner, status, campaign, channel, notes, end date and Jira key are picked up when present.</p>
 
           <div className="flex items-center gap-2">
-            <button onClick={test} disabled={!canTest} className="rounded-lg border border-control px-4 py-2 text-sm font-medium enabled:hover:bg-brand-soft disabled:opacity-40">{testing ? "Reading…" : "Test sheet"}</button>
-            <button onClick={add} disabled={!preview || !!preview.error || preview.items.length === 0} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Add source</button>
+            <button onClick={test} disabled={!canTest} className="btn btn-md btn-secondary">{testing ? "Reading…" : "Test sheet"}</button>
+            <button onClick={add} disabled={!preview || !!preview.error || preview.items.length === 0} className="btn btn-md btn-primary">Add source</button>
           </div>
 
           {preview?.error && <Callout tone="bad" icon="alert">{preview.error}</Callout>}

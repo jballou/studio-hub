@@ -39,7 +39,7 @@ export function AdminActivity() {
       {error && <Callout tone="bad" icon="alert">{error}</Callout>}
       {rows && shown.length === 0 && <p className="text-sm text-muted">Nothing matches.</p>}
       {rows && shown.length > 0 && (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-white text-sm">
+        <ul className="divide-y divide-line card text-sm">
           {shown.map((a, i) => (
             <li key={i} className="flex flex-wrap gap-x-4 px-4 py-2">
               <span className="w-44 shrink-0 text-xs text-muted">{when(a.at)}</span>

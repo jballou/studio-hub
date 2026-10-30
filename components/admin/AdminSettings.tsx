@@ -47,7 +47,7 @@ export function AdminSettings() {
       <h1 className="mb-2 text-2xl font-bold">Settings</h1>
       <p className="mb-6 text-sm text-muted">Organization-wide. Changes apply to everyone the next time they load a page.</p>
 
-      <section className="rounded-xl border border-line bg-white p-6" aria-labelledby="lookback">
+      <section className="card p-6" aria-labelledby="lookback">
         <h2 id="lookback" className="text-lg font-semibold">How far back project lists go</h2>
         <p className="mb-4 mt-2 text-sm text-muted">Closed projects finished longer ago than this are left out of the Projects page. Open projects always show, and searching by key or title still finds older ones.</p>
 
@@ -87,7 +87,7 @@ export function AdminSettings() {
         {error && <div className="mt-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
         {note && <div className="mt-4"><Callout tone="ok" icon="check">{note}</Callout></div>}
         <div className="mt-4 flex items-center gap-4">
-          <button onClick={save} disabled={!dirty || busy} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Saving…" : "Save"}</button>
+          <button onClick={save} disabled={!dirty || busy} className="btn btn-md btn-primary">{busy ? "Saving…" : "Save"}</button>
           {saved !== null && <span className="text-sm text-muted">Currently {saved} days.</span>}
         </div>
       </section>

@@ -166,7 +166,7 @@ export function CalendarView() {
         <h1 className="text-2xl font-bold">Calendar</h1>
         <div className="flex items-center gap-2">
           <button onClick={() => move(-1)} aria-label="Previous" className={iconBtn}><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
-          <button onClick={() => setCursor(todayIso())} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Today</button>
+          <button onClick={() => setCursor(todayIso())} className="btn btn-md btn-secondary">Today</button>
           <button onClick={() => move(1)} aria-label="Next" className={iconBtn}><Icon name="chevronRight" size={14} /></button>
           <span className="ml-2 text-lg font-semibold">{label}</span>
         </div>
@@ -227,18 +227,18 @@ export function CalendarView() {
             )}
           </div>
 
-          <div className="flex overflow-hidden rounded-lg border border-control">
+          <div className="seg">
             {(["month", "week", "list"] as View[]).map((v) => (
-              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`px-4 py-2 text-sm capitalize ${view === v ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{v}</button>
+              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item">{v}</button>
             ))}
           </div>
 
           {view === "list" && (
             <>
-              <button onClick={flip} aria-label={`Order: ${order} first. Click to reverse.`} className="flex items-center gap-2 rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">
+              <button onClick={flip} aria-label={`Order: ${order} first. Click to reverse.`} className="btn btn-md btn-secondary">
                 <span className={order === "oldest" ? "rotate-180" : ""}><Icon name="chevronDown" size={14} /></span> {order === "newest" ? "Newest first" : "Oldest first"}
               </button>
-              <button onClick={() => setFolded(allFolded ? new Set() : new Set(listMonths.map((m) => m.key)))} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">{allFolded ? "Expand all" : "Collapse all"}</button>
+              <button onClick={() => setFolded(allFolded ? new Set() : new Set(listMonths.map((m) => m.key)))} className="btn btn-md btn-secondary">{allFolded ? "Expand all" : "Collapse all"}</button>
             </>
           )}
 
@@ -346,7 +346,7 @@ export function CalendarView() {
                         <ul className="space-y-2">
                           {list.map((i) => (
                             <li key={i.id}>
-                              <button onClick={() => open(i.id)} className="flex w-full items-center gap-4 rounded-xl border border-line bg-white px-4 py-2 text-left text-sm hover:border-brand">
+                              <button onClick={() => open(i.id)} className="flex w-full items-center gap-4 card px-4 py-2 text-left text-sm hover:border-brand">
                                 <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
                                 <span className="min-w-0 flex-1"><span className="block truncate font-medium">{i.title}</span><span className="block truncate text-xs text-muted">{[i.channel, i.campaign, i.owner].filter(Boolean).join(" · ")}</span></span>
                                 <span className="hidden text-xs text-muted sm:block">{i.sourceName}</span>

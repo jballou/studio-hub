@@ -125,10 +125,10 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
         <button onClick={() => setStart(addDay(start, -span))} aria-label="Earlier" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
         <button onClick={() => setStart(addDay(start, span))} aria-label="Later" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
-        <button onClick={() => setStart(mondayOf(today))} className="rounded-full border border-control px-4 py-2 hover:bg-brand-soft">Today</button>
+        <button onClick={() => setStart(mondayOf(today))} className="btn btn-md btn-secondary">Today</button>
         <span className="font-semibold">{fmt(start, { month: "short", day: "numeric" })} – {fmt(days[n - 1], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto flex gap-2">
-          {WINDOWS.map((w) => <button key={w.id} onClick={() => setSpan(w.id)} aria-pressed={span === w.id} className={`rounded-full border px-4 py-2 ${span === w.id ? "border-brand bg-brand-soft font-medium" : "border-control hover:bg-brand-soft"}`}>{w.label}</button>)}
+          {WINDOWS.map((w) => <button key={w.id} onClick={() => setSpan(w.id)} aria-pressed={span === w.id} className="chip">{w.label}</button>)}
         </span>
       </div>
       <div className="overflow-x-auto">
@@ -185,7 +185,7 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
       <div className="mb-4 flex items-center gap-2 text-sm">
         <button onClick={() => setMonday(addDay(monday, -7))} aria-label="Previous week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
         <button onClick={() => setMonday(addDay(monday, 7))} aria-label="Next week" className="flex h-8 w-8 items-center justify-center rounded-full border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={14} /></button>
-        <button onClick={() => setMonday(mondayOf(today))} className="rounded-full border border-control px-4 py-2 hover:bg-brand-soft">This week</button>
+        <button onClick={() => setMonday(mondayOf(today))} className="btn btn-md btn-secondary">This week</button>
         <span className="font-semibold">{fmt(week[0], { month: "short", day: "numeric" })} – {fmt(week[4], { month: "short", day: "numeric", year: "numeric" })}</span>
         <span className="ml-auto text-xs text-muted">Shown on the day each ticket is due</span>
       </div>
@@ -266,9 +266,9 @@ export function TeamView() {
           <h1 className="text-2xl font-bold">Team</h1>
           <p className="text-sm text-muted">Open work by person, and what still needs an owner.</p>
         </div>
-        <div role="group" aria-label="View" className="ml-auto flex overflow-hidden rounded-full border border-control text-sm">
+        <div role="group" aria-label="View" className="ml-auto seg">
           {VIEWS.map((v) => (
-            <button key={v.id} onClick={() => choose(v.id)} aria-pressed={view === v.id} className={`flex items-center gap-2 px-4 py-2 ${view === v.id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}><Icon name={v.icon} size={14} />{v.label}</button>
+            <button key={v.id} onClick={() => choose(v.id)} aria-pressed={view === v.id} className="seg-item"><Icon name={v.icon} size={14} />{v.label}</button>
           ))}
         </div>
       </div>

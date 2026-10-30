@@ -92,8 +92,8 @@ export function UnblockDialog({
         )}
         {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
         <div className="flex gap-2">
-          <button onClick={go} disabled={busy || !picked} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Updating…" : `Move to ${picked || "…"}`}</button>
-          <button onClick={onClose} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
+          <button onClick={go} disabled={busy || !picked} className="btn btn-md btn-primary">{busy ? "Updating…" : `Move to ${picked || "…"}`}</button>
+          <button onClick={onClose} className="btn btn-md btn-secondary">Cancel</button>
         </div>
       </div>
     </div>

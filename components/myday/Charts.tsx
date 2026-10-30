@@ -1,35 +1,66 @@
 "use client";
 
+import { useId } from "react";
 import Link from "next/link";
 import type { GanttBar, Timeline } from "@/lib/myday/plan";
 
 type Part = { key: string; label: string; color: string; count: number };
 
+const CX = 100, CY = 100, RO = 92, RI = 62, INSET = 3, GAP_DEG = 3;
+const rad = (deg: number) => (deg * Math.PI) / 180;
+/** Point on the half circle, `deg` from the left end (0) to the right end (180). */
+const pt = (r: number, deg: number) => `${(CX - r * Math.cos(rad(deg))).toFixed(2)},${(CY - r * Math.sin(rad(deg))).toFixed(2)}`;
+
+/** One ring segment. It is drawn a few pixels smaller and stroked in its own color with round joins, which rounds the corners. */
+function arc(from: number, to: number): string {
+  const ro = RO - INSET, ri = RI + INSET;
+  const a0 = from + (INSET / ro) * (180 / Math.PI), a1 = to - (INSET / ro) * (180 / Math.PI);
+  const b0 = from + (INSET / ri) * (180 / Math.PI), b1 = to - (INSET / ri) * (180 / Math.PI);
+  if (a1 <= a0 || b1 <= b0) return "";
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M ${pt(ro, a0)} A ${ro} ${ro} 0 ${large} 1 ${pt(ro, a1)} L ${pt(ri, b1)} A ${ri} ${ri} 0 ${large} 0 ${pt(ri, b0)} Z`;
+}
+
+/** Texture laid over a segment's color so the parts differ by more than hue: stripes, fine stripes, dots. */
+function Texture({ id, color, kind }: { id: string; color: string; kind: number }) {
+  return (
+    <pattern id={id} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform={kind === 0 ? "rotate(45)" : kind === 1 ? "rotate(-45)" : undefined}>
+      <rect width="7" height="7" fill={color} />
+      {kind === 2
+        ? <circle cx="3.5" cy="3.5" r="1.1" fill="#fff" fillOpacity="0.55" />
+        : <line x1="0" y1="0" x2="0" y2="7" stroke="#fff" strokeOpacity={kind === 0 ? 0.28 : 0.5} strokeWidth={kind === 0 ? 1.5 : 2} />}
+    </pattern>
+  );
+}
+
 /** Half-circle gauge: share finished, with the three parts in the legend so color is never the only cue. */
 export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; caption: string }) {
-  const total = parts.reduce((n, s) => n + s.count, 0);
-  const R = 70, C = Math.PI * R, GAP = 3;
-  let offset = 0;
+  const uid = useId().replace(/:/g, "");
+  const shown = parts.filter((s) => s.count > 0);
+  const total = shown.reduce((n, s) => n + s.count, 0);
+  const free = 180 - GAP_DEG * Math.max(shown.length - 1, 0);
   return (
     <div>
-      <svg viewBox="0 0 180 104" role="img" aria-label={`${pct}% complete. ${parts.map((s) => `${s.label}: ${s.count}`).join(". ")}`} className="mx-auto block w-full max-w-[17rem]">
-        <path d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke="var(--color-n-150)" strokeWidth="18" strokeLinecap="butt" />
-        {total > 0 && parts.filter((s) => s.count > 0).map((s) => {
-          const len = (s.count / total) * C;
-          const seg = (
-            <path key={s.key} d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke={s.color} strokeWidth="18" strokeDasharray={`${Math.max(len - GAP, 0.5)} ${C}`} strokeDashoffset={-offset}>
+      <svg viewBox="0 0 200 112" role="img" aria-label={`${pct}% complete. ${parts.map((s) => `${s.label}: ${s.count}`).join(". ")}`} className="mx-auto block w-full max-w-[18rem] overflow-visible">
+        <defs>{parts.map((s, i) => <Texture key={s.key} id={`${uid}-${s.key}`} color={s.color} kind={i} />)}</defs>
+        {total === 0 && <path d={arc(0, 180)} fill="var(--color-n-150)" stroke="var(--color-n-150)" strokeWidth={INSET * 2} strokeLinejoin="round" />}
+        {shown.map((s, i) => {
+          const before = shown.slice(0, i).reduce((n, x) => n + (x.count / total) * free + GAP_DEG, 0);
+          return (
+            <path key={s.key} d={arc(before, before + (s.count / total) * free)} fill={`url(#${uid}-${s.key})`} stroke={s.color} strokeWidth={INSET * 2} strokeLinejoin="round" className="transition-opacity hover:opacity-80">
               <title>{`${s.label}: ${s.count}`}</title>
             </path>
           );
-          offset += len;
-          return seg;
         })}
-        <text x="90" y="82" textAnchor="middle" className="fill-ink text-3xl font-bold">{pct}%</text>
+        <text x={CX} y={CY - 6} textAnchor="middle" className="fill-ink text-4xl font-bold tabular-nums">{pct}<tspan className="fill-muted text-xl font-semibold">%</tspan></text>
       </svg>
       <p className="mt-2 text-center text-sm text-muted">{caption}</p>
       <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
-        {parts.map((s) => (
-          <li key={s.key} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} aria-hidden />{s.label} <b className="tabular-nums">{s.count}</b></li>
+        {parts.map((s, i) => (
+          <li key={s.key} className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><defs><Texture id={`${uid}-l-${s.key}`} color={s.color} kind={i} /></defs><rect width="14" height="14" rx="4" fill={`url(#${uid}-l-${s.key})`} /></svg>
+            {s.label} <b className="tabular-nums">{s.count}</b>
+          </li>
         ))}
       </ul>
     </div>

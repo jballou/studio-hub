@@ -68,7 +68,7 @@ export function Welcome() {
                 <div className="mt-2">
                   {google === null ? <span className="text-sm text-muted">Checking…</span>
                     : google.connected ? <Tag tone="ok" icon="check">Connected as {google.googleEmail}</Tag>
-                    : google.configured ? <a href="/api/google/connect?return=welcome" className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Connect Google</a>
+                    : google.configured ? <a href="/api/google/connect?return=welcome" className="btn btn-md btn-primary inline-block">Connect Google</a>
                     : <Tag tone="warn" icon="alert">Not set up yet. Ask an admin.</Tag>}
                 </div>
               </div>
@@ -88,7 +88,7 @@ export function Welcome() {
           </ul>
 
           <div className="mt-6 flex items-center gap-4">
-            <button onClick={go} className="rounded-xl bg-brand px-6 py-4 text-base font-semibold text-n-50 hover:bg-brand-dark">{google?.connected ? "Continue" : "Continue for now"}</button>
+            <button onClick={go} className="btn btn-lg btn-primary">{google?.connected ? "Continue" : "Continue for now"}</button>
             {!google?.connected && <button onClick={go} className="text-sm font-medium text-muted underline hover:text-ink">Skip</button>}
           </div>
         </div>

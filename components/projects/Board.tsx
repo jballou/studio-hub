@@ -173,8 +173,8 @@ export function Board({
             <h2 className="text-lg font-bold">Move to Done?</h2>
             <p className="mb-4 mt-2 text-sm text-muted">{confirm.card.id} · {confirm.card.project.title}. This closes the ticket in Jira.</p>
             <div className="flex gap-2">
-              <button autoFocus onClick={() => { const c = confirm; setConfirm(null); void run(c.card, c.col); }} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Move to Done</button>
-              <button onClick={() => setConfirm(null)} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
+              <button autoFocus onClick={() => { const c = confirm; setConfirm(null); void run(c.card, c.col); }} className="btn btn-md btn-primary">Move to Done</button>
+              <button onClick={() => setConfirm(null)} className="btn btn-md btn-secondary">Cancel</button>
             </div>
           </div>
         </div>

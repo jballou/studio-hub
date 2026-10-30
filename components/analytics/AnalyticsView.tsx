@@ -16,7 +16,7 @@ const RANGES = [{ id: 90, label: "Last 90 days" }, { id: 180, label: "Last 6 mon
 
 function Tile({ label, value, note, tone }: { label: string; value: string; note: string; tone?: "warn" }) {
   return (
-    <div className="flex h-full flex-col items-start rounded-xl border border-line bg-white p-4">
+    <div className="flex h-full flex-col items-start card p-4">
       <div className="text-sm font-semibold">{label}</div>
       <div className={`mt-2 text-3xl font-bold tabular-nums ${tone === "warn" ? "text-warn-fg" : ""}`}>{value}</div>
       <div className="mt-2 text-xs text-muted">{note}</div>
@@ -41,7 +41,7 @@ function Breakdown({ rows, heading }: { rows: Stats[]; heading: string }) {
   const maxWork = Math.max(0, ...rows.map((r) => r.workAvg ?? 0));
   if (rows.length === 0) return <p className="rounded-xl border border-dashed border-control p-8 text-center text-sm text-muted">No closed tickets in this period.</p>;
   return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-white">
+    <div className="overflow-x-auto card">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="border-b border-line bg-n-100 text-xs font-semibold text-muted">
           <tr>
@@ -110,9 +110,9 @@ export function AnalyticsView() {
           <p className="text-sm text-muted">How long tickets stay open, and how long the work itself takes.</p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <div role="group" aria-label="Whose work" className="flex overflow-hidden rounded-full border border-control text-sm">
+          <div role="group" aria-label="Whose work" className="seg">
             {(["you", "team"] as const).map((s) => (
-              <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className={`px-4 py-2 capitalize ${scope === s ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{s}</button>
+              <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className="seg-item">{s}</button>
             ))}
           </div>
           <label className="sr-only" htmlFor="range">Period</label>
@@ -147,7 +147,7 @@ export function AnalyticsView() {
               <h2 id="by-h" className="text-lg font-bold">Breakdown</h2>
               <div role="tablist" aria-label="Group by" className="flex flex-wrap gap-2">
                 {([["issue", "Ticket type"], ["project", "Project type"], ...(scope === "team" ? [["person", "Person"]] : [])] as [Cut, string][]).map(([id, label]) => (
-                  <button key={id} role="tab" aria-selected={cut === id} onClick={() => setCut(id)} className={`rounded-full border px-4 py-2 text-sm ${cut === id ? "border-brand bg-brand-soft font-medium" : "border-control bg-white hover:bg-brand-soft"}`}>{label}</button>
+                  <button key={id} role="tab" aria-selected={cut === id} onClick={() => setCut(id)} className="chip">{label}</button>
                 ))}
               </div>
             </div>

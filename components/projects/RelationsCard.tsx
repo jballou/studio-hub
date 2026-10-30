@@ -79,7 +79,7 @@ export function RelationsCard({ project, rel }: { project: Project; rel: Relatio
   return (
     <>
       {hasTree && (
-        <section className="rounded-xl border border-line bg-white p-6">
+        <section className="card p-6">
           <h2 className="mb-4 text-lg font-semibold">Hierarchy</h2>
           <ul>{tree(0)}</ul>
           {rel.children.length > 0 && (
@@ -91,7 +91,7 @@ export function RelationsCard({ project, rel }: { project: Project; rel: Relatio
         </section>
       )}
       {rel.links.length > 0 && (
-        <section className="rounded-xl border border-line bg-white p-6">
+        <section className="card p-6">
           <h2 className="mb-4 text-lg font-semibold">Linked work</h2>
           <div className="space-y-4">
             {LINK_GROUPS.map((g) => {

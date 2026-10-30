@@ -132,9 +132,9 @@ export function NodeInspector({
                       {!flow.nodes.some((n) => n.id === b.goto) && <option value={b.goto}>(missing)</option>}
                       {others.map((n) => <option key={n.id} value={n.id}>{snippet(n)}</option>)}
                     </select>
-                    <button type="button" aria-label="Move rule up" disabled={i === 0} onClick={() => onFlow(moveRule(flow, node.id, i, i - 1))} className="rounded border border-control px-2 py-2 disabled:opacity-30"><span className="inline-block -rotate-90"><Icon name="chevronRight" size={11} /></span></button>
-                    <button type="button" aria-label="Move rule down" disabled={i === branches.length - 1} onClick={() => onFlow(moveRule(flow, node.id, i, i + 1))} className="rounded border border-control px-2 py-2 disabled:opacity-30"><span className="inline-block rotate-90"><Icon name="chevronRight" size={11} /></span></button>
-                    <button type="button" aria-label="Delete rule" onClick={() => set({ branches: branches.filter((_, j) => j !== i) })} className="rounded border border-control px-2 py-2 text-bad-fg"><Icon name="x" size={11} /></button>
+                    <button type="button" aria-label="Move rule up" disabled={i === 0} onClick={() => onFlow(moveRule(flow, node.id, i, i - 1))} className="btn btn-md btn-secondary"><span className="inline-block -rotate-90"><Icon name="chevronRight" size={11} /></span></button>
+                    <button type="button" aria-label="Move rule down" disabled={i === branches.length - 1} onClick={() => onFlow(moveRule(flow, node.id, i, i + 1))} className="btn btn-md btn-secondary"><span className="inline-block rotate-90"><Icon name="chevronRight" size={11} /></span></button>
+                    <button type="button" aria-label="Delete rule" onClick={() => set({ branches: branches.filter((_, j) => j !== i) })} className="btn btn-md btn-danger"><Icon name="x" size={11} /></button>
                   </div>
                 </li>
               );
@@ -164,10 +164,10 @@ export function NodeInspector({
       </section>
 
       <div className="flex flex-wrap gap-2 border-t border-line pt-4">
-        <button type="button" onClick={onAddAfter} className="rounded-lg border border-control bg-white px-4 py-2 text-xs font-medium hover:bg-brand-soft">+ Add question after this</button>
+        <button type="button" onClick={onAddAfter} className="btn btn-sm btn-secondary">+ Add question after this</button>
         <p className="basis-full text-xs text-muted">New questions go on the &ldquo;usually ask&rdquo; path. Answers that have their own rule keep following it.</p>
-        {flow.start !== node.id && <button type="button" onClick={() => onFlow({ ...flow, start: node.id })} className="rounded-lg border border-control bg-white px-4 py-2 text-xs font-medium hover:bg-brand-soft">Make this the first question</button>}
-        <button type="button" onClick={onDelete} className="ml-auto rounded-lg border border-control bg-white px-4 py-2 text-xs font-medium text-bad-fg hover:bg-bad-bg">Delete</button>
+        {flow.start !== node.id && <button type="button" onClick={() => onFlow({ ...flow, start: node.id })} className="btn btn-sm btn-secondary">Make this the first question</button>}
+        <button type="button" onClick={onDelete} className="btn btn-sm btn-danger ml-auto">Delete</button>
       </div>
     </div>
   );

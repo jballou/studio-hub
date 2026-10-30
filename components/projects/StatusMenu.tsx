@@ -89,8 +89,8 @@ export function StatusMenu({ project, canChange, onChanged }: { project: Project
               <p className="text-sm font-medium">Move to {pending.name}?</p>
               <p className="mb-4 mt-2 text-xs text-muted">This closes the ticket in Jira.</p>
               <div className="flex gap-2">
-                <button autoFocus disabled={busy} onClick={() => apply(pending)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark disabled:opacity-50">{busy ? "Moving…" : `Move to ${pending.name}`}</button>
-                <button onClick={() => setPending(null)} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Back</button>
+                <button autoFocus disabled={busy} onClick={() => apply(pending)} className="btn btn-md btn-primary">{busy ? "Moving…" : `Move to ${pending.name}`}</button>
+                <button onClick={() => setPending(null)} className="btn btn-md btn-secondary">Back</button>
               </div>
             </div>
           ) : options === null && !error ? (

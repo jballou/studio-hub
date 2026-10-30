@@ -58,7 +58,7 @@ export function RouteView({ flow, selectedId, onSelect, problemIds }: { flow: Fl
         <ul className="flex flex-wrap gap-2">
           {tc.options.map((o) => (
             <li key={o.id}>
-              <button onClick={() => setTypeId(o.id)} aria-current={o.id === current.id} className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm ${o.id === current.id ? "border-brand bg-brand-soft font-medium" : "border-line hover:bg-n-150"}`}>
+              <button onClick={() => setTypeId(o.id)} aria-pressed={o.id === current.id} className="chip">
                 <span>{o.label}</span>
                 <span className="text-xs tabular-nums text-muted">{counts.get(o.id)}</span>
               </button>

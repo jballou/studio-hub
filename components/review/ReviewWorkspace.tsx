@@ -245,7 +245,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
               {canApprove && (
                 <button
                   onClick={() => { setStage("Delivered"); void repo.setReviewState(asset.id, "approved"); celebrate(); }}
-                  className="flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"
+                  className="btn btn-md btn-primary"
                 >
                   <Icon name="delivered" size={16} /> Approve
                 </button>
@@ -253,7 +253,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
             </>
           )}
           <span className="mx-2 h-5 w-px bg-line" aria-hidden="true" />
-          <button onClick={() => setShareOpen(true)} title={asset.linkAccess ? "Anyone at SurveyMonkey with the link can open this" : "Only people you add can open this"} className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium hover:bg-n-150">
+          <button onClick={() => setShareOpen(true)} title={asset.linkAccess ? "Anyone at SurveyMonkey with the link can open this" : "Only people you add can open this"} className="btn btn-sm btn-ghost">
             <Icon name={asset.linkAccess ? "users" : "lock"} size={16} /> Share
           </button>
           <button
@@ -308,21 +308,21 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Icon name="chevronDown" size={14} /></span>
         </label>
         {canShare && (
-          <Link href={`/submit?version=${asset.id}`} className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-brand hover:bg-brand-soft" title="Upload a new version of this design for re-review">
+          <Link href={`/submit?version=${asset.id}`} className="btn btn-sm btn-ghost text-brand" title="Upload a new version of this design for re-review">
             <Icon name="upload" size={14} /> New version
           </Link>
         )}
         <span className="h-5 w-px bg-line" aria-hidden="true" />
-        <div role="group" aria-label="What clicking the design does" className="flex overflow-hidden rounded-full border border-control text-sm">
-          <button onClick={() => setCommenting(false)} aria-pressed={!commenting} title="Scroll and click inside the design" className={`px-4 py-2 ${!commenting ? "bg-n-150 font-medium" : "hover:bg-brand-soft"}`}>Browse</button>
-          <button onClick={() => setCommenting(true)} aria-pressed={commenting} title="Click the design to add a pin" className={`flex items-center gap-2 px-4 py-2 ${commenting ? "bg-brand-soft font-medium" : "hover:bg-brand-soft"}`}><Icon name="comment" size={16} /> Comment</button>
+        <div role="group" aria-label="What clicking the design does" className="seg">
+          <button onClick={() => setCommenting(false)} aria-pressed={!commenting} title="Scroll and click inside the design" className="seg-item">Browse</button>
+          <button onClick={() => setCommenting(true)} aria-pressed={commenting} title="Click the design to add a pin" className="seg-item"><Icon name="comment" size={16} /> Comment</button>
         </div>
         {kind !== "audio" && <ZoomControl zoom={zoom} onChange={setZoom} />}
         <button
           onClick={() => setShowPins((p) => !p)}
           aria-pressed={showPins}
           title={showPins ? "Hide pins on the design" : "Show pins on the design"}
-          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm ${showPins ? "hover:bg-n-150" : "bg-n-150 font-medium"}`}
+          className={`btn btn-sm btn-ghost ${showPins ? "" : "bg-n-150"}`}
         >
           <Icon name={showPins ? "eye" : "eyeOff"} size={16} /> {showPins ? "Pins" : "Pins hidden"}
         </button>
@@ -346,9 +346,9 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
             <>
               <PdfViewer src={src} page={page} zoom={zoom} onPageCount={setPageCount} overlay={overlay} />
               <div className="flex items-center justify-center gap-4 pb-2 text-sm">
-                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page" className="rounded-full border border-control px-4 py-0 disabled:opacity-40">‹</button>
+                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page" className="btn btn-icon btn-secondary">‹</button>
                 <span>Page {page} of {pageCount}</span>
-                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} aria-label="Next page" className="rounded-full border border-control px-4 py-0 disabled:opacity-40">›</button>
+                <button disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)} aria-label="Next page" className="btn btn-icon btn-secondary">›</button>
               </div>
             </>
           )}

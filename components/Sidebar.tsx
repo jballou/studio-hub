@@ -141,7 +141,7 @@ export function Sidebar() {
           onClick={() => setSearchOpen(true)}
           aria-label="Search"
           title="Search (⌘K)"
-          className={`mb-2 flex items-center gap-2 rounded-xl border border-control bg-white py-2 text-sm text-n-700 hover:bg-white/60 ${collapsed ? "justify-center px-2" : "px-4"}`}
+          className={`btn btn-md btn-secondary mb-2 w-full font-normal text-n-700 ${collapsed ? "!px-0" : ""}`}
         >
           <Icon name="search" size={16} />
           {!collapsed && (<><span className="flex-1 text-left">Search</span><kbd className="text-xs">⌘K</kbd></>)}
@@ -151,7 +151,7 @@ export function Sidebar() {
           href="/my-day?new=task"
           title="New task"
           aria-label="New task"
-          className={`mb-2 flex items-center justify-center gap-2 rounded-xl border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-4"}`}
+          className={`btn btn-md btn-secondary mb-2 w-full border-brand text-brand ${collapsed ? "!px-0" : ""}`}
         >
           <Icon name="listChecks" size={16} />
           {!collapsed && "New task"}
@@ -161,7 +161,7 @@ export function Sidebar() {
           title="Submit for feedback"
           aria-label="Submit for feedback"
           aria-current={pathname === "/submit" ? "page" : undefined}
-          className={`mb-4 flex items-center justify-center gap-2 rounded-xl border border-brand bg-white py-2 text-sm font-medium text-brand hover:bg-brand-soft ${collapsed ? "px-2" : "px-4"} ${pathname === "/submit" ? "bg-brand-soft" : ""}`}
+          className={`btn btn-md btn-secondary mb-4 w-full border-brand text-brand ${collapsed ? "!px-0" : ""} ${pathname === "/submit" ? "!bg-brand-soft" : ""}`}
         >
           <Icon name="upload" size={16} />
           {!collapsed && "Submit for feedback"}
@@ -211,7 +211,7 @@ export function Sidebar() {
           href="/projects/new"
           title="New brief"
           aria-label="New brief"
-          className={`mb-4 flex items-center justify-center gap-2 rounded-xl bg-brand py-2 text-sm font-medium text-n-50 hover:bg-brand-dark ${collapsed ? "px-2" : "px-4"}`}
+          className={`btn btn-md btn-primary mb-4 w-full ${collapsed ? "!px-0" : ""}`}
         >
           <Icon name="plus" size={16} />
           {!collapsed && "New brief"}

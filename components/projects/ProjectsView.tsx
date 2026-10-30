@@ -192,9 +192,9 @@ export function ProjectsView() {
               {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
             </select>
           </label>}
-          <div className="flex overflow-hidden rounded border border-line">
+          <div className="seg">
             {([["list", "listStart"], ["board", "kanban"], ["month", "calendarDays"], ["week", "calendarWeek"]] as const).map(([v, icon]) => (
-              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`flex items-center gap-2 px-4 py-2 capitalize ${view === v ? "bg-brand text-white" : "bg-white"}`}><Icon name={icon} size={14} />{v}</button>
+              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item"><Icon name={icon} size={14} />{v}</button>
             ))}
           </div>
         </div>
@@ -205,7 +205,7 @@ export function ProjectsView() {
           onClick={() => setShelf(!shelf)}
           aria-expanded={shelf}
           aria-controls="filter-shelf"
-          className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium hover:bg-brand-soft ${activeFilters ? "border-brand bg-brand-soft" : "border-control bg-white"}`}
+          className="chip" data-on={activeFilters > 0}
         >
           <Icon name="filter" size={16} /> Filters
           {activeFilters > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-2 text-xs font-bold text-n-50">{activeFilters}</span>}
@@ -215,12 +215,12 @@ export function ProjectsView() {
       </div>
 
       {shelf && (
-        <div id="filter-shelf" className="mb-6 space-y-4 rounded-xl border border-line bg-white p-4 text-sm">
+        <div id="filter-shelf" className="mb-6 space-y-4 card p-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="font-semibold">Show</span>
-            <div className="flex overflow-hidden rounded border border-line" role="group" aria-label="Which projects">
+            <div className="seg" role="group" aria-label="Which projects">
               {([["mine", "Assigned to me"], ["all", "All projects"]] as const).map(([id, label]) => (
-                <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className={`px-4 py-2 ${scope === id ? "bg-brand text-white" : "bg-white"}`}>{label}</button>
+                <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item">{label}</button>
               ))}
             </div>
           </div>
@@ -249,7 +249,7 @@ export function ProjectsView() {
       {loadError && (
         <div className="mb-4 flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1"><Callout tone="bad" icon="alert">Couldn&apos;t load projects: {loadError}</Callout></div>
-          <button onClick={() => setTick((t) => t + 1)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Try again</button>
+          <button onClick={() => setTick((t) => t + 1)} className="btn btn-md btn-secondary">Try again</button>
         </div>
       )}
 

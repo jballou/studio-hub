@@ -96,7 +96,7 @@ export function AdminUsers() {
 
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
 
-      <section className="mb-6 rounded-xl border border-line bg-white p-4">
+      <section className="mb-6 card p-4">
         <h2 className="mb-2 text-sm font-semibold">Add someone before their first sign-in</h2>
         <form
           className="flex flex-wrap items-end gap-2"
@@ -113,7 +113,7 @@ export function AdminUsers() {
               {ROLES.map((r) => <option key={r} value={r}>{cap(r)}</option>)}
             </select>
           </label>
-          <button disabled={busy || !email} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Add</button>
+          <button disabled={busy || !email} className="btn btn-md btn-primary">Add</button>
         </form>
         <p className="mt-2 text-xs text-muted">{ROLE_HELP[role]}.</p>
       </section>
@@ -122,7 +122,7 @@ export function AdminUsers() {
         <h2 className="text-sm font-semibold">People ({users?.length ?? "…"})</h2>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search people" className={`${sel} ml-auto w-52`} />
       </div>
-      <div className="overflow-x-auto rounded-xl border border-line bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-n-150 text-xs text-n-800">
             <tr><th className="px-4 py-2 font-semibold">Person</th><th className="px-4 py-2 font-semibold">Role</th><th className="px-4 py-2 font-semibold">Status</th><th className="px-4 py-2 font-semibold">Last sign-in</th><th className="px-4 py-2" /></tr>
@@ -164,7 +164,7 @@ export function AdminUsers() {
       <section className="mt-8">
         <h2 className="mb-2 text-sm font-semibold">Recent changes</h2>
         {audit.length === 0 ? <p className="text-sm text-muted">Nothing yet.</p> : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-white text-sm">
+          <ul className="divide-y divide-line card text-sm">
             {audit.map((a, i) => (
               <li key={i} className="flex flex-wrap gap-x-2 px-4 py-2">
                 <span className="w-36 shrink-0 text-xs text-muted">{when(a.at)}</span>

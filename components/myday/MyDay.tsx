@@ -168,16 +168,16 @@ export function MyDay() {
     <main className="page">
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <h1 className="text-4xl font-bold md:text-display-md">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</h1>
+          <h1 className="text-4xl font-bold md:text-5xl">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</h1>
           <p className="mt-2 text-lg text-muted">{dateLabel}</p>
         </div>
-        <button onClick={() => setAdding(true)} className="ml-auto flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark"><Icon name="plus" size={16} /> Add new task</button>
+        <button onClick={() => setAdding(true)} className="btn btn-md btn-primary ml-auto"><Icon name="plus" size={16} /> Add new task</button>
       </div>
       <div className="mt-4"><StaleNotice /></div>
       {jiraErr && (
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="min-w-0 flex-1"><Callout tone="bad" icon="alert">Couldn&apos;t load your Jira tickets: {jiraErr}</Callout></div>
-          <button onClick={() => setReload((n) => n + 1)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Try again</button>
+          <button onClick={() => setReload((n) => n + 1)} className="btn btn-md btn-secondary">Try again</button>
         </div>
       )}
       {!isJira && <div className="mt-4"><Callout tone="info" icon="alert">Demo data. Real tickets, calendar and Google Tasks show up after sign-in.</Callout></div>}
@@ -202,18 +202,18 @@ export function MyDay() {
             />
           )}
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+          <div className="mt-4 grid gap-4 xl:grid-cols-[2fr_1fr]">
             <Card
               title="Project timeline"
               action={
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
                     <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-brand-soft"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
-                    <button onClick={() => setShift(0)} className="rounded-lg border border-control px-2 py-2 text-xs font-medium hover:bg-brand-soft">Today</button>
+                    <button onClick={() => setShift(0)} className="btn btn-sm btn-secondary">Today</button>
                     <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-lg border border-control hover:bg-brand-soft"><Icon name="chevronRight" size={12} /></button>
                   </div>
-                  <div className="flex overflow-hidden rounded-lg border border-control" role="group" aria-label="Timeline length">
-                    {WINDOWS.map((w) => <button key={w.id} onClick={() => { setWin(w.id); setShift(0); }} aria-pressed={win === w.id} className={`px-2 py-2 text-xs font-medium ${win === w.id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{w.label}</button>)}
+                  <div className="seg" role="group" aria-label="Timeline length">
+                    {WINDOWS.map((w) => <button key={w.id} onClick={() => { setWin(w.id); setShift(0); }} aria-pressed={win === w.id} className="seg-item">{w.label}</button>)}
                   </div>
                 </div>
               }
@@ -249,9 +249,9 @@ export function MyDay() {
               title={tab === "priority" ? "Task priority" : "My tasks"}
               hint={tab === "priority" ? "Most urgent first" : "Private to you. Not added to Jira."}
               action={
-                <div className="flex overflow-hidden rounded-lg border border-control" role="tablist" aria-label="Task views">
+                <div className="seg" role="tablist" aria-label="Task views">
                   {([["priority", "Priority"], ["tasks", `My tasks (${open.length})`]] as const).map(([id, label]) => (
-                    <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-2 py-2 text-xs font-medium ${tab === id ? "bg-brand text-n-50" : "bg-white hover:bg-brand-soft"}`}>{label}</button>
+                    <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className="seg-item">{label}</button>
                   ))}
                 </div>
               }
@@ -304,7 +304,7 @@ export function MyDay() {
                 <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-dashed border-control p-4 text-sm">
                   <Icon name="calendar" size={18} />
                   <span className="min-w-0 flex-1">{google.configured ? "Connect Google to plan around your meetings and back up tasks." : "Google isn't set up for this app yet."}</span>
-                  {google.configured && <a href="/api/google/connect" className="rounded-lg bg-brand px-4 py-2 font-medium text-n-50 hover:bg-brand-dark">Connect Google</a>}
+                  {google.configured && <a href="/api/google/connect" className="btn btn-md btn-primary">Connect Google</a>}
                 </div>
               )}
               {google?.broken || eventsErr?.code === "reconnect" ? (
@@ -317,7 +317,7 @@ export function MyDay() {
                   <p className="text-muted eyebrow">Next up</p>
                   <p className="mt-2 font-semibold">{next.label}</p>
                   <p className="text-sm text-muted">Today, {clock(next.at)} – {clock(next.end!)}{next.at <= now ? " (happening now)" : ""}</p>
-                  {next.link && <a href={next.link} target="_blank" rel="noreferrer" className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Open meeting</a>}
+                  {next.link && <a href={next.link} target="_blank" rel="noreferrer" className="btn btn-md btn-primary mt-4">Open meeting</a>}
                 </div>
               )}
               {schedule.length === 0 ? (
@@ -368,7 +368,7 @@ export function MyDay() {
 
 function Card({ title, hint, action, children }: { title: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-line bg-white p-4">
+    <section className="card p-4">
       <div className="mb-4 flex flex-wrap items-start gap-2">
         <div className="min-w-0 flex-[1_1_10rem]">
           <h2 className="text-base font-bold">{title}</h2>
@@ -386,7 +386,7 @@ function Tile({ label, n, note, tone, onClick }: { label: string; n: number; not
   return (
     <Wrap
       {...(onClick ? { onClick, type: "button" as const, "aria-haspopup": "dialog" as const, title: "See the list" } : {})}
-      className={`flex h-full flex-col items-start rounded-xl border border-line bg-white p-4 text-left ${onClick ? "cursor-pointer hover:border-brand hover:bg-brand-soft focus-visible:outline-offset-2" : ""}`}
+      className={`flex h-full flex-col items-start card p-4 text-left ${onClick ? "card-hover cursor-pointer focus-visible:outline-offset-2" : ""}`}
     >
       <div className="text-sm font-semibold">{label}</div>
       <div className="mt-2 flex items-center gap-2">
@@ -519,8 +519,8 @@ function AddTaskDialog({ onClose, onAdd }: { onClose: () => void; onAdd: (d: { t
           </label>
         )}
         <div className="flex gap-2">
-          <button disabled={busy || !d.title.trim()} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">{busy ? "Adding…" : "Add task"}</button>
-          <button type="button" onClick={onClose} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
+          <button disabled={busy || !d.title.trim()} className="btn btn-md btn-primary">{busy ? "Adding…" : "Add task"}</button>
+          <button type="button" onClick={onClose} className="btn btn-md btn-secondary">Cancel</button>
         </div>
       </form>
     </div>

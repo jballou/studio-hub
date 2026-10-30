@@ -58,7 +58,7 @@ export function BlockingYou() {
         {blocks?.map((b) => {
           const days = daysSince(b.since);
           return (
-            <li key={b.key} className="rounded-xl border border-line bg-white p-4">
+            <li key={b.key} className="card p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-xs text-muted">{b.key}</span>
                 {b.project && <StatusTag project={b.project} />}
@@ -71,13 +71,13 @@ export function BlockingYou() {
               {openKey === b.key ? (
                 <div className="mt-4 flex flex-wrap gap-2">
                   <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional note, e.g. Approved in Slack" aria-label="Note" className="min-w-64 flex-1 rounded-lg border border-control bg-white px-4 py-2 text-sm" />
-                  <button disabled={busy} onClick={() => resolve(b.key)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">Confirm</button>
-                  <button onClick={() => { setOpenKey(null); setNote(""); }} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
+                  <button disabled={busy} onClick={() => resolve(b.key)} className="btn btn-md btn-primary">Confirm</button>
+                  <button onClick={() => { setOpenKey(null); setNote(""); }} className="btn btn-md btn-secondary">Cancel</button>
                 </div>
               ) : (
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button onClick={() => setOpenKey(b.key)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">I&apos;ve unblocked this</button>
-                  <Link href={`/projects/${b.key}`} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Open project</Link>
+                  <button onClick={() => setOpenKey(b.key)} className="btn btn-md btn-primary">I&apos;ve unblocked this</button>
+                  <Link href={`/projects/${b.key}`} className="btn btn-md btn-secondary">Open project</Link>
                 </div>
               )}
             </li>

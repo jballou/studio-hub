@@ -74,13 +74,13 @@ export function BlockDialog({
           {error && <Callout tone="bad" icon="alert">{error}</Callout>}
           {notice && <Callout tone="warn" icon="alert">Saved here, but Jira&apos;s status didn&apos;t change. {notice}</Callout>}
           {notice ? (
-            <button onClick={onSaved} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Done</button>
+            <button onClick={onSaved} className="btn btn-md btn-primary">Done</button>
           ) : (
           <div className="flex gap-2">
-            <button onClick={save} disabled={busy || !who.length || !reason.trim()} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 enabled:hover:bg-brand-dark disabled:opacity-40">
+            <button onClick={save} disabled={busy || !who.length || !reason.trim()} className="btn btn-md btn-primary">
               {busy ? "Saving…" : existing ? "Save" : "Mark as blocked"}
             </button>
-            <button onClick={onClose} className="rounded-lg border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft">Cancel</button>
+            <button onClick={onClose} className="btn btn-md btn-secondary">Cancel</button>
           </div>
           )}
         </div>

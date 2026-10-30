@@ -54,7 +54,7 @@ function NameLink({ id, name }: { id: string; name: string }) {
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-line bg-white p-6">
+    <section className="card p-6">
       <div className="mb-4 flex items-center"><h2 className="text-lg font-semibold">{title}</h2><span className="ml-auto">{action}</span></div>
       {children}
     </section>
@@ -153,14 +153,14 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>
             {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-full ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
           </div>
-          <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>
-          <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Open in Jira</a>
+          <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="btn btn-md btn-primary">Submit for feedback</Link>
+          <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="btn btn-md btn-secondary">Open in Jira</a>
           {needsStartDate(project) && canManage && <PlanWork size="md" project={project} onPlanned={(d) => setProject({ ...project, startDate: d })} />}
           {canUnblock && project.group !== "closed" && (
-            <button onClick={() => setUnblocking(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Mark as unblocked</button>
+            <button onClick={() => setUnblocking(true)} className="btn btn-md btn-secondary">Mark as unblocked</button>
           )}
           {canManage && !isBlocked && project.group !== "closed" && (
-            <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium hover:bg-brand-soft">Mark as blocked</button>
+            <button onClick={() => setDialog(true)} className="btn btn-md btn-secondary">Mark as blocked</button>
           )}
         </div>
       </div>
@@ -203,8 +203,8 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                 )}
                 {blockError && <p role="alert" className="mt-2 text-sm font-medium">{blockError}</p>}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {canUnblock && <button onClick={() => setUnblocking(true)} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">{iHoldIt ? "I\u2019ve unblocked this" : "Mark as unblocked"}</button>}
-                  {canManage && <button onClick={() => setDialog(true)} className="rounded-lg border border-control bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-brand-soft">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
+                  {canUnblock && <button onClick={() => setUnblocking(true)} className="btn btn-md btn-primary">{iHoldIt ? "I\u2019ve unblocked this" : "Mark as unblocked"}</button>}
+                  {canManage && <button onClick={() => setDialog(true)} className="btn btn-md btn-secondary text-ink">{block ? "Change who" : "Name who it\u2019s waiting on"}</button>}
                 </div>
               </section>
             )}
@@ -298,13 +298,13 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         assets.length === 0 ? (
           <div className="rounded-xl border border-dashed border-control bg-white/60 p-10 text-center">
             <p className="mb-4 text-sm text-muted">Nothing has been shared for feedback yet.</p>
-            <Link href={`/submit?ticket=${project.jiraKey}`} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-n-50 hover:bg-brand-dark">Submit for feedback</Link>
+            <Link href={`/submit?ticket=${project.jiraKey}`} className="btn btn-md btn-primary">Submit for feedback</Link>
           </div>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {assets.map((a) => (
               <li key={a.id}>
-                <Link href={`/review/${a.id}`} className="block rounded-xl border border-line bg-white p-4 hover:border-brand">
+                <Link href={`/review/${a.id}`} className="block card p-4 hover:border-brand">
                   <span className="mb-2 flex items-center gap-2"><Tag tone="neutral">{a.source ? a.source.label : a.kind}</Tag><span className="text-xs text-muted">{a.versionIds.length} version{a.versionIds.length > 1 ? "s" : ""}</span></span>
                   <span className="block font-medium">{a.name}</span>
                   {a.dueAt && <span className="mt-2 block text-xs text-muted">Feedback by {formatDue(a.dueAt, a.dueTz)}</span>}
@@ -321,7 +321,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         ) : (
           <ul className="space-y-2">
             {items.map((i) => (
-              <li key={i.id} className="flex items-center gap-4 rounded-xl border border-line bg-white px-4 py-4 text-sm">
+              <li key={i.id} className="flex items-center gap-4 card px-4 py-4 text-sm">
                 <span className="w-28 text-muted">{dayLabel(i.date, { weekday: "short", month: "short", day: "numeric" })}</span>
                 <Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>
                 <span className="font-medium">{i.title}</span>
