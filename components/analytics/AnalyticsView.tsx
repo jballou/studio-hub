@@ -113,7 +113,7 @@ export function AnalyticsView() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <div role="group" aria-label="Whose work" className="seg">
             {(["you", "team"] as const).map((s) => (
-              <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className="seg-item"><Icon name={s === "you" ? "user" : "users"} size={14} />{s}</button>
+              <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className="seg-item"><Icon name={s === "you" ? "userRound" : "usersRound"} size={14} />{s}</button>
             ))}
           </div>
           <label className="sr-only" htmlFor="range">Period</label>
