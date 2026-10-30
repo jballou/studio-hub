@@ -225,7 +225,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
   const btn = "rounded-full border border-control px-4 py-2 text-sm font-medium hover:bg-brand-soft disabled:opacity-40";
 
   return (
-    <div className="paper flex h-screen flex-col">
+    <div className="paper flex h-[calc(100vh-16px)] flex-col">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-white px-6 py-2 text-sm">
         <Link href="/review" aria-label="Back to Review" title="Back to Review" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-n-150">
           <span className="rotate-180"><Icon name="chevronRight" size={18} /></span>

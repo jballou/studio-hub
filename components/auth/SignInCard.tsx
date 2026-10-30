@@ -17,7 +17,7 @@ export function SignInCard({ action, error, callbackUrl }: { action: (formData: 
   return (
     <>
       <ShaderBackground />
-      <main className="grid min-h-screen place-items-center p-4">
+      <main className="paper grid min-h-screen place-items-center p-4">
         <div className="w-full max-w-md rounded-3xl border border-white/60 bg-white/80 p-8 shadow-2xl backdrop-blur-xl [html[data-theme=dark]_&]:border-white/10 [html[data-theme=dark]_&]:bg-[#151c18]/80">
           <Logo size={56} className="mb-6 shadow-md" />
           <h1 className="text-2xl font-bold">Brand Creative Hub</h1>

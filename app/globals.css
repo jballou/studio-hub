@@ -135,7 +135,7 @@ body:has([role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="tr
 .text-brand, .hover\:text-brand:hover { color: var(--link); }
 
 body {
-  background: var(--color-paper);
+  background: var(--shell);
   color: var(--color-ink);
   font-family: "National 2", system-ui, sans-serif;
 }
@@ -158,7 +158,7 @@ body {
 @media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
 
 /* ---- Light values for the pieces that aren't palette tokens ---- */
-:root { --paper-dot: #e4e2dd; --card: #ffffff; --surface: #fefdfb; --link: #08794a; }
+:root { --shell: #ebe8e3; --paper-dot: #e4e2dd; --card: #ffffff; --surface: #fefdfb; --link: #08794a; }
 
 /* ---- Dark mode ----
    The palette tokens are swapped here, so every utility that reads them follows. A few utilities that name
@@ -166,6 +166,7 @@ body {
 :root[data-theme="dark"] {
   color-scheme: dark;
   --color-paper: #111714;
+  --shell: #0b100d;
   --paper-dot: #1d2621;
   --card: #1a221e;
   --surface: #151c18;

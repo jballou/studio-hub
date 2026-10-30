@@ -52,7 +52,7 @@ export function Welcome() {
   return (
     <>
       <ShaderBackground />
-      <main className="grid min-h-screen place-items-center p-4">
+      <main className="paper grid min-h-screen place-items-center p-4">
         <div className="w-full max-w-lg rounded-3xl border border-white/60 bg-white/80 p-8 shadow-2xl backdrop-blur-xl [html[data-theme=dark]_&]:border-white/10 [html[data-theme=dark]_&]:bg-[#151c18]/80">
           <Logo size={48} className="mb-4 shadow-md" />
           <h1 className="text-2xl font-bold">You&apos;re in. Connect your tools?</h1>
