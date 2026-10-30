@@ -62,7 +62,7 @@ function Row({ g, users, showState, onTrash }: { g: Group; users: User[]; showSt
         {meta && <p className="mt-2 text-xs text-muted">{meta}</p>}
         <ol className="mt-2 flex flex-wrap gap-2">
           {g.items.map((a) => (
-            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="btn btn-md btn-secondary"><span className="shrink-0 font-semibold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
+            <li key={a.id} className="min-w-0 max-w-56"><Link href={`/review/${a.id}`} title={a.name} className="btn btn-md btn-secondary w-full min-w-0 justify-start"><span className="shrink-0 font-semibold">{(a.batch?.index ?? 0) + 1}</span><span className="min-w-0 truncate">{a.name}</span></Link></li>
           ))}
         </ol>
         {onTrash && (

@@ -81,8 +81,7 @@
 @layer components {
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    white-space: nowrap; user-select: none; cursor: pointer;
-    border: 1px solid transparent; border-radius: 12px; font-weight: 500;
+    white-space: nowrap; user-select: none; cursor: pointer; max-width: 100%;    border: 1px solid transparent; border-radius: 12px; font-weight: 500;
     transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
   }
   .btn:active:not(:disabled) { transform: translateY(1px) scale(0.99); }
