@@ -105,13 +105,14 @@
 
   /* Segmented control: a group of exclusive choices (views, ranges, tabs). Items use aria-pressed / aria-selected.
      The green highlight is ::before, positioned by SegIndicator, so it slides to the chosen item. */
-  .seg { position: relative; display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--color-control); border-radius: var(--radius-round); background: var(--card); }
-  .seg::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 2px; width: var(--seg-w, 0); transform: translateX(var(--seg-x, 0)); border-radius: var(--radius-round); background: var(--color-brand); opacity: var(--seg-on, 0); pointer-events: none; }
+  .seg { position: relative; display: inline-flex; align-items: stretch; gap: 0; height: 32px; padding: 2px; border: 1px solid var(--color-control); border-radius: var(--radius-round); background: var(--card); }
+  .seg::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 0; width: var(--seg-w, 0); transform: translateX(var(--seg-x, 0)); border-radius: var(--radius-round); background: var(--color-brand); opacity: var(--seg-on, 0); pointer-events: none; }
   .seg[data-ready]::before { transition: transform 220ms cubic-bezier(0.3, 0.9, 0.3, 1), width 220ms cubic-bezier(0.3, 0.9, 0.3, 1); }
-  .seg-item { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: var(--radius-round); font-size: 12px; line-height: 20px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms ease, color 120ms ease; }
+  .seg-item { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; border-radius: var(--radius-round); font-size: 12px; line-height: 20px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms ease, color 120ms ease; }
   .seg-item:hover { background: var(--color-n-150); }
   .seg-item[aria-pressed="true"], .seg-item[aria-selected="true"], .seg-item[aria-current="true"] { color: var(--color-n-50); background: transparent; }
-  .seg-md .seg-item { height: 32px; padding: 0 16px; font-size: 14px; line-height: 24px; }
+  .seg-md { height: 40px; }
+  .seg-md .seg-item { font-size: 14px; line-height: 24px; }
 
   /* Chip: a filter or option pill. Selected via aria-pressed / aria-selected / data-on. chip-lg is the roomier wizard answer. */
   .chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 16px; border: 1px solid var(--color-control); border-radius: var(--radius-round); background: var(--card); font-size: 14px; line-height: 24px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease; }

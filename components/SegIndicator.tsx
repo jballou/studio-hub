@@ -28,8 +28,9 @@ export function SegIndicator() {
     mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-pressed", "aria-selected", "aria-current", "class"] });
     window.addEventListener("resize", schedule);
     document.fonts?.ready.then(schedule);
+    document.fonts?.addEventListener?.("loadingdone", schedule);
     schedule();
-    return () => { mo.disconnect(); window.removeEventListener("resize", schedule); if (raf) cancelAnimationFrame(raf); };
+    return () => { mo.disconnect(); window.removeEventListener("resize", schedule); document.fonts?.removeEventListener?.("loadingdone", schedule); if (raf) cancelAnimationFrame(raf); };
   }, []);
   return null;
 }
