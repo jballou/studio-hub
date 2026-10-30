@@ -114,6 +114,7 @@ export function ProjectsView() {
   // Closed work is fetched only when someone looks at it (the Closed section or the board), which keeps Jira calls down.
   const [closedState, setClosedState] = useState<{ key: string; list: Project[] } | null>(null);
   const [view, setView] = useState<"list" | "board" | "month" | "week">("list");
+  const [shelf, setShelf] = useState(false);
   const [scope, setScope] = useState<"mine" | "all">("mine");
   const [tasks, setTasks] = useState<PersonalTask[]>([]);
   const [tick, setTick] = useState(0);
@@ -188,6 +189,7 @@ export function ProjectsView() {
 
   const canPlan = isJira ? me?.role === "creative" : users.find((u) => u.id === meId)?.role === "creative";
   const activeFilters = [action, newOnly, starredOnly, blockedOnly, !!stage, !!type, !!collab, !!before, scope === "all"].filter(Boolean).length;
+  const filterCount = [action, newOnly, starredOnly, blockedOnly, !!stage, !!type, !!collab, !!before].filter(Boolean).length;
   const clearFilters = () => { setAction(false); setNewOnly(false); setStarredOnly(false); setBlockedOnly(false); setStage(""); setType(""); setCollab(""); setBefore(""); setScope("mine"); };
 
   return (
@@ -214,7 +216,13 @@ export function ProjectsView() {
             <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item">{label}</button>
           ))}
         </div>
-        <span className="mx-2 h-5 w-px bg-line" aria-hidden />
+        <button onClick={() => setShelf(!shelf)} aria-expanded={shelf} aria-controls="filter-shelf" className="chip" data-on={shelf || filterCount > 0}>
+          <Icon name="filter" size={16} /> Filters
+          {filterCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-2 text-xs font-bold text-n-50">{filterCount}</span>}
+        </button>
+        {activeFilters > 0 && <button onClick={clearFilters} className="btn btn-sm btn-ghost text-muted"><Icon name="x" size={14} /> Clear filters</button>}
+      </div>
+      {shelf && <div id="filter-shelf" className="mb-2 flex flex-wrap items-center gap-2">
         <FilterPill label="Status" value={stage} onClear={() => setStage("")}>
           {(close) => STAGES.map((s) => <FilterOption key={s} label={s} selected={stage === s} onSelect={() => { setStage(s); close(); }} />)}
         </FilterPill>
@@ -235,8 +243,7 @@ export function ProjectsView() {
         {([[action, setAction, "Action required"], [newOnly, setNewOnly, "New comments"], [starredOnly, setStarredOnly, "Starred"], [blockedOnly, setBlockedOnly, "Blocked"]] as const).map(([on, set, label]) => (
           <button key={label} onClick={() => set(!on)} aria-pressed={on} className="chip">{label}</button>
         ))}
-        {activeFilters > 0 && <button onClick={clearFilters} className="btn btn-sm btn-ghost ml-auto text-muted"><Icon name="x" size={14} /> Clear filters</button>}
-      </div>
+      </div>}
       <p className="mb-4 text-sm text-muted">{scope === "mine" ? "Assigned to you" : "All projects you can see"} · {filtered.length} {filtered.length === 1 ? "project" : "projects"}</p>
 
       <StaleNotice />
