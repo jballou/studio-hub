@@ -9,6 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { Callout, StatusTag, Tag } from "@/components/ui/Tag";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
+import { FilterOption, FilterPill } from "@/components/ui/FilterPill";
 import { IssueIcon } from "@/components/ui/IssueIcon";
 import { Board } from "./Board";
 import { StaleNotice } from "@/components/ui/StaleNotice";
@@ -26,6 +27,14 @@ const GROUPS: { id: ProjectGroup; label: string }[] = [
   { id: "open", label: "Open" },
   { id: "ideas", label: "Ideas" },
   { id: "closed", label: "Closed" },
+];
+const dayLabel = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const plusDays = (iso: string, n: number) => { const d = new Date(`${iso}T12:00:00`); d.setDate(d.getDate() + n); return localDay(d); };
+const DUE_PRESETS: { label: string; at: (today: string) => string }[] = [
+  { label: "Today", at: (t) => t },
+  { label: "End of this week", at: (t) => plusDays(t, (5 - new Date(`${t}T12:00:00`).getDay() + 7) % 7) },
+  { label: "In 7 days", at: (t) => plusDays(t, 7) },
+  { label: "In 30 days", at: (t) => plusDays(t, 30) },
 ];
 const STAGES: Stage[] = ["Submitted", "In review", "In progress", "In feedback", "Delivered"];
 const TYPES: ProjectType[] = isJira
@@ -106,7 +115,6 @@ export function ProjectsView() {
   const [closedState, setClosedState] = useState<{ key: string; list: Project[] } | null>(null);
   const [view, setView] = useState<"list" | "board" | "month" | "week">("list");
   const [scope, setScope] = useState<"mine" | "all">("mine");
-  const [shelf, setShelf] = useState(false);
   const [tasks, setTasks] = useState<PersonalTask[]>([]);
   const [tick, setTick] = useState(0);
   const [closedOpen, setClosedOpen] = useState(false);
@@ -200,50 +208,36 @@ export function ProjectsView() {
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-4">
-        <button
-          onClick={() => setShelf(!shelf)}
-          aria-expanded={shelf}
-          aria-controls="filter-shelf"
-          className="chip" data-on={activeFilters > 0}
-        >
-          <Icon name="filter" size={16} /> Filters
-          {activeFilters > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-2 text-xs font-bold text-n-50">{activeFilters}</span>}
-        </button>
-        <span className="text-sm text-muted">{scope === "mine" ? "Assigned to you" : "All projects you can see"} · {filtered.length} {filtered.length === 1 ? "project" : "projects"}</span>
-        {activeFilters > 0 && <button onClick={clearFilters} className="text-sm font-medium text-brand hover:underline">Reset</button>}
-      </div>
-
-      {shelf && (
-        <div id="filter-shelf" className="mb-6 space-y-4 card p-4 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">Show</span>
-            <div className="seg" role="group" aria-label="Which projects">
-              {([["mine", "Assigned to me"], ["all", "All projects"]] as const).map(([id, label]) => (
-                <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item">{label}</button>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={action} onChange={(e) => setAction(e.target.checked)} /> Action required</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={newOnly} onChange={(e) => setNewOnly(e.target.checked)} /> New comments</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={starredOnly} onChange={(e) => setStarredOnly(e.target.checked)} /> Starred</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={blockedOnly} onChange={(e) => setBlockedOnly(e.target.checked)} /> Blocked</label>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <select aria-label="Status" value={stage} onChange={(e) => setStage(e.target.value as Stage | "")} className="rounded border border-control px-2 py-2">
-              <option value="">Any status</option>{STAGES.map((s) => <option key={s}>{s}</option>)}
-            </select>
-            <select aria-label="Type" value={type} onChange={(e) => setType(e.target.value as ProjectType | "")} className="rounded border border-control px-2 py-2">
-              <option value="">Any type</option>{TYPES.map((t) => <option key={t}>{t}</option>)}
-            </select>
-            <select aria-label="Collaborator" value={collab} onChange={(e) => setCollab(e.target.value)} className="rounded border border-control px-2 py-2">
-              <option value="">Anyone</option>{users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select>
-            <label className="flex items-center gap-2">Due by <span className="w-44"><DatePicker value={before} onChange={setBefore} placeholder="Any date" className="!py-2" /></span></label>
-          </div>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <div className="seg" role="group" aria-label="Which projects">
+          {([["mine", "Assigned to me"], ["all", "All projects"]] as const).map(([id, label]) => (
+            <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item">{label}</button>
+          ))}
         </div>
-      )}
+        <span className="mx-2 h-5 w-px bg-line" aria-hidden />
+        <FilterPill label="Status" value={stage} onClear={() => setStage("")}>
+          {(close) => STAGES.map((s) => <FilterOption key={s} label={s} selected={stage === s} onSelect={() => { setStage(s); close(); }} />)}
+        </FilterPill>
+        <FilterPill label="Type" value={type} onClear={() => setType("")}>
+          {(close) => TYPES.map((t) => <FilterOption key={t} label={t} selected={type === t} onSelect={() => { setType(t); close(); }} />)}
+        </FilterPill>
+        <FilterPill label="Collaborator" value={users.find((u) => u.id === collab)?.name ?? (collab ? "Selected" : "")} onClear={() => setCollab("")}>
+          {(close) => users.length === 0 ? <p className="px-4 py-2 text-sm text-muted">No people to choose from yet.</p> : users.map((u) => <FilterOption key={u.id} label={u.name} selected={collab === u.id} onSelect={() => { setCollab(u.id); close(); }} />)}
+        </FilterPill>
+        <FilterPill label="Due by" value={before ? dayLabel(before) : ""} onClear={() => setBefore("")} width="w-72">
+          {(close) => (
+            <div>
+              {DUE_PRESETS.map((p) => { const d = p.at(localDay()); return <FilterOption key={p.label} label={p.label} selected={before === d} onSelect={() => { setBefore(d); close(); }} />; })}
+              <div className="mt-2 border-t border-line p-2"><DatePicker value={before} onChange={(d) => { setBefore(d); close(); }} placeholder="Pick a date" ariaLabel="Due by date" className="!h-10" /></div>
+            </div>
+          )}
+        </FilterPill>
+        {([[action, setAction, "Action required"], [newOnly, setNewOnly, "New comments"], [starredOnly, setStarredOnly, "Starred"], [blockedOnly, setBlockedOnly, "Blocked"]] as const).map(([on, set, label]) => (
+          <button key={label} onClick={() => set(!on)} aria-pressed={on} className="chip">{label}</button>
+        ))}
+        {activeFilters > 0 && <button onClick={clearFilters} className="btn btn-sm btn-ghost ml-auto text-muted"><Icon name="x" size={14} /> Clear filters</button>}
+      </div>
+      <p className="mb-4 text-sm text-muted">{scope === "mine" ? "Assigned to you" : "All projects you can see"} · {filtered.length} {filtered.length === 1 ? "project" : "projects"}</p>
 
       <StaleNotice />
       {loadError && (

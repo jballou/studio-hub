@@ -23,7 +23,7 @@ export function DueDateEdit({ project, late, onSaved }: { project: Pick<Project,
   };
   return (
     <div className={`w-40 shrink-0 ${busy ? "pointer-events-none opacity-60" : ""}`} title={late ? "Past due" : "Change the due date (updates Jira)"}>
-      <DatePicker value={project.deadline} onChange={save} min={project.startDate || undefined} placeholder="No due date" ariaLabel={`Due date for ${project.title}`} className="!py-2 text-xs" align="right" />
+      <DatePicker value={project.deadline} onChange={save} min={project.startDate || undefined} placeholder="No due date" ariaLabel={`Due date for ${project.title}`} className="!h-8 !py-0 text-xs" align="right" />
       {error && <p role="alert" className="mt-2 text-xs font-medium text-bad-fg">{error}</p>}
     </div>
   );
