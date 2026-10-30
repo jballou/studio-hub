@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { moveRule, renameField, updateNode } from "@/lib/brief/edit";
 import { OP_LABEL, QTYPE_LABEL, RESERVED_FIELDS, optionsOf, type Branch, type Flow, type Op, type QNode, type QType } from "@/lib/brief/flow";
@@ -23,6 +24,9 @@ export function NodeInspector({
   const isType = node.field === "type";
   const hasOptions = node.qtype === "choice" || node.qtype === "multichoice";
   const options = node.options ?? [];
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dropAt, setDropAt] = useState<number | null>(null);
+  const reorder = (from: number, to: number) => { const c = [...options]; const [m] = c.splice(from, 1); c.splice(to, 0, m); set({ options: c }); };
   const branches = node.branches ?? [];
 
   const setBranch = (i: number, patch: Partial<Branch> | { when: Partial<Branch["when"]> }) => {
@@ -56,8 +60,8 @@ export function NodeInspector({
               {(Object.keys(QTYPE_LABEL) as QType[]).map((t) => <option key={t} value={t}>{QTYPE_LABEL[t]}</option>)}
             </select>
           </label>
-          <label className="flex items-end gap-2 pb-2 text-sm font-medium">
-            <input type="checkbox" checked={node.required} onChange={(e) => set({ required: e.target.checked })} /> Required
+          <label className="flex h-10 cursor-pointer items-center gap-2 self-end text-sm font-bold">
+            <input type="checkbox" checked={node.required} onChange={(e) => set({ required: e.target.checked })} className="h-4 w-4 accent-brand" /> Required
           </label>
         </div>
         {(node.qtype === "text" || node.qtype === "longtext") && (
@@ -72,12 +76,22 @@ export function NodeInspector({
           <h3 className="mb-2 text-xs font-bold">Options</h3>
           <ul className="space-y-2">
             {options.map((o, i) => (
-              <li key={o.id} className="space-y-2">
-                <div className="flex gap-2">
+              <li
+                key={o.id} className={`space-y-2 ${dropAt === i && dragFrom !== null && dragFrom !== i ? (dragFrom < i ? "border-b-2" : "border-t-2") + " border-brand" : ""}`}
+                draggable={dragFrom !== null} onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; }}
+                onDragOver={(e) => { if (dragFrom === null) return; e.preventDefault(); setDropAt(i); }}
+                onDrop={(e) => { e.preventDefault(); if (dragFrom !== null && dragFrom !== i) reorder(dragFrom, i); setDragFrom(null); setDropAt(null); }}
+                onDragEnd={() => { setDragFrom(null); setDropAt(null); }}
+              >
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button" aria-label={`Reorder ${o.label}. Drag, or press the up and down arrow keys.`} title="Drag to reorder"
+                    onPointerDown={() => setDragFrom(i)} onPointerUp={() => setDragFrom(null)}
+                    onKeyDown={(e) => { const to = e.key === "ArrowUp" ? i - 1 : e.key === "ArrowDown" ? i + 1 : -1; if (to >= 0 && to < options.length) { e.preventDefault(); reorder(i, to); } }}
+                    className="flex h-10 w-6 shrink-0 cursor-grab items-center justify-center rounded-tight text-muted hover:bg-n-150 active:cursor-grabbing"
+                  ><Icon name="gripVertical" size={16} /></button>
                   <input aria-label={`Option ${i + 1}`} value={o.label} onChange={(e) => set({ options: options.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} className={input} />
-                  <button type="button" aria-label="Move option up" disabled={i === 0} onClick={() => { const c = [...options]; [c[i - 1], c[i]] = [c[i], c[i - 1]]; set({ options: c }); }} className="rounded-tight border border-control px-2 disabled:opacity-30"><span className="inline-block -rotate-90"><Icon name="chevronRight" size={12} /></span></button>
-                  <button type="button" aria-label="Move option down" disabled={i === options.length - 1} onClick={() => { const c = [...options]; [c[i + 1], c[i]] = [c[i], c[i + 1]]; set({ options: c }); }} className="rounded-tight border border-control px-2 disabled:opacity-30"><span className="inline-block rotate-90"><Icon name="chevronRight" size={12} /></span></button>
-                  <button type="button" aria-label={`Remove option ${o.label}`} onClick={() => set({ options: options.filter((_, j) => j !== i) })} className="rounded-tight border border-control px-2 text-bad-fg"><Icon name="x" size={12} /></button>
+                  <button type="button" aria-label={`Remove option ${o.label}`} onClick={() => set({ options: options.filter((_, j) => j !== i) })} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight border border-control text-bad-fg hover:bg-n-150"><Icon name="delete" size={16} /></button>
                 </div>
                 {isType && (
                   <input aria-label={`Jira issue type id for ${o.label}`} value={o.jiraIssueTypeId ?? ""} onChange={(e) => set({ options: options.map((x, j) => (j === i ? { ...x, jiraIssueTypeId: e.target.value.trim() || undefined } : x)) })} placeholder="Jira issue type ID (e.g. 18868)" className={`${input} font-mono text-xs`} />

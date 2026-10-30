@@ -228,8 +228,8 @@ export function CalendarView() {
           </div>
 
           <div className="seg">
-            {(["month", "week", "list"] as View[]).map((v) => (
-              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item">{v}</button>
+            {([["month", "Month", "calendarDays"], ["week", "Week", "calendarWeek"], ["list", "List", "listStart"]] as const).map(([v, label, icon]) => (
+              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item"><Icon name={icon} size={14} />{label}</button>
             ))}
           </div>
 

@@ -21,13 +21,13 @@ const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
 type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean; /** shown to the creative team only */ forCreatives?: boolean };
 
 const ITEMS: Item[] = [
-  { href: "/my-day", label: "My Day", icon: "dashboardAdd", match: (p) => p.startsWith("/my-day") },
+  { href: "/my-day", label: "My Day", icon: "layoutDashboard", match: (p) => p.startsWith("/my-day") },
   { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
-  { href: "/projects", label: "Projects", icon: "folderFilled", match: (p) => p === "/projects" || p === "/projects/new" },
+  { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new" },
   { href: "/team", label: "Team", icon: "usersRound", match: (p) => p.startsWith("/team"), forCreatives: true },
-  { href: "/calendar", label: "Calendar", icon: "calendarEdit", match: (p) => p.startsWith("/calendar") },
-  { href: "/review", label: "Review", icon: "chat", match: (p) => p.startsWith("/review") },
-  { href: "/blocking", label: "Waiting on you", icon: "danger", match: (p) => p.startsWith("/blocking") },
+  { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
+  { href: "/review", label: "Review", icon: "messagesSquare", match: (p) => p.startsWith("/review") },
+  { href: "/blocking", label: "Waiting on you", icon: "ban", match: (p) => p.startsWith("/blocking") },
 ];
 
 const ANALYTICS_ITEM: Item = { href: "/analytics", label: "Analytics", icon: "chartColumn", match: (p) => p.startsWith("/analytics") };

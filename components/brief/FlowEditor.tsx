@@ -147,9 +147,9 @@ export function FlowEditor() {
           window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
         }}>
           <div className="sticky left-0 top-0 z-10 flex w-full flex-wrap items-center gap-2 border-b border-line bg-white/90 p-2 text-xs backdrop-blur">
-            <div role="tablist" aria-label="Map view" className="flex rounded-tight bg-n-150 p-px">
-              {([["types", "By request type"], ["map", "Full map"]] as const).map(([k, l]) => (
-                <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className={`rounded-tight px-4 py-2 font-medium ${view === k ? "bg-white shadow-sm" : "text-muted hover:text-n-1000"}`}>{l}</button>
+            <div role="tablist" aria-label="Map view" className="seg">
+              {([["types", "By request type", "gitBranchPlus"], ["map", "Full map", "graphHub"]] as const).map(([k, l, icon]) => (
+                <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className="seg-item"><Icon name={icon} size={14} />{l}</button>
               ))}
             </div>
             {view === "map" && (

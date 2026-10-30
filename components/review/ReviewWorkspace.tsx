@@ -314,8 +314,8 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
         )}
         <span className="h-5 w-px bg-line" aria-hidden="true" />
         <div role="group" aria-label="What clicking the design does" className="seg">
-          <button onClick={() => setCommenting(false)} aria-pressed={!commenting} title="Scroll and click inside the design" className="seg-item">Browse</button>
-          <button onClick={() => setCommenting(true)} aria-pressed={commenting} title="Click the design to add a pin" className="seg-item"><Icon name="comment" size={16} /> Comment</button>
+          <button onClick={() => setCommenting(false)} aria-pressed={!commenting} title="Scroll and click inside the design" className="seg-item"><Icon name="pointer" size={14} /> Browse</button>
+          <button onClick={() => setCommenting(true)} aria-pressed={commenting} title="Click the design to add a pin" className="seg-item"><Icon name="comment" size={14} /> Comment</button>
         </div>
         {kind !== "audio" && <ZoomControl zoom={zoom} onChange={setZoom} />}
         <button

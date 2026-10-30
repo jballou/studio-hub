@@ -212,8 +212,8 @@ export function ProjectsView() {
             </select>
           </label>}
           <div className="seg">
-            {([["list", "listStart"], ["board", "kanban"], ["month", "calendarDays"], ["week", "calendarWeek"]] as const).map(([v, icon]) => (
-              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item"><Icon name={icon} size={14} />{v}</button>
+            {([["list", "List", "listStart"], ["board", "Board", "kanban"], ["month", "Month", "calendarDays"], ["week", "Week", "calendarWeek"]] as const).map(([v, label, icon]) => (
+              <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item"><Icon name={icon} size={14} />{label}</button>
             ))}
           </div>
         </div>
@@ -221,8 +221,8 @@ export function ProjectsView() {
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <div className="seg" role="group" aria-label="Which projects">
-          {([["mine", "Assigned to me"], ["all", "All projects"]] as const).map(([id, label]) => (
-            <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item">{label}</button>
+          {([["mine", "Assigned to you", "userRound"], ["all", "All projects", "folderUsers"]] as const).map(([id, label, icon]) => (
+            <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item"><Icon name={icon} size={14} />{label}</button>
           ))}
         </div>
         <button onClick={() => setShelf(!shelf)} aria-expanded={shelf} aria-controls="filter-shelf" className="chip" data-on={shelf || filterCount > 0}>

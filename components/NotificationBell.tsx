@@ -77,7 +77,7 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
           </div>
           {waiting > 0 && (
             <Link href="/blocking" onClick={() => setOpen(false)} className="flex items-center gap-4 border-b border-line bg-bad-bg px-4 py-4 text-sm hover:opacity-90">
-              <Icon name="danger" size={16} />
+              <Icon name="ban" size={16} />
               <span className="flex-1 font-medium text-bad-fg">{waiting} {waiting === 1 ? "project is" : "projects are"} waiting on you</span>
               <Icon name="chevronRight" size={14} />
             </Link>
