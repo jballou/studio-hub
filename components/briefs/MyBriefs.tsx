@@ -13,6 +13,7 @@ import { BRIEF_STEPS, excerpt, matchesFilter, needsInput, sortBriefs, stepIndex,
 import { daysBetween, localDay } from "@/lib/myday/plan";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import type { Project, User } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
 const FILTERS: { id: BriefFilter; label: string }[] = [
@@ -122,10 +123,9 @@ export function MyBriefs() {
     <main className="page">
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{first ? `${first}'s briefs` : "My briefs"}</h1>
+          <PageTitle>{first ? `${first}'s briefs` : "My briefs"}</PageTitle>
           <p className="text-sm text-muted">Everything you&apos;ve asked the creative team for, and where it stands.</p>
         </div>
-        <Link href="/projects/new" className="btn btn-md btn-primary ml-auto"><Icon name="plus" size={16} /> New brief</Link>
       </div>
 
       <div className="mt-4"><StaleNotice /></div>
@@ -141,7 +141,7 @@ export function MyBriefs() {
           <Logo size={64} className="mx-auto mb-4 shadow-md" />
           <h2 className="text-xl font-bold">No briefs yet</h2>
           <p className="mx-auto mb-6 mt-2 max-w-md text-sm text-muted">Start a brief and answer a few questions. The creative team picks it up, and you can follow it here. Briefs you create in Jira show up here too.</p>
-          <Link href="/projects/new" className="btn btn-md btn-primary"><Icon name="plus" size={16} /> Start a brief</Link>
+          <Link href="/projects/new" className="btn btn-md btn-secondary"><Icon name="plus" size={16} /> Start a brief</Link>
         </section>
       ) : (
         <>

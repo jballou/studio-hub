@@ -7,6 +7,7 @@ import { Tag } from "@/components/ui/Tag";
 import { repo } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
 import type { Asset } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 type Item = Asset & { daysLeft: number };
 
@@ -41,7 +42,7 @@ export function AdminTrash() {
   return (
     <main className="page">
       <div className="mb-2 flex items-center gap-4">
-        <h1 className="flex items-center gap-2 text-2xl font-bold"><Icon name="trash" size={22} /> Trash</h1>
+        <PageTitle>Trash</PageTitle>
         {me?.isAdmin && (items?.length ?? 0) > 0 && (
           <button onClick={() => setAsk({ kind: "all" })} className="btn btn-md btn-danger ml-auto">Empty Trash</button>
         )}

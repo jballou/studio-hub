@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { isJira } from "@/lib/data/mode";
+import { PageTitle } from "@/components/PageTitle";
 
 type Check = { id: string; label: string; ok: boolean; detail: string };
 type Result = { checks: Check[]; build: { env: string; commit: string | null; site: string | null } };
@@ -36,7 +37,7 @@ export function AdminSystem() {
   return (
     <main className="page">
       <div className="mb-4 flex items-center gap-4">
-        <h1 className="text-2xl font-bold">System</h1>
+        <PageTitle>System</PageTitle>
         <button onClick={load} disabled={loading} className="btn btn-md btn-secondary ml-auto">{loading ? "Checking…" : "Re-check"}</button>
       </div>
       <p className="mb-4 text-sm text-muted">Is everything the app depends on connected? Shows names and counts only, never secret values. Useful when handing this over.</p>

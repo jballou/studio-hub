@@ -47,6 +47,10 @@
   --color-gold-bg: #f9f2d2; --color-gold-line: #f2e2a6; --color-gold-fg: #7c6403; /* Yellow 100/200/700 */
   --color-focus: #5568bf; /* Periwinkle 600 [CONFIRM] */
 
+  /* Data colors for charts, bars and calendar types. Lighter in dark mode so they keep their contrast. */
+  --color-data-ok: #08794a; --color-data-watch: #a95c18; --color-data-late: #8a3734; --color-data-none: #908d89;
+  --color-data-progress: #348289; --color-data-social: #5568bf; --color-data-product: #a18102; --color-data-other: #686764; --color-data-task: #464543;
+
   --font-sans: "National 2", system-ui, sans-serif;
 
   /*
@@ -71,13 +75,27 @@
   --text-display-lg: 76px; --text-display-lg--line-height: 80px; --text-display-lg--letter-spacing: -1.52px;
 }
 
-/* The one page container: left aligned, same width and padding on every tab. Narrow reading pages add [&>*]:max-w-3xl. */
+/* The one content column. The top bar and every page sit in it, so their left and right edges always line up.
+   Centered above 80rem so a wide monitor gets even margins instead of a ragged right edge. */
+@utility column {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 16px;
+  @media (min-width: 768px) { padding-inline: 32px; }
+}
+
+/* The one page container: the column plus vertical padding. Narrow reading pages add [&>*]:max-w-3xl. */
 @utility page {
   width: 100%;
   max-width: 80rem;
+  margin-inline: auto;
   padding: 16px;
   @media (min-width: 768px) { padding: 32px; }
 }
+
+/* Keep the scrollbar's width reserved so pages with and without one share the same right edge. */
+html { scrollbar-gutter: stable; }
 
 /* ---- Buttons: one system, three sizes, four looks ----
    Sizes:  btn-sm (32px, chips and toolbars)  btn-md (40px, default)  btn-lg (48px, the one big action on a screen)
@@ -102,6 +120,8 @@
   .btn-secondary:hover:not(:disabled), .btn-danger:hover:not(:disabled), .btn-ghost:hover:not(:disabled) { background: var(--color-n-150); }
   .btn-icon { width: 32px; height: 32px; padding: 0; }
   .btn-icon.btn-icon-lg { width: 40px; height: 40px; }
+  /* Touch screens get the 44px target. */
+  @media (pointer: coarse) { .btn-icon { width: 44px; height: 44px; } }
 
   /* Segmented control: a group of exclusive choices (views, ranges, tabs). Items use aria-pressed / aria-selected.
      The green highlight is ::before, positioned by SegIndicator, so it slides to the chosen item. */
@@ -179,7 +199,12 @@ body {
 /* Wizard messages ease in; skipped entirely for people who prefer reduced motion. */
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease-out both; }
-@media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  /* Motion that only decorates a change of state: the state still changes, it just doesn't travel. */
+  .seg[data-ready]::before { transition: none; }
+  .seg-item, .btn, .card-hover { transition: none; }
+}
 
 /* ---- Light values for the pieces that aren't palette tokens ---- */
 :root { --shell: #ebe8e3; --paper-dot: #e4e2dd; --card: #ffffff; --surface: #fefdfb; --link: #08794a; }
@@ -213,6 +238,8 @@ body {
   --color-bad-bg: #3e201d; --color-bad-line: #7c3b37; --color-bad-fg: #f3aaa3;
   --color-gold-bg: #3a3110; --color-gold-line: #6d5c1b; --color-gold-fg: #f2e2a6;
   --color-focus: #93a0f2;
+  --color-data-ok: #3fd08f; --color-data-watch: #f2c48a; --color-data-late: #f3aaa3; --color-data-none: #7c8781;
+  --color-data-progress: #6fc0c7; --color-data-social: #93a0f2; --color-data-product: #e0c455; --color-data-other: #9fa9a3; --color-data-task: #c9d2cc;
 }
 :root[data-theme="dark"] .bg-white,
 :root[data-theme="dark"] .bg-white\/60,

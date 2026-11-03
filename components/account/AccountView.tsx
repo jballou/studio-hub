@@ -7,6 +7,7 @@ import { Avatar } from "@/components/review/Avatar";
 import { googleRepo, isJira, type GoogleStatus } from "@/lib/data";
 import { useMe } from "@/hooks/useMe";
 import { setSounds, soundsOn } from "@/lib/sfx";
+import { PageTitle } from "@/components/PageTitle";
 
 const PROFILE_URL = "https://id.atlassian.com/manage-profile/profile-and-visibility";
 
@@ -36,7 +37,7 @@ export function AccountView() {
 
   return (
     <main className="page [&>*]:max-w-3xl">
-      <h1 className="text-2xl font-bold">Account</h1>
+      <PageTitle>Account</PageTitle>
       <div className="mt-6 space-y-6">
         <Section icon="userRound" title="Profile">
           <div className="flex flex-wrap items-center gap-4">

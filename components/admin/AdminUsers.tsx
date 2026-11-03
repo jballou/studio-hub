@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { isJira } from "@/lib/data/mode";
+import { PageTitle } from "@/components/PageTitle";
 
 type Role = "requester" | "creative" | "admin";
 type UserRow = { email: string; name: string; role: Role; status: "active" | "disabled"; addedBy: string; addedAt: string; lastSignIn?: string };
@@ -72,7 +73,7 @@ export function AdminUsers() {
   if (!isJira) {
     return (
       <main className="page [&>*:not(.fixed)]:max-w-3xl">
-        <h1 className="text-2xl font-bold">Team &amp; access</h1>
+        <PageTitle>Team &amp; access</PageTitle>
         <p className="mt-2 text-sm text-muted">This screen is available once sign-in is turned on (NEXT_PUBLIC_DATA_SOURCE=jira).</p>
       </main>
     );
@@ -80,7 +81,7 @@ export function AdminUsers() {
   if (denied) {
     return (
       <main className="page [&>*:not(.fixed)]:max-w-3xl">
-        <h1 className="text-2xl font-bold">Team &amp; access</h1>
+        <PageTitle>Team &amp; access</PageTitle>
         <p className="mt-2 text-sm text-muted">Only Brand Creative admins can manage people. Ask an admin if you need a change.</p>
       </main>
     );
@@ -91,7 +92,7 @@ export function AdminUsers() {
 
   return (
     <main className="page">
-      <h1 className="text-2xl font-bold">Team &amp; access</h1>
+      <PageTitle>Team &amp; access</PageTitle>
       <p className="mb-6 mt-2 text-sm text-muted">Anyone with a SurveyMonkey Atlassian account can sign in as a requester. Use this page to give people more access or take it away.</p>
 
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}

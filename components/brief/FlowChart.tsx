@@ -57,7 +57,7 @@ export function FlowChart({
         <svg width={W} height={H} className="pointer-events-none absolute inset-0" aria-hidden>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0,0 L10,5 L0,10 z" fill="#686764" />
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--color-n-650)" />
             </marker>
           </defs>
           {edges.map((e) => {
@@ -65,12 +65,12 @@ export function FlowChart({
             const dim = !!selectedId && !hot;
             return (
             <g key={e.key} opacity={dim ? 0.3 : 1}>
-              <path d={e.d} fill="none" stroke={hot ? "var(--color-brand)" : "#686764"} strokeWidth={hot ? 2.5 : 1.5} strokeDasharray={e.dashed ? "5 4" : undefined} markerEnd="url(#arrow)" />
+              <path d={e.d} fill="none" stroke={hot ? "var(--color-brand)" : "var(--color-n-650)"} strokeWidth={hot ? 2.5 : 1.5} strokeDasharray={e.dashed ? "5 4" : undefined} markerEnd="url(#arrow)" />
               {e.label && (
                 <g>
                   <title>{e.full}</title>
-                  <rect x={e.lx - Math.min(e.label.length, 22) * 3.1 - 7} y={e.ly - 9} width={Math.min(e.label.length, 22) * 6.2 + 14} height={18} rx={9} fill="#fefdfb" stroke="#d7d3cc" />
-                  <text x={e.lx} y={e.ly + 4} textAnchor="middle" fontSize={12} fill="#464543">{e.label.length > 22 ? `${e.label.slice(0, 21)}…` : e.label}</text>
+                  <rect x={e.lx - Math.min(e.label.length, 22) * 3.1 - 7} y={e.ly - 9} width={Math.min(e.label.length, 22) * 6.2 + 14} height={18} rx={9} fill="var(--surface)" stroke="var(--color-line)" />
+                  <text x={e.lx} y={e.ly + 4} textAnchor="middle" fontSize={12} fill="var(--color-n-800)">{e.label.length > 22 ? `${e.label.slice(0, 21)}…` : e.label}</text>
                 </g>
               )}
             </g>

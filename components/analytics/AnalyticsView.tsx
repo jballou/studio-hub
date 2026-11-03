@@ -10,6 +10,7 @@ import { useMe } from "@/hooks/useMe";
 import { byIssueType, byPerson, byProjectType, daysLabel, groupStats, percentLabel, summarize, type Stats } from "@/lib/analytics";
 import { needsStartDate } from "@/lib/startdate";
 import type { Project } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 type Scope = "you" | "team";
 type Cut = "issue" | "project" | "person";
@@ -107,11 +108,11 @@ export function AnalyticsView() {
     <main className="page">
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
+          <PageTitle>Analytics</PageTitle>
           <p className="text-sm text-muted">How long tickets stay open, and how long the work itself takes.</p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <div role="group" aria-label="Whose work" className="seg">
+          <div suppressHydrationWarning role="group" aria-label="Whose work" className="seg">
             {(["you", "team"] as const).map((s) => (
               <button key={s} onClick={() => { setScope(s); if (s === "you" && cut === "person") setCut("issue"); }} aria-pressed={scope === s} className="seg-item"><Icon name={s === "you" ? "userRound" : "usersRound"} size={14} />{s === "you" ? "You" : "Team"}</button>
             ))}

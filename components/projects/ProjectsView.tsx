@@ -22,6 +22,7 @@ import { lookbackLabel } from "@/lib/settings";
 import { useMe } from "@/hooks/useMe";
 import { localDay } from "@/lib/myday/plan";
 import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, User } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 const GROUPS: { id: ProjectGroup; label: string }[] = [
   { id: "open", label: "Open" },
@@ -204,14 +205,14 @@ export function ProjectsView() {
   return (
     <main className="page">
       <div className="mb-4 flex flex-wrap items-center gap-4">
-        <h1 className="text-2xl font-bold">Projects</h1>
+        <PageTitle>Projects</PageTitle>
         <div className="ml-auto flex items-center gap-4 text-xs">
           {!isJira && <label className="flex items-center gap-2">Viewing as
             <select value={meId} onChange={(e) => setMeId(e.target.value)} className="rounded-tight border border-control px-2 py-2">
               {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
             </select>
           </label>}
-          <div className="seg">
+          <div suppressHydrationWarning className="seg">
             {([["list", "List", "listStart"], ["board", "Board", "kanban"], ["month", "Month", "calendarDays"], ["week", "Week", "calendarWeek"]] as const).map(([v, label, icon]) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item"><Icon name={icon} size={14} />{label}</button>
             ))}
@@ -220,7 +221,7 @@ export function ProjectsView() {
       </div>
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <div className="seg" role="group" aria-label="Which projects">
+        <div suppressHydrationWarning className="seg" role="group" aria-label="Which projects">
           {([["mine", "Assigned to you", "userRound"], ["all", "All projects", "folderUsers"]] as const).map(([id, label, icon]) => (
             <button key={id} onClick={() => setScope(id)} aria-pressed={scope === id} className="seg-item"><Icon name={icon} size={14} />{label}</button>
           ))}
@@ -303,7 +304,7 @@ export function ProjectsView() {
               {!shown ? null : collapsible && closedList === null ? <p className="text-sm text-muted">Loading closed projects…</p> : rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
                   {nest(rows).map(({ p, depth }) => (
-                    <li key={p.id} style={{ marginLeft: depth * 32 }} className={`flex items-center gap-2 rounded-tight border bg-white pl-2 hover:border-brand ${depth ? "border-line border-l-4 border-l-n-200" : "border-line"}`}>
+                    <li key={p.id} style={{ marginLeft: depth * 32 }} className={`flex items-center gap-2 rounded-tight border bg-white pl-2 hover:border-brand border-line`}>
                       <StarButton starred={favs.isStarred(p.jiraKey)} onToggle={() => favs.toggle(p.jiraKey, p.title)} label={p.title} />
                       <Link href={`/projects/${p.jiraKey}`} className="flex min-w-0 flex-1 items-center gap-4 p-4 pl-2">
                         <div className="min-w-0 flex-1">

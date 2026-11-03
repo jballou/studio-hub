@@ -8,6 +8,7 @@ import { isJira } from "@/lib/data/mode";
 import { toCsvExportUrl } from "@/lib/calendar/gsheet";
 import { loadSource, loadSources, saveUserSources } from "@/lib/calendar/store";
 import { SOURCE_TYPES, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
+import { PageTitle } from "@/components/PageTitle";
 
 const field = "w-full rounded-tight border border-control bg-white px-4 py-2 text-sm";
 
@@ -62,7 +63,7 @@ export function SourcesView() {
   return (
     <main className="page [&>*:not(.fixed)]:max-w-3xl">
       <Link href="/calendar" className="mb-2 inline-block text-sm font-medium text-brand hover:underline">← Calendar</Link>
-      <h1 className="text-2xl font-bold">Calendar sources</h1>
+      <PageTitle>Calendar sources</PageTitle>
       <p className="mb-6 mt-2 text-sm text-muted">Everything on the calendar comes from a source: a Google Sheet tracker or a Jira query. Add one and its dates show up for everyone.</p>
 
       <ul className="mb-8 space-y-2">

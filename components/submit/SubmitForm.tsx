@@ -18,6 +18,7 @@ import { parseSource, SHAPES, type DriveType, type Shape } from "@/lib/sources";
 import { AUDIO_EXTENSIONS, MAX_UPLOAD_BYTES, kindFromFile, mimeOf } from "@/lib/media";
 import { localTimezone, timezoneOptions, zonedToInstant } from "@/lib/time";
 import type { Asset, AssetKind, Device, Person, Project, SourceKind } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 const SOURCES: { id: SourceKind; label: string; hint: string; icon: IconName; placeholder?: string }[] = [
   { id: "figma", label: "Figma frame", hint: "One frame, or pick several", icon: "link", placeholder: "https://www.figma.com/design/…?node-id=12-34" },
@@ -309,7 +310,7 @@ export function SubmitForm() {
 
   return (
     <main className="page [&>*:not(.fixed)]:max-w-2xl">
-      <h1 className="text-2xl font-bold">{versionOf ? "Upload a new version" : "Submit for feedback"}</h1>
+      <PageTitle>{versionOf ? "Upload a new version" : "Submit for feedback"}</PageTitle>
       {versionOf && (
         <p className="mt-2 rounded-tight border border-info-line bg-info-bg px-4 py-4 text-sm text-info-fg">
           This will be <b>version {versionOf.versionIds.length + 1}</b> of “{versionOf.name}”. Reviewers and approvers are carried over (change them below if needed), and it goes back to awaiting feedback. Add one file or link.
@@ -494,7 +495,7 @@ export function SubmitForm() {
             <div className="w-48"><DatePicker ariaLabel="Date" value={dueDate} onChange={setDueDate} /></div>
             <input aria-label="Time" type="time" className={`${field} w-32 font-normal`} value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
             <select aria-label="Timezone" className={`${field} min-w-56 flex-1 font-normal`} value={dueTz} onChange={(e) => setDueTz(e.target.value)}>
-              {timezoneOptions(dueTz).map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+              {timezoneOptions(dueTz).map((t) => <option key={t.id} value={t.id} suppressHydrationWarning>{t.label}</option>)}
             </select>
           </div>
         </div>

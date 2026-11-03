@@ -153,7 +153,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
           <div className="flex -space-x-2" aria-label={`${people.length} people on this project`}>
             {people.slice(0, 4).map((u) => <span key={u.id} className="rounded-round ring-2 ring-white" title={u.name}><Avatar user={u} size={32} /></span>)}
           </div>
-          <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="btn btn-md btn-primary">Submit for feedback</Link>
+          <Link href={`/submit?ticket=${project.jiraKey}&title=${encodeURIComponent(project.title)}`} className="btn btn-md btn-secondary">Submit for feedback</Link>
           <a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="btn btn-md btn-secondary">Open in Jira</a>
           {needsStartDate(project) && canManage && <PlanWork size="md" project={project} onPlanned={(d) => setProject({ ...project, startDate: d })} />}
           {canUnblock && project.group !== "closed" && (
@@ -298,7 +298,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
         assets.length === 0 ? (
           <div className="rounded-tight border border-dashed border-control bg-white/60 p-10 text-center">
             <p className="mb-4 text-sm text-muted">Nothing has been shared for feedback yet.</p>
-            <Link href={`/submit?ticket=${project.jiraKey}`} className="btn btn-md btn-primary">Submit for feedback</Link>
+            <Link href={`/submit?ticket=${project.jiraKey}`} className="btn btn-md btn-secondary">Submit for feedback</Link>
           </div>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

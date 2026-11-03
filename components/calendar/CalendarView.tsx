@@ -12,6 +12,7 @@ import { MY_TASKS_SOURCE, tasksResult } from "@/lib/calendar/tasks";
 import { ITEM_TYPES, STATUSES, type CalendarItem, type CalendarSource, type ItemType, type SourceResult } from "@/lib/calendar/types";
 import { ItemPanel } from "./ItemPanel";
 import { STATUS_TONE, TYPE_BAR, TYPE_SHORT, TYPE_TONE } from "./meta";
+import { PageTitle } from "@/components/PageTitle";
 
 type View = "month" | "week" | "list";
 type Panel = { kind: "item"; id: string } | { kind: "day"; day: string } | null;
@@ -36,8 +37,8 @@ function Chip({ item, onOpen }: { item: CalendarItem; onOpen: () => void }) {
       onClick={onOpen}
       title={`${TYPE_SHORT[item.type]}: ${item.title}`}
       className="flex w-full items-center gap-2 truncate rounded-tight border border-line bg-white py-0 pl-2 pr-2 text-left text-xs hover:bg-n-150"
-      style={{ borderLeft: `3px solid ${TYPE_BAR[item.type]}` }}
     >
+      <span className="h-2 w-2 shrink-0 rounded-round" style={{ background: TYPE_BAR[item.type] }} aria-hidden />
       <b className="shrink-0">{TYPE_SHORT[item.type]}</b>
       <span className="truncate">{item.title}</span>
     </button>
@@ -163,7 +164,7 @@ export function CalendarView() {
   return (
     <main className="page">
       <div className="mb-4 flex flex-wrap items-center gap-4">
-        <h1 className="text-2xl font-bold">Calendar</h1>
+        <PageTitle>Calendar</PageTitle>
         <div className="flex items-center gap-2">
           <button onClick={() => move(-1)} aria-label="Previous" className={iconBtn}><span className="rotate-180"><Icon name="chevronRight" size={14} /></span></button>
           <button onClick={() => setCursor(todayIso())} className="btn btn-md btn-secondary">Today</button>
@@ -227,7 +228,7 @@ export function CalendarView() {
             )}
           </div>
 
-          <div className="seg">
+          <div suppressHydrationWarning className="seg">
             {([["month", "Month", "calendarDays"], ["week", "Week", "calendarWeek"], ["list", "List", "listStart"]] as const).map(([v, label, icon]) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className="seg-item"><Icon name={icon} size={14} />{label}</button>
             ))}
@@ -301,8 +302,8 @@ export function CalendarView() {
               <header className="mb-2 flex items-baseline gap-2 text-sm"><b>{dayLabel(d, { weekday: "short" })}</b><span className="text-muted">{fromIso(d).getDate()}</span></header>
               <div className="space-y-2">
                 {(byDay.get(d) ?? []).map((i) => (
-                  <button key={i.id + d} onClick={() => open(i.id)} className="block w-full rounded-tight border border-line p-2 text-left text-xs hover:bg-n-150" style={{ borderLeft: `3px solid ${TYPE_BAR[i.type]}` }}>
-                    <span className="mb-2 flex items-center gap-2"><Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>{i.time != null && <span className="text-muted">{formatTime(i.time)}</span>}</span>
+                  <button key={i.id + d} onClick={() => open(i.id)} className="block w-full rounded-tight border border-line p-2 text-left text-xs hover:bg-n-150">
+                    <span className="mb-2 flex items-center gap-2"><span className="h-2 w-2 shrink-0 rounded-round" style={{ background: TYPE_BAR[i.type] }} aria-hidden /><Tag tone={TYPE_TONE[i.type]}>{TYPE_SHORT[i.type]}</Tag>{i.time != null && <span className="text-muted">{formatTime(i.time)}</span>}</span>
                     <span className="block font-medium">{i.title}</span>
                     {i.channel && <span className="text-muted">{i.channel}</span>}
                   </button>

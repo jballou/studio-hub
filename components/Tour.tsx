@@ -73,7 +73,7 @@ export function Tour() {
 
   return (
     <div className="fixed inset-0 z-[70]" onMouseDown={close}>
-      <div aria-hidden="true" className="pointer-events-none fixed rounded-tight transition-all duration-200" style={{ top: box.top, left: box.left, width: box.width, height: box.height, boxShadow: "0 0 0 9999px rgb(20 28 24 / 0.6)" }} />
+      <div aria-hidden="true" className="pointer-events-none fixed rounded-tight motion-safe:transition-all motion-safe:duration-200" style={{ top: box.top, left: box.left, width: box.width, height: box.height, boxShadow: "0 0 0 9999px rgb(20 28 24 / 0.6)" }} />
       <div
         role="dialog" aria-modal="true" aria-label={`Tour, step ${i + 1} of ${steps.length}`}
         onMouseDown={(e) => e.stopPropagation()}

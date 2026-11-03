@@ -22,19 +22,23 @@ export function TopBar() {
   // On a section's own page the page title already says where you are. Preferences has its own side menu, and "new" pages carry their own title.
   const crumb = !!section && rest.length > 0 && section.prefix !== "/admin" && rest[0] !== "new";
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b border-line px-4 text-sm text-muted md:px-8">
-      {crumb && (
-        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
-          <Link href={section!.prefix} className="truncate hover:text-ink">{section.label}</Link>
-          {rest.map((r, i) => (
-            <span key={i} className="flex min-w-0 items-center gap-2">
-              <Icon name="chevronRight" size={12} />
-              <span className={`truncate ${i === rest.length - 1 ? "font-medium text-ink" : ""}`}>{decodeURIComponent(r)}</span>
-            </span>
-          ))}
-        </nav>
-      )}
-      <div className="ml-auto"><NewProjectButton /></div>
+    <header className="shrink-0 border-b border-line text-sm text-muted">
+      <div className="column flex h-16 items-center gap-4">
+        {/* Pages put their title here (see PageTitle), so it never repeats in the page itself. */}
+        <div id="page-title" className="min-w-0 truncate text-xl font-bold text-ink empty:hidden" />
+        {crumb && (
+          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
+            <Link href={section!.prefix} className="truncate hover:text-ink">{section!.label}</Link>
+            {rest.map((r, i) => (
+              <span key={i} className="flex min-w-0 items-center gap-2">
+                <Icon name="chevronRight" size={12} />
+                <span className={`truncate ${i === rest.length - 1 ? "font-medium text-ink" : ""}`}>{decodeURIComponent(r)}</span>
+              </span>
+            ))}
+          </nav>
+        )}
+        <div className="ml-auto"><NewProjectButton /></div>
+      </div>
     </header>
   );
 }

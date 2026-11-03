@@ -6,6 +6,7 @@ import { Callout, Tag } from "@/components/ui/Tag";
 import { StatusTag } from "@/components/ui/Tag";
 import { blocksRepo, type MyBlock } from "@/lib/data/blocks";
 import { daysSince } from "./BlockedTag";
+import { PageTitle } from "@/components/PageTitle";
 
 /** Everything waiting on the signed-in person, with a one-click way to say "done". */
 export function BlockingYou() {
@@ -42,7 +43,7 @@ export function BlockingYou() {
 
   return (
     <main className="page">
-      <h1 className="text-2xl font-bold">Waiting on you</h1>
+      <PageTitle>Waiting on you</PageTitle>
       <p className="mb-6 mt-2 text-sm text-muted">Projects that are waiting on something from you. Clear each one when you&apos;ve done what&apos;s needed so the team can keep moving.</p>
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
 

@@ -8,6 +8,7 @@ import { flowRepo, projectsRepo } from "@/lib/data";
 import { display, interpolate, walk, type AnswerValue, type Answers, type Flow, type QNode } from "@/lib/brief/flow";
 import { toSubmission } from "@/lib/brief/submit";
 import { QuestionInput } from "./QuestionInput";
+import { PageTitle } from "@/components/PageTitle";
 
 const DRAFT_KEY = "brief-wizard-draft-v1";
 
@@ -106,7 +107,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
     <main className={`page [&>*:not(.fixed)]:max-w-2xl ${preview ? "!py-4" : ""}`}>
       {!preview && (
         <div className="mb-6 flex items-center gap-4">
-          <h1 className="text-2xl font-bold">New brief</h1>
+          <PageTitle>New brief</PageTitle>
           {answeredCount > 0 && <button onClick={startOver} className="ml-auto text-sm font-medium text-muted hover:underline">Start over</button>}
         </div>
       )}

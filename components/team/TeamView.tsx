@@ -11,6 +11,7 @@ import { columnOfProject, COLUMNS, dueLabel } from "@/lib/board";
 import { addDay, ganttBars, localDay } from "@/lib/myday/plan";
 import { buildLanes, calendarDay, mondayOf, workWeek, type Lane } from "@/lib/team";
 import type { Person, Project } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 type View = "kanban" | "gantt" | "calendar";
 const VIEWS: { id: View; label: string; icon: IconName }[] = [
@@ -263,10 +264,10 @@ export function TeamView() {
     <main className="page">
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Team</h1>
+          <PageTitle>Team</PageTitle>
           <p className="text-sm text-muted">Open work by person, and what still needs an owner.</p>
         </div>
-        <div role="group" aria-label="View" className="ml-auto seg">
+        <div suppressHydrationWarning role="group" aria-label="View" className="ml-auto seg">
           {VIEWS.map((v) => (
             <button key={v.id} onClick={() => choose(v.id)} aria-pressed={view === v.id} className="seg-item"><Icon name={v.icon} size={14} />{v.label}</button>
           ))}

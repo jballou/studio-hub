@@ -20,6 +20,7 @@ import { needsStartDate } from "@/lib/startdate";
 import { PlanWorkCard } from "./PlanWorkCard";
 import { localTimezone, timezoneOptions, zoneAbbr } from "@/lib/time";
 import type { PersonalTask, Project } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 const FLASH: Record<string, { tone: "ok" | "warn" | "bad"; text: string }> = {
   connected: { tone: "ok", text: "Google is connected. Your calendar events show up here, and your tasks are backed up to Google Tasks." },
@@ -168,10 +169,11 @@ export function MyDay() {
     <main className="page">
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <h1 className="text-4xl font-bold md:text-5xl">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</h1>
+          <PageTitle>My Day</PageTitle>
+          <p className="text-4xl font-bold md:text-5xl">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</p>
           <p className="mt-2 text-lg text-muted">{dateLabel}</p>
         </div>
-        <button onClick={() => setAdding(true)} className="btn btn-md btn-primary ml-auto"><Icon name="plus" size={16} /> Add new task</button>
+        <button onClick={() => setAdding(true)} className="btn btn-md btn-secondary ml-auto"><Icon name="plus" size={16} /> Add new task</button>
       </div>
       <div className="mt-4"><StaleNotice /></div>
       {jiraErr && (
@@ -214,7 +216,7 @@ export function MyDay() {
                     <button onClick={() => setShift(0)} className="btn btn-sm btn-secondary">Today</button>
                     <button onClick={() => setShift(shift + 1)} aria-label="Later" className="flex h-7 w-7 items-center justify-center rounded-tight border border-control hover:bg-n-150"><Icon name="chevronRight" size={12} /></button>
                   </div>
-                  <div className="seg" role="group" aria-label="Timeline length">
+                  <div suppressHydrationWarning className="seg" role="group" aria-label="Timeline length">
                     {WINDOWS.map((w) => <button key={w.id} onClick={() => { setWin(w.id); setShift(0); }} aria-pressed={win === w.id} className="seg-item">{w.label}</button>)}
                   </div>
                 </div>
@@ -234,9 +236,9 @@ export function MyDay() {
                 pct={comp.pct}
                 caption={`${comp.done} of ${comp.total} completed`}
                 parts={[
-                  { key: "done", label: "Completed", color: "#08794a", count: comp.done },
-                  { key: "progress", label: "In progress", color: "#348289", count: comp.progress },
-                  { key: "todo", label: "To do", color: "#908d89", count: comp.todo },
+                  { key: "done", label: "Completed", color: "var(--color-data-ok)", count: comp.done },
+                  { key: "progress", label: "In progress", color: "var(--color-data-progress)", count: comp.progress },
+                  { key: "todo", label: "To do", color: "var(--color-data-none)", count: comp.todo },
                 ]}
               />
               <div className="mt-4 border-t border-line pt-4">
@@ -251,7 +253,7 @@ export function MyDay() {
               title={tab === "priority" ? "Task priority" : "My tasks"}
               hint={tab === "priority" ? "Most urgent first" : "Private to you. Not added to Jira."}
               action={
-                <div className="seg" role="tablist" aria-label="Task views">
+                <div suppressHydrationWarning className="seg" role="tablist" aria-label="Task views">
                   {([["priority", "Priority"], ["tasks", `My tasks (${open.length})`]] as const).map(([id, label]) => (
                     <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className="seg-item">{label}</button>
                   ))}

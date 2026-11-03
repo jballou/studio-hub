@@ -52,7 +52,7 @@ export function Gauge({ parts, pct, caption }: { parts: Part[]; pct: number; cap
   );
 }
 
-const BAR = { ok: "#08794a", watch: "#a95c18", late: "#8a3734", none: "#908d89" } as const;
+const BAR = { ok: "var(--color-data-ok)", watch: "var(--color-data-watch)", late: "var(--color-data-late)", none: "var(--color-data-none)" } as const;
 const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 /** Time used between submission and deadline. Fills red once the deadline has passed. */
@@ -76,7 +76,7 @@ export function TimelineMeter({ t, label }: { t: Timeline; label: string }) {
 /** Big percentage with a bar. Bar color follows the score band; the number stays in ink. */
 export function ScoreMeter({ score, compact }: { score: number | null; compact?: boolean }) {
   if (score === null) return <p className="text-sm text-muted">Add a deadline to a task to start your score.</p>;
-  const color = score >= 80 ? "#08794a" : score >= 50 ? "#a95c18" : "#8a3734";
+  const color = score >= 80 ? "var(--color-data-ok)" : score >= 50 ? "var(--color-data-watch)" : "var(--color-data-late)";
   return (
     <div>
       <div className="flex items-baseline gap-2"><span className={`${compact ? "text-2xl" : "text-5xl"} font-bold tabular-nums`}>{score}</span><span className="text-lg font-bold text-muted">%</span></div>
@@ -119,7 +119,7 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
                     gridColumn: `${b.from + 2} / ${b.to + 3}`,
                     background: `color-mix(in srgb, ${b.color} 22%, var(--card))`,
                     borderLeft: b.clippedLeft ? undefined : `3px solid ${b.color}`,
-                    outline: b.late ? "1.5px solid #8a3734" : undefined,
+                    outline: b.late ? "1.5px solid var(--color-data-late)" : undefined,
                   }}
                 >
                   {b.clippedLeft && <span aria-hidden>◂</span>}

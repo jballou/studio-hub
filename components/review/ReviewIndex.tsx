@@ -10,6 +10,7 @@ import { repo } from "@/lib/data";
 import { formatDue } from "@/lib/time";
 import { useMe } from "@/hooks/useMe";
 import type { Asset, ReviewState, SourceKind, User } from "@/lib/types";
+import { PageTitle } from "@/components/PageTitle";
 
 const SOURCE_LABEL: Record<SourceKind, string> = {
   figma: "Figma", staging: "Landing page", drive: "Google Drive", slides: "Google Slides", lottie: "Lottie", wistia: "Wistia", upload: "Upload",
@@ -127,9 +128,9 @@ export function ReviewIndex() {
 
   return (
     <main className="page">
-      <div className="mb-6 flex items-center">
-        <h1 className="text-2xl font-bold">Review</h1>
-        <Link href="/submit" className="btn btn-md btn-primary ml-auto">Submit for feedback</Link>
+      <div className="mb-4 flex items-center">
+        <PageTitle>Review</PageTitle>
+        <Link href="/submit" className="btn btn-md btn-secondary ml-auto">Submit for feedback</Link>
       </div>
       {assets === null ? <p className="text-sm text-muted">Loading…</p> : (
         <>

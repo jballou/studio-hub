@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Callout } from "@/components/ui/Tag";
 import { isJira } from "@/lib/data/mode";
+import { PageTitle } from "@/components/PageTitle";
 
 type Row = { at: string; actor: string; action: string; target: string; detail?: string };
 
@@ -32,7 +33,7 @@ export function AdminActivity() {
   return (
     <main className="page">
       <div className="mb-4 flex items-center gap-4">
-        <h1 className="text-2xl font-bold">Activity</h1>
+        <PageTitle>Activity</PageTitle>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search activity" className="ml-auto w-56 rounded-tight border border-control bg-white px-4 py-2 text-sm" />
       </div>
       <p className="mb-4 text-sm text-muted">Who changed access or blocked work, newest first. The last 500 changes are kept.</p>

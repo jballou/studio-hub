@@ -11,6 +11,7 @@ import { BriefWizard } from "./BriefWizard";
 import { FlowChart } from "./FlowChart";
 import { RouteView } from "./RouteView";
 import { NodeInspector } from "./NodeInspector";
+import { PageTitle } from "@/components/PageTitle";
 
 const when = (iso: string) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "built-in");
 
@@ -68,7 +69,7 @@ export function FlowEditor() {
   }, [dirty]);
 
   if (me && me.role !== "creative") {
-    return <main className="page [&>*:not(.fixed)]:max-w-3xl"><h1 className="text-2xl font-bold">Brief builder</h1><p className="mt-2 text-sm text-muted">Only the creative team can edit the brief questions.</p></main>;
+    return <main className="page [&>*:not(.fixed)]:max-w-3xl"><PageTitle>Brief builder</PageTitle><p className="mt-2 text-sm text-muted">Only the creative team can edit the brief questions.</p></main>;
   }
   if (!draft || !saved) return <main className="p-8 text-sm text-muted">{error ?? "Loading…"}</main>;
 
@@ -97,7 +98,7 @@ export function FlowEditor() {
   return (
     <main className="page">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h1 className="text-2xl font-bold">Brief builder</h1>
+        <PageTitle>Brief builder</PageTitle>
         <Tag tone={isDefault ? "neutral" : "ok"}>{isDefault ? "Built-in questions" : `Version ${saved.version}`}</Tag>
         {dirty && <Tag tone="warn" icon="alert">Unsaved changes</Tag>}
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -147,7 +148,7 @@ export function FlowEditor() {
           window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
         }}>
           <div className="sticky left-0 top-0 z-10 flex w-full flex-wrap items-center gap-2 border-b border-line bg-white/90 p-2 text-xs backdrop-blur">
-            <div role="tablist" aria-label="Map view" className="seg">
+            <div suppressHydrationWarning role="tablist" aria-label="Map view" className="seg">
               {([["types", "By request type", "gitBranchPlus"], ["map", "Full map", "graphHub"]] as const).map(([k, l, icon]) => (
                 <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)} className="seg-item"><Icon name={icon} size={14} />{l}</button>
               ))}

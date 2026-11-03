@@ -9,7 +9,7 @@ import { useMe } from "@/hooks/useMe";
 
 const OPTIONS: { href: string; icon: IconName; title: string; body: string }[] = [
   { href: "/submit", icon: "upload", title: "Submit for feedback", body: "Share designs and get comments" },
-  { href: "/projects/new", icon: "task", title: "New ticket", body: "Request creative work in Jira" },
+  { href: "/projects/new", icon: "task", title: "New ticket", body: "Fill in a brief to request creative work" },
   { href: "/my-day?new=task", icon: "listChecks", title: "New personal task", body: "A private to-do on My Day" },
 ];
 
