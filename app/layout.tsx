@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { TopBar } from "@/components/Shell";
 import { SegIndicator } from "@/components/SegIndicator";
+import { Tour } from "@/components/Tour";
 
 export const metadata: Metadata = {
   title: "Brand Creative Hub",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SegIndicator />
           <div className="paper flex min-w-0 flex-1 flex-col">{children}</div>
         </div>
+        <Tour />
       </body>
     </html>
   );

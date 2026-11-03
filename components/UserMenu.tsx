@@ -38,10 +38,10 @@ export function UserMenu({ me, user, collapsed }: { me: Me | null; user?: User; 
         aria-haspopup="menu" aria-expanded={open}
         aria-label={user ? `Account menu for ${user.name}` : "Account menu"}
         title={user?.name}
-        className={`btn btn-md btn-secondary w-full ${collapsed ? "!px-0" : "justify-start"}`}
+        className={`flex w-full items-center gap-4 rounded-tight p-2 text-left hover:bg-white/60 ${collapsed ? "justify-center" : ""}`}
       >
-        <Avatar user={user} size={24} />
-        {!collapsed && (<><span className="min-w-0 flex-1 truncate text-left">{user?.name ?? ""}</span><Icon name="chevronsUpDown" size={14} /></>)}
+        <Avatar user={user} size={32} />
+        {!collapsed && <span className="min-w-0 flex-1 truncate font-bold text-ink">{user?.name ?? ""}</span>}
       </button>
 
       {open && (

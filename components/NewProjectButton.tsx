@@ -30,11 +30,11 @@ export function NewProjectButton() {
   }, [open]);
 
   if (!creative) {
-    return <Link href="/projects/new" className="btn btn-md btn-primary"><Icon name="plus" size={16} /> New project</Link>;
+    return <Link href="/projects/new" data-tour="new-project" className="btn btn-md btn-primary"><Icon name="plus" size={16} /> New project</Link>;
   }
   return (
     <>
-      <button onClick={() => setOpen(true)} aria-haspopup="dialog" className="btn btn-md btn-primary"><Icon name="plus" size={16} /> New project</button>
+      <button onClick={() => setOpen(true)} data-tour="new-project" aria-haspopup="dialog" className="btn btn-md btn-primary"><Icon name="plus" size={16} /> New project</button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-n-1000/40 p-4" onMouseDown={() => setOpen(false)}>
           <div role="dialog" aria-modal="true" aria-labelledby="new-project-title" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-2xl rounded-loose border border-line bg-white p-6 shadow-xl">

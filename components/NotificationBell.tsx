@@ -63,10 +63,10 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
         aria-haspopup="dialog" aria-expanded={open}
         aria-label={badge > 0 ? `Notifications: ${badge} new` : "Notifications"}
         title={badge > 0 ? `${badge} new` : "Notifications"}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-n-150"
+        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-white/60"
       >
         <Icon name="bell" size={18} />
-        {badge > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-round bg-bad-fg px-0 text-xs font-bold leading-none text-n-50 ring-2 ring-white">{badge > 99 ? "99+" : badge}</span>}
+        {badge > 0 && <span aria-hidden="true" className="absolute right-1 top-1 h-2 w-2 rounded-round bg-bad-fg" />}
       </button>
 
       {open && (
