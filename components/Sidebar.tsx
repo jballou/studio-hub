@@ -9,10 +9,8 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useMe } from "@/hooks/useMe";
 import { NotificationBell } from "./NotificationBell";
 import type { User } from "@/lib/types";
-import { Avatar } from "@/components/review/Avatar";
 import { SearchDialog } from "./SearchDialog";
-import { signOut } from "next-auth/react";
-import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 import { Logo } from "@/components/ui/Logo";
 
 const PREF_KEY = "sidebar-pref-v1";
@@ -117,7 +115,7 @@ export function Sidebar() {
       aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       aria-expanded={!collapsed}
       title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-white/60"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-white/60"
     >
       <Icon name="panel" size={18} />
     </button>
@@ -129,43 +127,23 @@ export function Sidebar() {
         aria-label="Main"
         className={`sticky top-0 flex h-screen shrink-0 flex-col p-4 transition-[width] duration-150 ${collapsed ? "w-16" : "w-64"}`}
       >
-        <div className={`mb-4 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
-          <Link href="/my-day" title="Brand Creative Hub" className="flex min-w-0 flex-1 items-center gap-2 font-bold text-ink">
-            <Logo size={32} />
-            {!collapsed && <span className="truncate">Brand Creative Hub</span>}
-          </Link>
+        <Link href="/my-day" title="Brand Creative Hub" className={`mb-4 flex items-center gap-2 font-bold text-ink ${collapsed ? "justify-center" : "px-2"}`}>
+          <Logo size={32} />
+          {!collapsed && <span className="min-w-0 flex-1 truncate">Brand Creative Hub</span>}
+        </Link>
+
+        <div className={`mb-4 flex gap-2 ${collapsed ? "flex-col items-center" : ""}`}>
+          <button
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search"
+            title="Search (⌘K)"
+            className={`btn btn-md btn-secondary font-normal text-n-700 ${collapsed ? "w-full !px-0" : "min-w-0 flex-1"}`}
+          >
+            <Icon name="search" size={16} />
+            {!collapsed && (<><span className="flex-1 text-left">Search</span><kbd className="text-xs">⌘K</kbd></>)}
+          </button>
           {toggleBtn}
         </div>
-
-        <button
-          onClick={() => setSearchOpen(true)}
-          aria-label="Search"
-          title="Search (⌘K)"
-          className={`btn btn-md btn-secondary mb-2 w-full font-normal text-n-700 ${collapsed ? "!px-0" : ""}`}
-        >
-          <Icon name="search" size={16} />
-          {!collapsed && (<><span className="flex-1 text-left">Search</span><kbd className="text-xs">⌘K</kbd></>)}
-        </button>
-
-        <Link
-          href="/my-day?new=task"
-          title="New task"
-          aria-label="New task"
-          className={`btn btn-md btn-secondary mb-2 w-full border-brand text-brand ${collapsed ? "!px-0" : ""}`}
-        >
-          <Icon name="listChecks" size={16} />
-          {!collapsed && "New task"}
-        </Link>
-        <Link
-          href="/submit"
-          title="Submit for feedback"
-          aria-label="Submit for feedback"
-          aria-current={pathname === "/submit" ? "page" : undefined}
-          className={`btn btn-md btn-secondary mb-4 w-full border-brand text-brand ${collapsed ? "!px-0" : ""} ${pathname === "/submit" ? "!bg-brand-soft" : ""}`}
-        >
-          <Icon name="upload" size={16} />
-          {!collapsed && "Submit for feedback"}
-        </Link>
 
         {!collapsed && <p className="mb-2 px-4 text-muted eyebrow">Workspace</p>}
         <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
@@ -207,41 +185,13 @@ export function Sidebar() {
           )}
         </div>
 
-        <Link
-          href="/projects/new"
-          title="New brief"
-          aria-label="New brief"
-          className={`btn btn-md btn-primary mb-4 w-full ${collapsed ? "!px-0" : ""}`}
-        >
-          <Icon name="plus" size={16} />
-          {!collapsed && "New brief"}
-        </Link>
-
         {/* Bottom: Admin, then you */}
         <div className="pt-2">
-          <div className={`mb-2 flex ${collapsed ? "justify-center" : "justify-start px-2"}`}><ThemeToggle vertical={collapsed} /></div>
           {(!isJira || me?.role === "creative") && <div>{navLink(ANALYTICS_ITEM)}</div>}
           {(me?.isAdmin || me?.role === "creative") && <div className="mb-2">{navLink(ADMIN_ITEM)}</div>}
-          <div className={`flex rounded-loose bg-white shadow-sm ${collapsed ? "flex-col items-center gap-2 p-2" : "items-center gap-2 p-2"}`}>
-            <Avatar user={user} size={32} />
-            {!collapsed && (
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">{user?.name ?? ""}</span>
-                <span className="block text-xs capitalize text-muted">{me ? (me.isAdmin ? "Admin" : me.role) : ""}</span>
-              </span>
-            )}
+          <div className={`flex gap-2 ${collapsed ? "flex-col items-center" : "items-center"}`}>
+            <UserMenu me={me} user={user} collapsed={collapsed} />
             <NotificationBell waiting={waiting} collapsed={collapsed} ready={!isJira || !!me} />
-            {/* Real sign-in only; the demo has no account to sign out of. */}
-            {isJira && (
-              <button
-                onClick={() => signOut({ callbackUrl: "/signin" })}
-                aria-label="Sign out"
-                title="Sign out"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight text-n-800 hover:bg-n-150"
-              >
-                <Icon name="logOut" size={18} />
-              </button>
-            )}
           </div>
         </div>
       </nav>

@@ -185,7 +185,9 @@ export function MyDay() {
 
       {loading ? <p className="mt-6 text-sm text-muted">Loading…</p> : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_352px]">
+          <div className="min-w-0">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 min-[1800px]:grid-cols-6">
             <Tile label="Open work" n={tiles.open.count} onClick={() => setTileOpen("open")} note="Tickets and tasks" />
             <Tile label="Due today" n={dueToday} onClick={() => setTileOpen("due")} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
             <Tile label="In progress" n={tiles.progress.count} onClick={() => setTileOpen("progress")} note="Being worked on" />
@@ -202,7 +204,7 @@ export function MyDay() {
             />
           )}
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-[2fr_1fr]">
+          <div className="mt-4 grid gap-4 min-[1700px]:grid-cols-[2fr_1fr]">
             <Card
               title="Project timeline"
               action={
@@ -244,7 +246,7 @@ export function MyDay() {
             </Card>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2 min-[1500px]:grid-cols-[1.3fr_1fr_1fr]">
+          <div className="mt-4">
             <Card
               title={tab === "priority" ? "Task priority" : "My tasks"}
               hint={tab === "priority" ? "Most urgent first" : "Private to you. Not added to Jira."}
@@ -299,6 +301,10 @@ export function MyDay() {
               )}
             </Card>
 
+          </div>
+          </div>
+
+          <aside aria-label="Today" className="space-y-4 xl:sticky xl:top-4">
             <Card title="Reminders" hint={google?.connected ? "From Google Calendar and your timed tasks" : undefined}>
               {google && !google.connected && isJira && (
                 <div className="mb-4 flex flex-wrap items-center gap-4 rounded-tight border border-dashed border-control p-4 text-sm">
@@ -357,7 +363,8 @@ export function MyDay() {
                 </ul>
               )}
             </Card>
-          </div>
+          </aside>
+        </div>
         </>
       )}
       {tileOpen && today && <TileDialog kind={tileOpen} items={tiles[tileOpen].items} tz={tz} today={today} onClose={() => setTileOpen(null)} onDone={(t) => { celebrate(); void act(() => tasksRepo.update(t.id, { done: true })); }} />}

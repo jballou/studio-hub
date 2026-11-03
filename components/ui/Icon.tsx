@@ -34,6 +34,7 @@ const PATHS = {
   arrowDown: <><path d="M12 5v14M6 13l6 6 6-6" /></>,
   chevronsUpDown: <><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></>,
   chevronsDownUp: <><path d="m7 20 5-5 5 5M7 4l5 5 5-5" /></>,
+  pencil: <><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" /></>,
   userRound: <><circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" /></>,
   usersRound: <><path d="M18 21a8 8 0 0 0-16 0" /><circle cx="10" cy="8" r="5" /><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" /></>,
   at: <><circle cx="12" cy="12" r="4" /><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" /></>,
