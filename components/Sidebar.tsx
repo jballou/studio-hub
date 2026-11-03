@@ -127,7 +127,7 @@ export function Sidebar() {
     <>
       <nav
         aria-label="Main"
-        className={`sticky top-0 flex h-screen shrink-0 flex-col p-4 motion-safe:transition-[width] motion-safe:duration-150 ${collapsed ? "w-16" : "w-64"}`}
+        className={`sticky top-0 z-40 flex h-screen shrink-0 flex-col p-4 motion-safe:transition-[width] motion-safe:duration-150 ${collapsed ? "w-16" : "w-64"}`}
       >
         <div className={`mb-4 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
           <Link href="/my-day" title="Brand Creative Hub" className={`flex min-w-0 flex-1 items-center gap-2 text-sm font-bold text-ink ${collapsed ? "justify-center" : ""}`}>

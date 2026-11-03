@@ -29,8 +29,7 @@ export function UserMenu({ me, user, collapsed }: { me: Me | null; user?: User; 
 
   const roleLabel = me ? (me.isAdmin ? "Admin" : me.role === "creative" ? "Creative team" : "Requester") : "";
   const rowCls = "flex w-full items-center gap-4 rounded-tight px-4 py-2 text-left text-sm font-medium hover:bg-n-150";
-  const iconBtn = "flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-n-150 text-n-800 hover:bg-n-200";
-
+  
   return (
     <div ref={box} className="relative min-w-0 flex-1">
       <button
@@ -53,10 +52,9 @@ export function UserMenu({ me, user, collapsed }: { me: Me | null; user?: User; 
               <p className="truncate text-xs text-muted">{me?.email ?? "Demo account"}</p>
               {roleLabel && <div className="mt-2"><Tag tone="neutral">{roleLabel}</Tag></div>}
             </div>
-            <a href={PROFILE_URL} target="_blank" rel="noreferrer" role="menuitem" aria-label="Edit profile" title="Edit profile" className={iconBtn}><Icon name="pencil" size={18} /></a>
-            {isJira && <button role="menuitem" onClick={() => signOut({ callbackUrl: "/signin" })} aria-label="Log out" title="Log out" className={iconBtn}><Icon name="logOut" size={18} /></button>}
           </div>
           <div className="my-2 border-t border-line" role="separator" />
+          <a href={PROFILE_URL} target="_blank" rel="noreferrer" role="menuitem" onClick={() => setOpen(false)} className={rowCls}><Icon name="pencil" size={18} /> <span className="flex-1">Edit profile</span><Icon name="externalLink" size={14} /></a>
           <Link href="/account#notifications" role="menuitem" onClick={() => setOpen(false)} className={rowCls}><Icon name="bell" size={18} /> Notification settings</Link>
           <Link href="/account" role="menuitem" onClick={() => setOpen(false)} className={rowCls}><Icon name="userRound" size={18} /> Account management</Link>
           <div className="my-2 border-t border-line" role="separator" />
@@ -64,6 +62,12 @@ export function UserMenu({ me, user, collapsed }: { me: Me | null; user?: User; 
             <span className="flex-1">Appearance and sounds</span>
             <ThemeToggle />
           </div>
+          {isJira && (
+            <>
+              <div className="my-2 border-t border-line" role="separator" />
+              <button role="menuitem" onClick={() => signOut({ callbackUrl: "/signin" })} className={rowCls}><Icon name="logOut" size={18} /> Log out</button>
+            </>
+          )}
         </div>
       )}
     </div>
