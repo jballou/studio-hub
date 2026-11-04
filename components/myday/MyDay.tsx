@@ -21,6 +21,7 @@ import { PlanWorkCard } from "./PlanWorkCard";
 import { localTimezone, timezoneOptions, zoneAbbr } from "@/lib/time";
 import type { PersonalTask, Project } from "@/lib/types";
 import { PageTitle } from "@/components/PageTitle";
+import { FlipBoard } from "./FlipBoard";
 
 const FLASH: Record<string, { tone: "ok" | "warn" | "bad"; text: string }> = {
   connected: { tone: "ok", text: "Google is connected. Your calendar events show up here, and your tasks are backed up to Google Tasks." },
@@ -184,6 +185,8 @@ export function MyDay() {
       )}
       {!isJira && <div className="mt-4"><Callout tone="info" icon="alert">Demo data. Real tickets, calendar and Google Tasks show up after sign-in.</Callout></div>}
       {flash && <div className="mt-4"><Callout tone={flash.tone} icon={flash.tone === "ok" ? "check" : "alert"}>{flash.text}</Callout></div>}
+
+      <div className="mt-6"><FlipBoard greeting={me?.name ? `Hi, ${me.name.split(" ")[0]}` : undefined} /></div>
 
       {loading ? <p className="mt-6 text-sm text-muted">Loading…</p> : (
         <>

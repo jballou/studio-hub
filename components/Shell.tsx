@@ -1,42 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icon } from "@/components/ui/Icon";
 import { NewProjectButton } from "./NewProjectButton";
 
-const SECTIONS: { prefix: string; label: string }[] = [
-  { prefix: "/my-day", label: "My Day" }, { prefix: "/briefs", label: "My briefs" }, { prefix: "/projects", label: "Projects" },
-  { prefix: "/team", label: "Team" }, { prefix: "/calendar", label: "Calendar" }, { prefix: "/review", label: "Review" },
-  { prefix: "/blocking", label: "Waiting on you" }, { prefix: "/analytics", label: "Analytics" }, { prefix: "/admin", label: "Preferences" },
-  { prefix: "/submit", label: "Submit for feedback" }, { prefix: "/account", label: "Account" },
-];
-
-/** The slim bar above each page: a breadcrumb only when you are inside something (a project, a sub-page), and the New project button. The review workspace and sign-in pages have their own headers. */
+/**
+ * The slim bar above each page: the page's title (drawn here by PageTitle) and the New project button.
+ * Pages that sit inside a record, like a project, draw their own breadcrumb, so the bar never adds a second one.
+ * The review workspace and sign-in pages have their own headers.
+ */
 export function TopBar() {
   const pathname = usePathname();
   const inWorkspace = /^\/review\/[^/]+/.test(pathname);
   if (inWorkspace || pathname === "/signin" || pathname === "/welcome") return null;
-  const section = SECTIONS.find((s) => pathname === s.prefix || pathname.startsWith(`${s.prefix}/`));
-  const rest = section ? pathname.slice(section.prefix.length).split("/").filter(Boolean) : [];
-  // On a section's own page the page title already says where you are. Preferences has its own side menu, and "new" pages carry their own title.
-  const crumb = !!section && rest.length > 0 && section.prefix !== "/admin" && rest[0] !== "new";
   return (
     <header className="shrink-0 border-b border-line text-sm text-muted">
       <div className="column flex h-16 items-center gap-4">
-        {/* Pages put their title here (see PageTitle), so it never repeats in the page itself. */}
         <div id="page-title" className="min-w-0 truncate text-xl font-bold text-ink empty:hidden" />
-        {crumb && (
-          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
-            <Link href={section!.prefix} className="truncate hover:text-ink">{section!.label}</Link>
-            {rest.map((r, i) => (
-              <span key={i} className="flex min-w-0 items-center gap-2">
-                <Icon name="chevronRight" size={12} />
-                <span className={`truncate ${i === rest.length - 1 ? "font-medium text-ink" : ""}`}>{decodeURIComponent(r)}</span>
-              </span>
-            ))}
-          </nav>
-        )}
         <div className="ml-auto"><NewProjectButton /></div>
       </div>
     </header>

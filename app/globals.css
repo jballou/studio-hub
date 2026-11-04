@@ -209,6 +209,16 @@ body {
 /* ---- Light values for the pieces that aren't palette tokens ---- */
 :root { --shell: #ebe8e3; --paper-dot: #e4e2dd; --card: #ffffff; --surface: #fefdfb; --link: #08794a; }
 
+/* The flip board on My Day is a physical object, so its colors are the same in light and dark mode.
+   --flap-0 is a blank tile; the rest are the brand palette steps the board draws with. */
+:root {
+  --board-bg: #0c1a13;
+  --flap-0: #163326;
+  --flap-1: #08794a; --flap-2: #089b5e; --flap-3: #b0e8c3; --flap-4: #a6dce1; --flap-5: #348289;
+  --flap-6: #f2e2a6; --flap-7: #d07a2f; --flap-8: #c5ccf9; --flap-9: #5568bf; --flap-10: #f7f5f3;
+  --flap-11: #255b60; --flap-12: #a95c18;
+}
+
 /* ---- Dark mode ----
    The palette tokens are swapped here, so every utility that reads them follows. A few utilities that name
    a fixed color (white cards, the dark video bar, links, solid red badges) are patched below. */
