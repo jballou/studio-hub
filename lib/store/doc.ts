@@ -118,6 +118,13 @@ function remember(name: string, data: unknown) {
   try { waitUntil(p); } catch { /* not on Vercel */ }
 }
 
+/** Removes a document for good (and its cached copies). Best effort; only the Redis store supports it. */
+export async function deleteDoc(name: string): Promise<void> {
+  l1.delete(name);
+  try { await l2().delete(l2Key(name)); } catch { /* cache only */ }
+  if (storeKind === "Upstash Redis") await redis().del(redisKey(name));
+}
+
 /** `fresh` skips the caches and reads the store itself. Writers use it; everything else should not. */
 export async function readDoc<T>(name: string, empty: () => T, opts: { fresh?: boolean } = {}): Promise<Doc<T>> {
   if (!opts.fresh) {

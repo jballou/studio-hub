@@ -1,12 +1,11 @@
-// Review data on the Blob document store: submissions (assets and their versions) and comment threads.
+// Review data on the document store: submissions (assets and their versions) and comment threads.
 // Assets and versions share one small document; threads get one document per version so a busy review
 // doesn't make everyone rewrite the same file. Every write is conditional (see doc.ts), so two people
 // commenting at once both land.
 import type { Anchor, Asset, ShareChange, AssetKind, AssetVersion, Person, ReviewState, SourceKind, SubmitInput, Thread } from "@/lib/types";
 import { asSeverity } from "@/lib/types";
-import { del } from "@vercel/blob";
 import { deleteFile, filesAvailable } from "./files";
-import { readDoc, updateDoc } from "./doc";
+import { deleteDoc, readDoc, updateDoc } from "./doc";
 import { AdminError } from "./users";
 
 type AssetsDoc = { assets: Asset[]; versions: AssetVersion[] };
@@ -305,12 +304,9 @@ export async function purge(opts: { ids?: string[]; expiredOnly: boolean }): Pro
     return { data: d, result: vs };
   });
   // Files and comment documents go after the records, best effort: an orphan file is harmless, a dangling record is not.
-  const paths: string[] = [];
   for (const v of removed) {
-    paths.push(`${process.env.VERCEL_ENV ?? "local"}/${threadsName(v.id)}.json`);
-    if (v.src.startsWith(FILE_PREFIX) && filesAvailable()) { await deleteFile(v.src.slice(FILE_PREFIX.length).split("/")[0]).catch(() => undefined); continue; }
-    if (v.src.startsWith(FILE_PREFIX)) paths.push(`review-files/${v.src.slice(FILE_PREFIX.length).split("/").map(decodeURIComponent).join("/")}`);
+    await deleteDoc(threadsName(v.id)).catch(() => undefined);
+    if (v.src.startsWith(FILE_PREFIX) && filesAvailable()) await deleteFile(v.src.slice(FILE_PREFIX.length).split("/")[0]).catch(() => undefined);
   }
-  if (paths.length) await del(paths).catch(() => undefined);
   return new Set(removed.map((v) => v.assetId)).size;
 }
