@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "hub", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "-p", "3100"], "port": 3100 }
+    { "name": "hub", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "-p", "3100"], "port": 3100 },
+    { "name": "phone-loop", "runtimeExecutable": "bash", "runtimeArgs": ["-c", "cd ~/Desktop/meraki-phone-loop && npx remotion studio --no-open --port 3123"], "port": 3123 }
   ]
 }
