@@ -24,6 +24,8 @@ import { PageTitle } from "@/components/PageTitle";
 import { FlipBoard } from "./FlipBoard";
 import { NoteDialog } from "@/components/reports/NoteDialog";
 
+const JIRA_BASE = "https://surveymonkey.atlassian.net";
+
 const FLASH: Record<string, { tone: "ok" | "warn" | "bad"; text: string }> = {
   connected: { tone: "ok", text: "Google is connected. Your calendar events show up here, and your tasks are backed up to Google Tasks." },
   denied: { tone: "warn", text: "Google wasn't connected because the request was cancelled." },
@@ -480,7 +482,12 @@ function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKin
                 <div className="min-w-0 flex-1">
                   <Link href={`/projects/${p.jiraKey}`} className="font-medium hover:underline">{p.title}</Link>
                   <div className="mt-0 flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <Tag tone="info" icon="ticket">Jira ticket</Tag>
+                    {isJira ? (
+                      <a href={`${JIRA_BASE}/browse/${p.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-round hover:opacity-80">
+                        <Tag tone="info" icon="externalLink" title={`Open ${p.jiraKey} in Jira`}>Jira ticket</Tag>
+                        <span className="sr-only"> (opens {p.jiraKey} in Jira, new tab)</span>
+                      </a>
+                    ) : <Tag tone="info" icon="ticket">Jira ticket</Tag>}
                     <span>{p.jiraKey}</span>
                     <StatusTag project={p} />
                     {when(p)}
