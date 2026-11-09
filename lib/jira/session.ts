@@ -7,6 +7,8 @@ export type JiraSession = {
   /** What the person can see: "creative" (also admins) sees every ticket, "requester" only their own. */
   role: "creative" | "requester";
   isAdmin: boolean;
+  /** Team lead: may view the team's work in My Day. Not implied by admin. */
+  isLead: boolean;
   email: string;
   name: string;
   accountId: string;
@@ -47,6 +49,7 @@ export async function jiraSession(req: Request): Promise<JiraSession> {
     auth: { accessToken: token.accessToken, cloudId },
     role: visibilityRole(access.role),
     isAdmin: access.role === "admin",
+    isLead: access.lead,
     email,
     name: String(token.name ?? ""),
     accountId: token.accountId ?? "",
@@ -57,6 +60,13 @@ export async function jiraSession(req: Request): Promise<JiraSession> {
 export async function adminSession(req: Request): Promise<JiraSession> {
   const s = await jiraSession(req);
   if (!s.isAdmin) throw new AdminError(403, "Admins only.");
+  return s;
+}
+
+/** For team-lead-only routes. */
+export async function leadSession(req: Request): Promise<JiraSession> {
+  const s = await jiraSession(req);
+  if (!s.isLead) throw new AdminError(403, "Only team leads can view the team's work.");
   return s;
 }
 

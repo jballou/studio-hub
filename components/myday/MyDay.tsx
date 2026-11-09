@@ -52,7 +52,7 @@ function dueText(t: PersonalTask, tz: string): string {
 
 const WINDOWS = [{ id: "3", label: "3 days", days: 3 }, { id: "7", label: "Week", days: 7 }, { id: "30", label: "Month", days: 30 }] as const;
 
-export function MyDay() {
+export function MyDay({ headerExtra }: { /** shown beside the Add new task button; team leads get the person picker here */ headerExtra?: React.ReactNode } = {}) {
   const me = useMe();
   const params = useSearchParams();
   const flashKey = params.get("google");
@@ -174,7 +174,10 @@ export function MyDay() {
           <p className="text-4xl font-bold md:text-5xl">{me?.name ? `${greetingFor(hour)}, ${me.name.split(" ")[0]}` : "My Day"}</p>
           <p className="mt-2 text-lg text-muted">{dateLabel}</p>
         </div>
-        <button onClick={() => setAdding(true)} className="btn btn-md btn-secondary ml-auto"><Icon name="plus" size={16} /> Add new task</button>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {headerExtra}
+          <button onClick={() => setAdding(true)} className="btn btn-md btn-secondary"><Icon name="plus" size={16} /> Add new task</button>
+        </div>
       </div>
       <div className="mt-4"><StaleNotice /></div>
       {jiraErr && (
@@ -379,7 +382,7 @@ export function MyDay() {
   );
 }
 
-function Card({ title, hint, action, className = "", children }: { title: string; hint?: string; action?: React.ReactNode; className?: string; children: React.ReactNode }) {
+export function Card({ title, hint, action, className = "", children }: { title: string; hint?: string; action?: React.ReactNode; className?: string; children: React.ReactNode }) {
   return (
     <section className={`card p-4 ${className}`}>
       <div className="mb-4 flex flex-wrap items-start gap-2">
@@ -394,7 +397,7 @@ function Card({ title, hint, action, className = "", children }: { title: string
   );
 }
 
-function Tile({ label, n, note, tone, onClick }: { label: string; n: number; note: string; tone?: "bad"; onClick?: () => void }) {
+export function Tile({ label, n, note, tone, onClick }: { label: string; n: number; note: string; tone?: "bad"; onClick?: () => void }) {
   const Wrap = onClick ? "button" : "div";
   return (
     <Wrap

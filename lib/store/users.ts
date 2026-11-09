@@ -9,6 +9,8 @@ export type UserRecord = {
   accountId?: string;
   role: UserRole;
   status: UserStatus;
+  /** Team lead: can open other creatives' My Day work views. Separate from role, so admins don't get it automatically. */
+  lead?: boolean;
   addedBy: string;
   addedAt: string;
   firstSignIn?: string;
@@ -69,22 +71,23 @@ async function usersDoc(): Promise<UsersDoc> {
   return data;
 }
 
-export type Access = { role: UserRole; active: boolean; record?: UserRecord };
+export type Access = { role: UserRole; active: boolean; /** may view the team's My Day work */ lead: boolean; record?: UserRecord };
 
 /** What this person may do right now. Unknown people get the env-seeded default (creative if listed, else requester). */
 export async function resolveAccess(email: string): Promise<Access> {
   const e = normalizeEmail(email);
-  if (isEnvAdmin(e)) return { role: "admin", active: true };
+  const envAdmin = isEnvAdmin(e);
   let doc: UsersDoc;
   try {
     doc = await usersDoc();
   } catch {
-    // Store unreachable: fall back to the env lists rather than locking everyone out.
-    return { role: envCreatives().includes(e) ? "creative" : "requester", active: true };
+    // Store unreachable: fall back to the env lists rather than locking everyone out. Nobody gets lead access this way.
+    return { role: envAdmin ? "admin" : envCreatives().includes(e) ? "creative" : "requester", active: true, lead: false };
   }
   const record = doc.users[e];
-  if (record) return { role: record.role, active: record.status === "active", record };
-  return { role: envCreatives().includes(e) ? "creative" : "requester", active: true };
+  if (envAdmin) return { role: "admin", active: true, lead: !!record?.lead, record };
+  if (record) return { role: record.role, active: record.status === "active", lead: !!record.lead && record.role !== "requester" && record.status === "active", record };
+  return { role: envCreatives().includes(e) ? "creative" : "requester", active: true, lead: false };
 }
 
 /** "creative" and "admin" see every ticket; requesters only their own. */
@@ -115,6 +118,14 @@ export async function recordSignIn(p: { email: string; name?: string; accountId?
   return { active: out.active };
 }
 
+/** The creative team: active creatives and admins who have signed in once (so they have a Jira account id). */
+export async function teamMembers(): Promise<{ id: string; name: string; email: string }[]> {
+  return (await listUsers())
+    .filter((u) => u.status === "active" && (u.role === "creative" || u.role === "admin") && u.accountId)
+    .map((u) => ({ id: u.accountId!, name: u.name || u.email, email: u.email }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export async function listUsers(): Promise<UserRecord[]> {
   cache = null;
   const { data } = await readDoc("users", emptyUsers);
@@ -143,9 +154,9 @@ export async function addUser(actor: string, emailRaw: string, role: UserRole): 
   return rec;
 }
 
-export async function updateUser(actor: string, emailRaw: string, patch: { role?: UserRole; status?: UserStatus }): Promise<UserRecord> {
+export async function updateUser(actor: string, emailRaw: string, patch: { role?: UserRole; status?: UserStatus; lead?: boolean }): Promise<UserRecord> {
   const email = normalizeEmail(emailRaw);
-  if (isEnvAdmin(email)) throw new AdminError(403, "This admin is set in the environment (ADMIN_EMAILS) and can't be changed here.");
+  if (isEnvAdmin(email) && (patch.role !== undefined || patch.status !== undefined)) throw new AdminError(403, "This admin is set in the environment (ADMIN_EMAILS) and can't be changed here.");
   const { rec, detail } = await updateDoc("users", emptyUsers, (d) => {
     seed(d);
     const r = d.users[email];
@@ -156,6 +167,13 @@ export async function updateUser(actor: string, emailRaw: string, patch: { role?
     const bits: string[] = [];
     if (patch.role && patch.role !== r.role) { bits.push(`role ${r.role} to ${patch.role}`); r.role = patch.role; }
     if (patch.status && patch.status !== r.status) { bits.push(patch.status === "disabled" ? "disabled" : "re-enabled"); r.status = patch.status; }
+    if (patch.lead !== undefined && patch.lead !== !!r.lead) {
+      if (patch.lead && r.role === "requester") throw new AdminError(409, "Make them a creative first. Only the creative team can be team leads.");
+      r.lead = patch.lead || undefined;
+      bits.push(patch.lead ? "team lead on" : "team lead off");
+    }
+    // Losing creative access also ends team lead access.
+    if (r.role === "requester" && r.lead) { r.lead = undefined; bits.push("team lead off"); }
     return { data: d, result: { rec: r, detail: bits.join(", ") } };
   });
   cache = null;

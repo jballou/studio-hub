@@ -7,7 +7,7 @@ import { isJira } from "@/lib/data/mode";
 import { PageTitle } from "@/components/PageTitle";
 
 type Role = "requester" | "creative" | "admin";
-type UserRow = { email: string; name: string; role: Role; status: "active" | "disabled"; addedBy: string; addedAt: string; lastSignIn?: string };
+type UserRow = { email: string; name: string; role: Role; lead?: boolean; status: "active" | "disabled"; addedBy: string; addedAt: string; lastSignIn?: string };
 type AuditRow = { at: string; actor: string; action: string; target: string; detail?: string };
 
 const ROLE_HELP: Record<Role, string> = {
@@ -67,7 +67,7 @@ export function AdminUsers() {
     return res.ok;
   };
 
-  const patch = (u: UserRow, change: { role?: Role; status?: "active" | "disabled" }) =>
+  const patch = (u: UserRow, change: { role?: Role; status?: "active" | "disabled"; lead?: boolean }) =>
     call(`/api/admin/users/${encodeURIComponent(u.email)}`, { method: "PATCH", body: JSON.stringify(change) });
 
   if (!isJira) {
@@ -126,10 +126,10 @@ export function AdminUsers() {
       <div className="overflow-x-auto card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-n-150 text-xs text-n-800">
-            <tr><th className="px-4 py-2 font-bold">Person</th><th className="px-4 py-2 font-bold">Role</th><th className="px-4 py-2 font-bold">Status</th><th className="px-4 py-2 font-bold">Last sign-in</th><th className="px-4 py-2" /></tr>
+            <tr><th className="px-4 py-2 font-bold">Person</th><th className="px-4 py-2 font-bold">Role</th><th className="px-4 py-2 font-bold">Team lead</th><th className="px-4 py-2 font-bold">Status</th><th className="px-4 py-2 font-bold">Last sign-in</th><th className="px-4 py-2" /></tr>
           </thead>
           <tbody>
-            {users === null && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">Loading…</td></tr>}
+            {users === null && <tr><td colSpan={6} className="px-4 py-6 text-center text-muted">Loading…</td></tr>}
             {shown.map((u) => {
               const locked = envAdmins.includes(u.email);
               const self = u.email === me;
@@ -142,6 +142,12 @@ export function AdminUsers() {
                         {ROLES.map((r) => <option key={r} value={r}>{cap(r)}</option>)}
                       </select>
                     )}
+                  </td>
+                  <td className="px-4 py-2">
+                    <label className="flex items-center gap-2 text-xs" title={u.role === "requester" ? "Only creatives and admins can be team leads" : "Can open anyone's work in My Day"}>
+                      <input type="checkbox" checked={!!u.lead} disabled={busy || u.role === "requester"} onChange={(e) => patch(u, { lead: e.target.checked })} aria-label={`Team lead: ${u.email}`} />
+                      {u.lead ? "Team lead" : "No"}
+                    </label>
                   </td>
                   <td className="px-4 py-2"><Tag tone={u.status === "active" ? "ok" : "neutral"} icon={u.status === "active" ? "check" : "close"}>{u.status === "active" ? "Active" : "Disabled"}</Tag></td>
                   <td className="px-4 py-2 text-xs text-muted">{when(u.lastSignIn)}</td>
@@ -156,11 +162,11 @@ export function AdminUsers() {
                 </tr>
               );
             })}
-            {users && shown.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">No one matches.</td></tr>}
+            {users && shown.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-muted">No one matches.</td></tr>}
           </tbody>
         </table>
       </div>
-      <p className="mt-2 flex items-start gap-2 text-xs text-muted"><Icon name="alert" size={14} /> <span><b>Disable</b> blocks sign-in and API access right away. <b>Remove</b> only deletes the record; the person can sign back in as a requester. Locked admins come from the <code>ADMIN_EMAILS</code> setting so the app can never be left without an owner.</span></p>
+      <p className="mt-2 flex items-start gap-2 text-xs text-muted"><Icon name="alert" size={14} /> <span><b>Disable</b> blocks sign-in and API access right away. <b>Remove</b> only deletes the record; the person can sign back in as a requester. <b>Team leads</b> can open any creative&apos;s Jira work in My Day and see the team in total. They do not see personal tasks, calendars, notes or reports. Locked admins come from the <code>ADMIN_EMAILS</code> setting so the app can never be left without an owner.</span></p>
 
       <section className="mt-8">
         <h2 className="mb-2 text-sm font-bold">Recent changes</h2>
