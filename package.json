@@ -8,12 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "check:design": "node scripts/check-design.mjs"
+    "check:design": "node scripts/check-design.mjs",
+    "check:private": "node scripts/check-private-store.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.40.0",
     "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.4",
+    "ai": "^7.0.166",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.3",
     "next-auth": "^5.0.0-beta.32",
