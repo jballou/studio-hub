@@ -227,6 +227,10 @@ export type Project = {
   description?: string;
   /** Made with the Hub's brief wizard (the ticket carries the brand-hub label), as opposed to created straight in Jira */
   viaHub?: boolean;
+  /** the KR this work supports (from the kr-xxxxxxxx label). Absent = not tagged yet */
+  krId?: string;
+  /** tagged "not tied to a KR" (business as usual) */
+  krNone?: boolean;
   /** the description as Jira's rich-text document, on single-ticket reads, so formatting can be shown as in Jira */
   descriptionAdf?: unknown;
   requesterName?: string;

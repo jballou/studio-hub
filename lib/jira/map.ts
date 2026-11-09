@@ -1,5 +1,6 @@
 import type { CalendarItem, CalStatus, ItemType } from "@/lib/calendar/types";
 import type { Project, ProjectFlag, ProjectGroup, ProjectType, Stage } from "@/lib/types";
+import { krFromLabels } from "@/lib/okr/label";
 import type { JiraIssue } from "./client";
 
 export const PROJECT_KEY = "MKTGCRTV";
@@ -70,6 +71,8 @@ export function toProject(issue: JiraIssue): Project {
     requesterId: (f.requestor ?? f.reporter)?.accountId ?? "",
     requesterName: (f.requestor ?? f.reporter)?.displayName,
     viaHub: Array.isArray(f.labels) ? f.labels.includes(HUB_LABEL) : undefined,
+    krId: krFromLabels(f.labels).krId,
+    krNone: krFromLabels(f.labels).none,
     assigneeId: f.assignee?.accountId,
     assigneeName: f.assignee?.displayName,
     collaboratorIds: unique.map((u) => u.accountId),

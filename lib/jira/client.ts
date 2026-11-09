@@ -118,15 +118,15 @@ export type JiraIssue = {
  * What a list needs. Left out on purpose: the description (rich text) and the Cc people. Jira charges quota per object
  * returned, and each person counts double, so the ticket page is the only place that asks for Cc.
  */
-export const LIST_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "resolutiondate", "parent"];
+export const LIST_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "resolutiondate", "parent", "labels"];
 
 /** Field-list token: "ask for the Requestor field, whatever its id is on this site". */
 const REQUESTOR_TOKEN = "@requestor";
 
 /** My Briefs: a list plus the Requestor, labels (to tell Hub-made briefs apart) and the description for the card's summary. */
-export const BRIEF_FIELDS = [...LIST_FIELDS, "labels", "description", REQUESTOR_TOKEN];
+export const BRIEF_FIELDS = [...LIST_FIELDS, "description", REQUESTOR_TOKEN];
 
-export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent"];
+export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent", "labels"];
 
 // Some fields have site-specific ids (Start date, Requestor), so they are found by name once and remembered, both in
 // memory and in our own store, so a fresh server instance doesn't spend a Jira call on it.
@@ -203,6 +203,16 @@ export async function setDueDate(a: JiraAuth, key: string, date: string): Promis
   if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new JiraError(400, "That date doesn't look right.");
   await request<void>(a, `/issue/${key}`, { method: "PUT", body: { fields: { duedate: date } } });
+}
+
+/** Sets which KR a ticket supports: removes any kr-* label it has, then adds `label` (a kr-xxxxxxxx id or kr-none). Other labels are untouched. */
+export async function setKrLabel(a: JiraAuth, key: string, label: string, current: readonly string[]): Promise<void> {
+  if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) throw new JiraError(400, "That doesn't look like a Jira key.");
+  if (!/^kr-([0-9a-f]{8}|none)$/.test(label)) throw new JiraError(400, "That isn't a KR label.");
+  const old = current.filter((l) => /^kr-([0-9a-f]{8}|none)$/.test(l.toLowerCase()) && l !== label);
+  const update = [...old.map((l) => ({ remove: l })), ...(current.includes(label) ? [] : [{ add: label }])];
+  if (!update.length) return;
+  await request<void>(a, `/issue/${key}`, { method: "PUT", body: { update: { labels: update } } });
 }
 
 /** Quotes a value for use inside a JQL string literal. */

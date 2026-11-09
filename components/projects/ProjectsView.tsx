@@ -20,6 +20,8 @@ import { needsStartDate } from "@/lib/startdate";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
 import { lookbackLabel } from "@/lib/settings";
 import { useMe } from "@/hooks/useMe";
+import { useOkr } from "@/hooks/useOkr";
+import { KrChip } from "./KrChip";
 import { localDay } from "@/lib/myday/plan";
 import type { Block, PersonalTask, Project, ProjectGroup, ProjectType, User } from "@/lib/types";
 import { PageTitle } from "@/components/PageTitle";
@@ -122,6 +124,7 @@ export function ProjectsView() {
   const [lookback, setLookback] = useState<number | null>(null);
   const [today, setToday] = useState("");
   const me = useMe();
+  const okr = useOkr();
   const [action, setAction] = useState(false);
   const [newOnly, setNewOnly] = useState(false);
   const [starredOnly, setStarredOnly] = useState(false);
@@ -164,6 +167,7 @@ export function ProjectsView() {
 
   const closedList = closedState?.key === closedKey ? closedState.list : null;
   const projects = useMemo(() => [...openProjects, ...(closedList ?? [])], [openProjects, closedList]);
+  const untagged = useMemo(() => openProjects.filter((p) => !p.krId && !p.krNone).length, [openProjects]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -207,6 +211,7 @@ export function ProjectsView() {
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <PageTitle>Projects</PageTitle>
         <div className="ml-auto flex items-center gap-4 text-xs">
+          {isJira && me?.role === "creative" && okr.krs.length > 0 && untagged > 0 && <Link href="/projects/untagged" className="font-medium text-brand hover:underline">Tag {untagged} {untagged === 1 ? "project" : "projects"} with a KR</Link>}
           {!isJira && <label className="flex items-center gap-2">Viewing as
             <select value={meId} onChange={(e) => setMeId(e.target.value)} className="rounded-tight border border-control px-2 py-2">
               {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
@@ -315,6 +320,7 @@ export function ProjectsView() {
                             {p.actionRequired && <Tag tone="warn" icon="alert">Action required</Tag>}
                             {today && pastDueDays(p, today) !== null && <Tag tone="bad" icon="alert">Past due · {pastDueWords(pastDueDays(p, today)!)}</Tag>}
                             {needsStartDate(p) && <NoStartTag />}
+                            <KrChip project={p} />
                             {p.newComments > 0 && <Tag tone="info" icon="feedback">{p.newComments} new {p.newComments === 1 ? "comment" : "comments"}</Tag>}
                           </div>
                           <div className="text-xs text-muted">{p.jiraKey} · {p.issueType && p.issueType.level !== 0 ? p.issueType.name : p.type} · {p.requesterName ?? name(p.requesterId)}{p.parentKey && !rows.some((r) => r.jiraKey === p.parentKey) ? ` · in ${p.parentTitle ?? p.parentKey}` : ""}</div>

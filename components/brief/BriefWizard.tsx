@@ -7,6 +7,10 @@ import { Logo } from "@/components/ui/Logo";
 import { flowRepo, projectsRepo } from "@/lib/data";
 import { display, interpolate, walk, type AnswerValue, type Answers, type Flow, type QNode } from "@/lib/brief/flow";
 import { toSubmission } from "@/lib/brief/submit";
+import { NO_KR_LABEL } from "@/lib/okr/label";
+import { useMe } from "@/hooks/useMe";
+import { useOkr } from "@/hooks/useOkr";
+import { KrPicker, NO_KR } from "./KrPicker";
 import { QuestionInput } from "./QuestionInput";
 import { PageTitle } from "@/components/PageTitle";
 
@@ -30,6 +34,10 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
   const [answers, setAnswers] = useState<Answers>({});
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [kr, setKr] = useState("");
+  const okr = useOkr();
+  // Creatives must choose (they know the goals). Requesters may skip; the creative team tags those later.
+  const krRequired = useMe()?.role === "creative";
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<string | null>(null);
   const [resumed, setResumed] = useState(false);
@@ -78,7 +86,9 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
     setBusy(true);
     setError(null);
     try {
-      const res = await projectsRepo.createBrief(toSubmission(flow, answers), "u-riley");
+      const base = toSubmission(flow, answers);
+      const krLabel = kr === NO_KR ? NO_KR_LABEL : kr;
+      const res = await projectsRepo.createBrief(krLabel ? { ...base, labels: [...(base.labels ?? []), krLabel] } : base, "u-riley");
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       setCreated(res.jiraKey);
     } catch (e) {
@@ -151,12 +161,13 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
                 {sub.stakeholders.length > 0 && <div><dt className="font-bold">Keeping in the loop</dt><dd>{sub.stakeholders.map((p) => p.name).join(", ")}</dd></div>}
                 {sub.sections.map((s) => <div key={s.label}><dt className="font-bold">{s.label}</dt><dd className="whitespace-pre-wrap">{s.value}</dd></div>)}
               </dl>
+              {okr.krs.length > 0 && <div className="mt-6"><KrPicker krs={okr.krs} value={kr} onChange={setKr} optional={!krRequired} /></div>}
               {error && <div className="mt-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 {preview ? (
                   <p className="text-sm text-muted">Preview only. Nothing is sent from here.</p>
                 ) : (
-                  <button onClick={submit} disabled={busy} className="btn btn-md btn-primary">{busy ? "Submitting…" : "Submit brief"}</button>
+                  <button onClick={submit} disabled={busy || (krRequired && okr.krs.length > 0 && !kr)} className="btn btn-md btn-primary">{busy ? "Submitting…" : "Submit brief"}</button>
                 )}
                 <span className="text-xs text-muted">Click any answer above to change it.</span>
               </div>
