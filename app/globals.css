@@ -7,6 +7,9 @@
 
 /* SurveyMonkey brand palette (brand-visuals/colors.md). No hexes outside this file. */
 @theme {
+  /* Wide-screen step: the My Day timeline row sits on the same three columns as the tiles above it, so their edges line up. */
+  --breakpoint-3xl: 106.25rem;
+
   /* Corners: three shapes and no others. Tight for controls, Loose for cards and floating panels, Round for pills and circles. */
   --radius-tight: 8px;
   --radius-loose: 24px;

@@ -192,7 +192,7 @@ export function MyDay() {
         <>
           <div className="mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_352px]">
           <div className="min-w-0">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 min-[1800px]:grid-cols-6">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <Tile label="Open work" n={tiles.open.count} onClick={() => setTileOpen("open")} note="Tickets and tasks" />
             <Tile label="Due today" n={dueToday} onClick={() => setTileOpen("due")} note={bigSlot ? `Longest open stretch ${hm(minutes(bigSlot.end - bigSlot.start))}` : "No open stretch left"} />
             <Tile label="In progress" n={tiles.progress.count} onClick={() => setTileOpen("progress")} note="Being worked on" />
@@ -209,8 +209,9 @@ export function MyDay() {
             />
           )}
 
-          <div className="mt-4 grid gap-4 min-[1700px]:grid-cols-[2fr_1fr]">
+          <div className="mt-4 grid gap-4 3xl:grid-cols-3">
             <Card
+              className="3xl:col-span-2"
               title="Project timeline"
               action={
                 <div className="flex items-center gap-2">
@@ -378,9 +379,9 @@ export function MyDay() {
   );
 }
 
-function Card({ title, hint, action, children }: { title: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Card({ title, hint, action, className = "", children }: { title: string; hint?: string; action?: React.ReactNode; className?: string; children: React.ReactNode }) {
   return (
-    <section className="card p-4">
+    <section className={`card p-4 ${className}`}>
       <div className="mb-4 flex flex-wrap items-start gap-2">
         <div className="min-w-0 flex-[1_1_10rem]">
           <h2 className="text-base font-bold">{title}</h2>

@@ -202,13 +202,14 @@ export function FlipBoard({ greeting, images = ["/brand/monkey-512.png"], interv
   const btn = "flex h-8 w-8 items-center justify-center rounded-round bg-n-1000/60 text-n-50 hover:bg-n-1000/80";
   return (
     <div
-      className="group relative overflow-hidden rounded-loose p-2"
+      className="group relative overflow-hidden rounded-loose p-4"
       style={{ background: "var(--board-bg)" }}
       role="img"
       aria-label="Animated display of abstract art and pixel illustrations"
     >
-      <div ref={wrap} className="w-full"><canvas ref={canvas} aria-hidden="true" className="block" /></div>
-      <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100">
+      {/* Outer corner 24px, padding 16px, so the tiles are clipped to an 8px corner that sits concentric with it. */}
+      <div ref={wrap} className="w-full overflow-hidden rounded-tight"><canvas ref={canvas} aria-hidden="true" className="block" /></div>
+      <div className="absolute bottom-6 right-6 flex gap-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100">
         <button type="button" onClick={() => { const p = !paused; setPaused(p); api.current?.setPaused(p); }} aria-pressed={paused} aria-label={paused ? "Resume the display" : "Pause the display"} className={btn}>
           <Icon name={paused ? "play" : "pause"} size={14} />
         </button>
