@@ -22,6 +22,7 @@ import { localTimezone, timezoneOptions, zoneAbbr } from "@/lib/time";
 import type { PersonalTask, Project } from "@/lib/types";
 import { PageTitle } from "@/components/PageTitle";
 import { FlipBoard } from "./FlipBoard";
+import { NoteDialog } from "@/components/reports/NoteDialog";
 
 const FLASH: Record<string, { tone: "ok" | "warn" | "bad"; text: string }> = {
   connected: { tone: "ok", text: "Google is connected. Your calendar events show up here, and your tasks are backed up to Google Tasks." },
@@ -69,6 +70,7 @@ export function MyDay({ headerExtra }: { /** shown beside the Add new task butto
   const [taskErr, setTaskErr] = useState<string | null>(null);
   const [syncErr, setSyncErr] = useState<string | null>(null);
   const [adding, setAdding] = useState(wantsNewTask);
+  const [noting, setNoting] = useState(false);
   const [tab, setTab] = useState<"priority" | "tasks">("priority");
   const [win, setWin] = useState<(typeof WINDOWS)[number]["id"]>("3");
   const [shift, setShift] = useState(0);
@@ -176,6 +178,7 @@ export function MyDay({ headerExtra }: { /** shown beside the Add new task butto
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {headerExtra}
+          {me?.role === "creative" && <button onClick={() => setNoting(true)} className="btn btn-md btn-secondary" title="A private note for your weekly report">Add note</button>}
           <button onClick={() => setAdding(true)} className="btn btn-md btn-secondary"><Icon name="plus" size={16} /> Add new task</button>
         </div>
       </div>
@@ -377,6 +380,7 @@ export function MyDay({ headerExtra }: { /** shown beside the Add new task butto
         </>
       )}
       {tileOpen && today && <TileDialog kind={tileOpen} items={tiles[tileOpen].items} tz={tz} today={today} onClose={() => setTileOpen(null)} onDone={(t) => { celebrate(); void act(() => tasksRepo.update(t.id, { done: true })); }} />}
+      {noting && <NoteDialog onClose={() => setNoting(false)} />}
       {adding && <AddTaskDialog onClose={() => setAdding(false)} onAdd={async (d) => { await act(() => tasksRepo.add(d)); setAdding(false); setTab("tasks"); }} />}
     </main>
   );

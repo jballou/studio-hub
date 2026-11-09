@@ -32,3 +32,5 @@ export { settingsRepo } from "./settings";
 export { notificationsRepo } from "./notifications";
 export type { Inbox } from "./notifications";
 export { teamRepo } from "./team";
+export { meRepo } from "./me";
+export type { InterviewState, InterviewTurn } from "./me";

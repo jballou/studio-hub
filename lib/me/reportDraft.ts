@@ -52,7 +52,7 @@ export function draftFromSignals(s: WeekSignals, krs: KrFacts[], opts: { sample?
     blockers: blockers.join("\n"),
     discussionTopics: notesOf(s, "one_on_one").join("\n"),
     nextSteps: "",
-    themes: groups.slice(0, 3).map((g) => g.objective ?? g.label),
+    themes: [...new Set(groups.map((g) => g.objective ?? g.label))].slice(0, 3),
     wins,
     losses,
     opportunities: notesOf(s, "opportunity"),

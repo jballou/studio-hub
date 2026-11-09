@@ -45,6 +45,10 @@ test("facts-only draft: wins, slips, blockers and notes land in the right fields
   assert.match(d.discussionTopics, /travel/);
   assert.match(d.owedThisWeek, /A-9.*2026-11-20/);
   assert.deepEqual(d.themes, ["Win in employee experience"]);
+  // two KRs under one objective make one theme, not two
+  const two = [...krs, { id: "kr-bbbbbbbb", kr: "EX leads", objective: "Win in employee experience" }];
+  const d2 = draftFromSignals(week({ tickets: [t("A-1", { krId: "kr-aaaaaaaa" }), t("A-2", { krId: "kr-bbbbbbbb" })] }), two);
+  assert.deepEqual(d2.themes, ["Win in employee experience"]);
 });
 
 test("the model writes the narrative but never the KPI numbers", async () => {
@@ -79,4 +83,16 @@ test("the prompt carries goals, tickets, notes and last week's next steps, and n
   assert.match(p, /my blocker note: Waiting on legal/);
   assert.match(p, /Send the deck/);
   assert.match(p, /A-9/);
+});
+
+test("MarCo export lays out the columns and skips empty ones", async () => {
+  const { marcoText } = await import("../lib/me/export.ts");
+  const body = { kpis: "Net new EX: now 120", whyItMoved: "Most work served EX.", owedThisWeek: "", blockers: "A-3 blocked", discussionTopics: "", nextSteps: "Send deck", themes: [], wins: ["Shipped A-1"], losses: ["A-2 ran late"], opportunities: [] };
+  const txt = marcoText(body, "Nov 9");
+  assert.match(txt, /^Brand Creative, week of Nov 9/);
+  assert.match(txt, /Top 2 KPIs & Performance\nNet new EX: now 120/);
+  assert.match(txt, /Wins\n• Shipped A-1/);
+  assert.match(txt, /Misses\n• A-2 ran late/);
+  assert.doesNotMatch(txt, /This week: what we owe/);
+  assert.doesNotMatch(txt, /Proposed discussion topics/);
 });

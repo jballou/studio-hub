@@ -24,6 +24,7 @@ const ITEMS: Item[] = [
   { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new", tour: "projects" },
   { href: "/team", label: "Team", icon: "usersRound", match: (p) => p.startsWith("/team"), forCreatives: true },
+  { href: "/reports", label: "Reports", icon: "listChecks", match: (p) => p.startsWith("/reports"), forCreatives: true },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "messagesSquare", match: (p) => p.startsWith("/review"), tour: "review" },
   { href: "/blocking", label: "Waiting on you", icon: "ban", match: (p) => p.startsWith("/blocking"), tour: "blocking" },
