@@ -12,6 +12,8 @@ export const SCOPES = [
   "https://www.googleapis.com/auth/drive.readonly",
 ];
 export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+/** Not in SCOPES on purpose: only an admin who syncs the OKR Sheet is asked for it (/api/google/connect?sheets=1). */
+export const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
 export class GoogleError extends Error {
   constructor(public status: number, message: string, public code?: "not-connected" | "reconnect" | "not-configured") {
@@ -21,12 +23,12 @@ export class GoogleError extends Error {
 
 export const configured = () => !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
 
-export function authUrl(redirectUri: string, state: string, loginHint?: string): string {
+export function authUrl(redirectUri: string, state: string, loginHint?: string, extraScopes: string[] = []): string {
   const p = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID ?? "",
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: SCOPES.join(" "),
+    scope: [...SCOPES, ...extraScopes].join(" "),
     access_type: "offline",
     // Without this Google only returns a refresh token the first time ever.
     prompt: "consent",
@@ -102,6 +104,16 @@ async function gfetch<T>(email: string, url: string, init?: { method?: string; b
     throw new GoogleError(502, `Google returned HTTP ${res.status}.`);
   }
   return res.json() as Promise<T>;
+}
+
+/** Cell values for one or more ranges of a Google Sheet, as displayed. Needs the Sheets read scope (admins only, see SHEETS_SCOPE). */
+export async function sheetValues(email: string, spreadsheetId: string, ranges: string[]): Promise<string[][][]> {
+  const conn = await getConnection(email);
+  if (conn && !conn.scopes.includes(SHEETS_SCOPE)) throw new GoogleError(403, "Reconnect Google and allow reading Google Sheets.", "reconnect");
+  const qs = new URLSearchParams({ valueRenderOption: "FORMATTED_VALUE", majorDimension: "ROWS" });
+  ranges.forEach((r) => qs.append("ranges", r));
+  const data = await gfetch<{ valueRanges?: { values?: unknown[][] }[] }>(email, `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values:batchGet?${qs}`);
+  return (data.valueRanges ?? []).map((v) => (v.values ?? []).map((row) => row.map((c) => String(c ?? ""))));
 }
 
 export type GEvent = {

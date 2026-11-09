@@ -10,7 +10,8 @@ const NEED = SCOPES.filter((s) => s.startsWith("https://") && s !== DRIVE_SCOPE)
 /** GET /api/google/callback  Google sends the person back here with a one-time code. */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const dest = /(?:^|;\s*)google_oauth_return=welcome/.test(req.headers.get("cookie") ?? "") ? "welcome" : "my-day";
+  const cookie = req.headers.get("cookie") ?? "";
+  const dest = /(?:^|;\s*)google_oauth_return=admin-okr/.test(cookie) ? "admin/okr" : /(?:^|;\s*)google_oauth_return=welcome/.test(cookie) ? "welcome" : "my-day";
   const clear = ["google_oauth_nonce", "google_oauth_return"].map((n) => `${n}=; Path=/api/google; Max-Age=0`);
   const back = (flag: string) => {
     const h = new Headers({ Location: `${url.origin}/${dest}?google=${flag}` });
