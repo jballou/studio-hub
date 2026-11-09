@@ -330,6 +330,13 @@ export async function searchWithChangelog(a: JiraAuth, jql: string, maxResults: 
   return data.issues;
 }
 
+/** Like searchIssues, but each ticket also carries its change history. Costly: keep maxResults small. */
+export async function searchIssuesWithChangelog(a: JiraAuth, jql: string, fields: string[], maxResults = 30): Promise<(JiraIssue & { changelog?: { histories?: ChangeHistory[] } })[]> {
+  const qs = new URLSearchParams({ jql, fields: fields.join(","), expand: "changelog", maxResults: String(maxResults) });
+  const data = await request<{ issues: (JiraIssue & { changelog?: { histories?: ChangeHistory[] } })[] }>(a, `/search/jql?${qs}`);
+  return data.issues;
+}
+
 /** Adds a plain-text comment (one paragraph per line) as the signed-in person. Returns Jira's comment id. */
 export async function addIssueComment(a: JiraAuth, key: string, lines: string[]): Promise<string> {
   const body = {

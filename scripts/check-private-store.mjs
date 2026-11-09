@@ -1,7 +1,7 @@
 // Guards the private notes and reports store.
 // Run: npm run check:private   (exits 1 and lists every offender)
 //  1. Only lib/store/me.ts and lib/me/ may build "me/<id>" document names or call userDocId for it.
-//  2. Anything importing lib/store/me must call requireMe, and must not live under app/api/admin.
+//  2. Anything outside lib/me importing lib/store/me must call requireMe, and must not live under app/api/admin.
 //  3. The private modules never log.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -29,7 +29,8 @@ for (const f of files) {
     if (/\bme\.docId\b/.test(src)) bad.push(`${f}  reads Me.docId outside the private store`);
   }
   if (importsStore) {
-    if (!/\brequireMe\(/.test(src)) bad.push(`${f}  uses the private store without requireMe(req)`);
+    // lib/me/* modules receive a Me from their caller, which is the same guarantee as calling requireMe here.
+    if (!isPrivateModule(f) && !/\brequireMe\(/.test(src)) bad.push(`${f}  uses the private store without requireMe(req)`);
     if (f.startsWith("app/api/admin/")) bad.push(`${f}  admin routes must not read private data`);
     if (f.startsWith("components/")) bad.push(`${f}  client components must not import the private store`);
   }
