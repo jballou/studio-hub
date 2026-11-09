@@ -2,7 +2,7 @@
 // Everything here runs as the signed-in person (their Jira token, their Google connection, their own documents), so it can
 // only ever see what they can see. A source that fails is reported in `sources` and the rest still come back.
 import { listEvents } from "@/lib/google/client";
-import { searchIssuesWithChangelog } from "@/lib/jira/client";
+import { searchIssues, searchIssuesWithChangelog } from "@/lib/jira/client";
 import { PROJECT_KEY } from "@/lib/jira/map";
 import { flagOf } from "@/lib/jira/map";
 import type { JiraSession } from "@/lib/jira/session";
@@ -51,6 +51,17 @@ async function jiraTickets(s: JiraSession, w: ReturnType<typeof weekWindow>): Pr
   });
 }
 
+/** Open work with a due date, soonest first: what's coming up. */
+async function openAheadTickets(s: JiraSession, w: ReturnType<typeof weekWindow>): Promise<TicketSignal[]> {
+  const jql = `project = ${PROJECT_KEY} AND assignee = currentUser() AND statusCategory != Done AND duedate IS NOT EMPTY ORDER BY duedate ASC`;
+  const issues = await searchIssues(s.auth, jql, ["summary", "status", "duedate", "labels"], 10);
+  return issues.map((i): TicketSignal => {
+    const kr = krFromLabels(i.fields.labels);
+    const due = i.fields.duedate ?? undefined;
+    return { key: i.key, title: i.fields.summary, status: i.fields.status.name, done: false, krId: kr.krId, krNone: kr.none, moves: [], closedThisWeek: false, due, dueChanges: 0, overdue: !!due && due < w.weekEnd, flagged: flagOf(i) };
+  });
+}
+
 async function reviewActivity(s: JiraSession, w: ReturnType<typeof weekWindow>, projectKeys: Set<string>): Promise<ReviewSignal> {
   const who = { accountId: s.accountId, name: s.name, email: s.email, role: s.role };
   const assets = (await listAssets(who)).filter((a) => projectKeys.has(a.projectKey));
@@ -86,7 +97,7 @@ export async function collectSignals(me: Me, session: JiraSession, weekStart: st
   const w = weekWindow(weekStart);
   const sources = {} as Record<SourceName, SourceStatus>;
 
-  const [jira, notes, tasks, cal] = await Promise.allSettled([jiraTickets(session, w), listNotes(me, { from: w.fromIso, to: w.toIso }), tasksDone(me, w), meetings(me, w)]);
+  const [jira, notes, tasks, cal, ahead] = await Promise.allSettled([jiraTickets(session, w), listNotes(me, { from: w.fromIso, to: w.toIso }), tasksDone(me, w), meetings(me, w), openAheadTickets(session, w)]);
 
   const tickets = jira.status === "fulfilled" ? jira.value : [];
   sources.jira = jira.status === "fulfilled" ? ok() : failed(jira.reason, "Couldn't read Jira.");
@@ -112,6 +123,7 @@ export async function collectSignals(me: Me, session: JiraSession, weekStart: st
     tasksDone: tasks.status === "fulfilled" ? tasks.value : [],
     notes: notes.status === "fulfilled" ? notes.value : [],
     meetings: calendar,
+    openAhead: ahead.status === "fulfilled" ? ahead.value : [],
     sources,
   };
 }

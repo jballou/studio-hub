@@ -37,6 +37,8 @@ export type WeekSignals = {
   tasksDone: TaskSignal[];
   notes: Note[];
   meetings: MeetingSignal[];
+  /** Open tickets with a due date, soonest first. What is coming up, for the "owed next" part of a report. */
+  openAhead?: TicketSignal[];
   sources: Record<SourceName, SourceStatus>;
 };
 
