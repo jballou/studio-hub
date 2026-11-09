@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   try {
     await jiraSession(req);
     const m = await getOkrMirror();
-    return Response.json(m ? { syncedAt: m.syncedAt, krs: m.krs, initiatives: m.initiatives } : { syncedAt: null, krs: [], initiatives: [] });
+    return Response.json(m ? { syncedAt: m.syncedAt, sample: !!m.sample, krs: m.krs, initiatives: m.initiatives } : { syncedAt: null, sample: false, krs: [], initiatives: [] });
   } catch (e) {
     return apiError(e);
   }

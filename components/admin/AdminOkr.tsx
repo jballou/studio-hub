@@ -14,7 +14,7 @@ export function AdminOkr() {
   const [data, setData] = useState<Overview | null>(null);
   const [sheet, setSheet] = useState("");
   const [tabs, setTabs] = useState("");
-  const [busy, setBusy] = useState<"save" | "sync" | null>(null);
+  const [busy, setBusy] = useState<"save" | "sync" | "sample" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export function AdminOkr() {
 
   if (!isJira) return <main className="page [&>*:not(.fixed)]:max-w-3xl"><p className="text-sm text-muted">OKRs appear once sign-in is turned on.</p></main>;
 
-  const run = async (kind: "save" | "sync") => {
+  const run = async (kind: "save" | "sync" | "sample") => {
     setBusy(kind);
     setError(null);
     setNote(null);
@@ -46,6 +46,9 @@ export function AdminOkr() {
       if (kind === "save") {
         apply(await call("PUT", { sheet, tabs: tabs.split(",").map((t) => t.trim()).filter(Boolean) }));
         setNote("Saved. Sync to pull the latest.");
+      } else if (kind === "sample") {
+        apply(await call("POST", { sample: true }));
+        setNote("Loaded sample data. Nothing from the real Sheet was imported.");
       } else {
         const d = await call("POST");
         apply(d);
@@ -65,6 +68,11 @@ export function AdminOkr() {
       <PageTitle>OKRs</PageTitle>
       <p className="mb-6 text-sm text-muted">A read-only copy of the FY27 OKR Sheet, so creatives can tie projects and reports to a KR. The Sheet stays the source of truth; edit it there and sync here.</p>
 
+      {data?.mirror?.sample && (
+        <div className="mb-4">
+          <Callout tone="warn" icon="alert">Currently using sample data. Nothing from the real OKR Sheet has been imported. Projects tagged now point at sample KRs and will need re-tagging after the real sync.</Callout>
+        </div>
+      )}
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
       {note && <div className="mb-4"><Callout tone="ok" icon="check">{note}</Callout></div>}
 
@@ -95,8 +103,14 @@ export function AdminOkr() {
             <Tag tone="ok" icon="check">Sheets access on</Tag>
           </div>
         )}
+        {(!m || m.sample) && (
+          <div className="mt-4">
+            <button onClick={() => run("sample")} disabled={busy !== null} className="btn btn-md btn-secondary">{busy === "sample" ? "Loading…" : m?.sample ? "Reload sample data" : "Load sample data"}</button>
+            <p className="mt-2 text-xs text-muted">Made-up goals shaped like the real Sheet, for trying the picker and reports without importing anything.</p>
+          </div>
+        )}
         {m ? (
-          <p className="mt-4 text-sm text-muted">Last synced {when(m.syncedAt)} by {m.syncedBy}. {m.krs.length} KRs, {m.initiatives.length} initiatives.</p>
+          <p className="mt-4 text-sm text-muted">{m.sample ? "Sample data loaded" : "Last synced"} {when(m.syncedAt)}{m.sample ? "" : ` by ${m.syncedBy}`}. {m.krs.length} KRs, {m.initiatives.length} initiatives.</p>
         ) : (
           <p className="mt-4 text-sm text-muted">Not synced yet.</p>
         )}

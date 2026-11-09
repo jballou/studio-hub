@@ -3,7 +3,6 @@
 // The Sheet's tabs don't share one layout (the function tabs hold an OKR block and an initiative block, the
 // R&D tab lists Objective > KR > Initiative in one table), so this finds header rows by their wording instead
 // of by position, fills merged cells downwards, and reports what it couldn't place instead of guessing.
-import { createHash } from "node:crypto";
 import type { Initiative, Kr, ParsedTab } from "./types";
 
 type Field = "objective" | "kr" | "initiative" | "owner" | "success" | "milestone" | "baseline" | "target" | "current" | "unit" | "status";
@@ -23,7 +22,12 @@ const PATTERNS: [Field, RegExp][] = [
 ];
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-const hash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 8);
+// Small FNV-1a hash (no Node crypto) so ids can be computed in the browser too. 8 hex chars is plenty for a few hundred KRs.
+const hash = (s: string) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, "0");
+};
 export const krId = (objective: string, kr: string) => `kr-${hash(`${norm(objective)}|${norm(kr)}`)}`;
 const initiativeId = (kid: string | undefined, title: string) => `in-${hash(`${kid ?? ""}|${norm(title)}`)}`;
 

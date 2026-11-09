@@ -2,7 +2,7 @@ import { SHEETS_SCOPE, configured } from "@/lib/google/client";
 import { apiError } from "@/lib/google/http";
 import { adminSession } from "@/lib/jira/session";
 import { getConnection } from "@/lib/store/google";
-import { getOkrConfig, getOkrMirror, setOkrConfig, syncOkr } from "@/lib/store/okr";
+import { getOkrConfig, getOkrMirror, loadSampleOkr, setOkrConfig, syncOkr } from "@/lib/store/okr";
 
 async function overview(email: string) {
   const conn = configured() ? await getConnection(email) : null;
@@ -35,11 +35,13 @@ export async function PUT(req: Request) {
   }
 }
 
-/** POST  Re-reads the Sheet with this admin's Google connection. */
+/** POST  Re-reads the Sheet with this admin's Google connection. POST { sample: true } loads made-up data instead. */
 export async function POST(req: Request) {
   try {
     const s = await adminSession(req);
-    await syncOkr(s.email);
+    const body = await req.json().catch(() => ({}));
+    if (body.sample === true) await loadSampleOkr(s.email);
+    else await syncOkr(s.email);
     return Response.json(await overview(s.email));
   } catch (e) {
     return apiError(e);

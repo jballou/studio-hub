@@ -59,3 +59,12 @@ test("merge de-duplicates across tabs", () => {
   const m = mergeParsed([parseOkrTab("A", t), parseOkrTab("B", t)]);
   assert.equal(m.krs.length, 1);
 });
+
+test("sample rows parse into linked KRs and initiatives with no warnings", async () => {
+  const { OKR_ROWS, INITIATIVE_ROWS } = await import("../lib/okr/sampleRows.ts");
+  const m = mergeParsed([parseOkrTab("Sample", OKR_ROWS), parseOkrTab("Sample", INITIATIVE_ROWS)]);
+  assert.equal(m.krs.length, 6);
+  assert.equal(m.initiatives.length, 6);
+  assert.ok(m.initiatives.every((i) => i.krId && m.krs.some((k) => k.id === i.krId)));
+  assert.equal(m.warnings.length, 0);
+});

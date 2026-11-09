@@ -1,5 +1,6 @@
 import { GoogleError, sheetValues } from "@/lib/google/client";
 import { mergeParsed, parseOkrTab } from "@/lib/okr/parse";
+import { sampleMirror } from "@/lib/okr/sample";
 import type { OkrConfig, OkrMirror } from "@/lib/okr/types";
 import { readDoc, updateDoc } from "./doc";
 import { AdminError, audit } from "./users";
@@ -67,5 +68,15 @@ export async function syncOkr(adminEmail: string): Promise<OkrMirror> {
   };
   await updateDoc("okr/mirror", emptyMirror, () => ({ data: { mirror }, result: undefined }));
   await audit({ actor: adminEmail, action: "okr.sync", target: "okr", detail: `${mirror.krs.length} KRs, ${mirror.initiatives.length} initiatives` });
+  return mirror;
+}
+
+/** Fills the mirror with made-up data shaped like the real Sheet. Refuses to overwrite a real sync. */
+export async function loadSampleOkr(actor: string): Promise<OkrMirror> {
+  const cur = await getOkrMirror();
+  if (cur && !cur.sample) throw new AdminError(409, "Real OKR data is already synced. Sample data would overwrite it.");
+  const mirror = sampleMirror(actor);
+  await updateDoc("okr/mirror", emptyMirror, () => ({ data: { mirror }, result: undefined }));
+  await audit({ actor, action: "okr.sample", target: "okr", detail: `${mirror.krs.length} sample KRs` });
   return mirror;
 }

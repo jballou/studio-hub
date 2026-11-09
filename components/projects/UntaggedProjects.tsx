@@ -13,7 +13,7 @@ import type { Project } from "@/lib/types";
 /** Open projects with no KR yet, each with a picker that saves straight to the ticket's Jira labels. */
 export function UntaggedProjects() {
   const me = useMe();
-  const { krs, ready } = useOkr();
+  const { krs, ready, sample } = useOkr();
   const [list, setList] = useState<Project[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -48,6 +48,7 @@ export function UntaggedProjects() {
       </div>
       <p className="mb-6 text-sm text-muted">Pick the goal each open project supports, or &ldquo;Not tied to a KR&rdquo; for business as usual. It&apos;s saved to the Jira ticket as a label, and reports group work by it.</p>
       {error && <div className="mb-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
+      {sample && krs.length > 0 && <div className="mb-4"><Callout tone="warn" icon="alert">Sample goals only. The real OKR Sheet hasn&apos;t been imported yet.</Callout></div>}
       {ready && krs.length === 0 && <Callout tone="warn" icon="alert">No OKRs are synced yet. An admin can sync them in Preferences → OKRs.</Callout>}
       {done > 0 && <div className="mb-4"><Callout tone="ok" icon="check">{done} tagged.</Callout></div>}
       {list && list.length === 0 && krs.length > 0 && <p className="text-sm text-muted">Every open project has a KR. Nice.</p>}
@@ -58,7 +59,7 @@ export function UntaggedProjects() {
               <Link href={`/projects/${p.jiraKey}`} className="font-medium hover:underline">{p.title}</Link>
               <span className="text-xs text-muted">{p.jiraKey}</span>
             </div>
-            <KrPicker id={`kr-${p.jiraKey}`} krs={krs} value="" onChange={(v) => save(p, v)} />
+            <KrPicker id={`kr-${p.jiraKey}`} krs={krs} value="" onChange={(v) => save(p, v)} sample={sample} />
           </li>
         ))}
       </ul>

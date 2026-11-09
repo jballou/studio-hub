@@ -161,7 +161,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
                 {sub.stakeholders.length > 0 && <div><dt className="font-bold">Keeping in the loop</dt><dd>{sub.stakeholders.map((p) => p.name).join(", ")}</dd></div>}
                 {sub.sections.map((s) => <div key={s.label}><dt className="font-bold">{s.label}</dt><dd className="whitespace-pre-wrap">{s.value}</dd></div>)}
               </dl>
-              {okr.krs.length > 0 && <div className="mt-6"><KrPicker krs={okr.krs} value={kr} onChange={setKr} optional={!krRequired} /></div>}
+              {okr.krs.length > 0 && <div className="mt-6"><KrPicker krs={okr.krs} value={kr} onChange={setKr} optional={!krRequired} sample={okr.sample} /></div>}
               {error && <div className="mt-4"><Callout tone="bad" icon="alert">{error}</Callout></div>}
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 {preview ? (

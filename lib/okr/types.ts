@@ -33,6 +33,8 @@ export type OkrMirror = {
   sourceId: string;
   syncedAt: string;
   syncedBy: string;
+  /** True for made-up sample data. Nothing from the real OKR Sheet was imported. */
+  sample?: boolean;
   tabs: string[];
   krs: Kr[];
   initiatives: Initiative[];
