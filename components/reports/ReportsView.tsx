@@ -84,6 +84,8 @@ export function ReportsView() {
     setError(null);
     try { await fn(); } catch (e) { setError(e instanceof Error ? e.message : "Something went wrong."); }
     setBusy(null);
+    // Results show at the top of the page. The editor is long, so bring them into view instead of leaving them off screen.
+    scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const generate = (overwrite: boolean) => run("generate", async () => {
@@ -99,7 +101,7 @@ export function ReportsView() {
     setBody(r.body);
     setInfo(status === "final" ? "Marked final." : "Saved.");
   });
-  const remove = () => run("delete", async () => { await meRepo.deleteReport(week); setReport(null); setBody(null); setInfo(null); });
+  const remove = () => run("delete", async () => { await meRepo.deleteReport(week); setReport(null); setBody(null); setInfo("Report deleted. Your notes are still here, so you can draft it again."); });
   const copy = () => body && navigator.clipboard.writeText(marcoText(body, day(week))).then(() => setInfo("Copied. Paste it into the MarCo Sheet.")).catch(() => setError("Couldn't copy. Select the text and copy it by hand."));
   const dropNote = (id: string) => run("note", async () => { await meRepo.deleteNote(id); setNotes((ns) => ns.filter((n) => n.id !== id)); });
 
@@ -174,7 +176,7 @@ export function ReportsView() {
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-4">
             {!final && <button onClick={() => save()} disabled={!dirty || busy !== null} className="btn btn-md btn-primary">{busy === "save" ? "Saving…" : "Save"}</button>}
             <button onClick={() => save(final ? "draft" : "final")} disabled={busy !== null} className="btn btn-md btn-secondary">{final ? "Reopen as draft" : "Mark final"}</button>
-            <button onClick={() => setConfirm("delete")} disabled={busy !== null} className="ml-auto text-sm font-medium text-bad-fg hover:underline">Delete report</button>
+            <button onClick={() => setConfirm("delete")} disabled={busy !== null} className="ml-auto flex items-center gap-2 text-sm font-medium text-bad-fg hover:underline"><Icon name="trash" size={14} />Delete report</button>
           </div>
         </section>
       )}
