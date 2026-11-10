@@ -118,11 +118,18 @@ function remember(name: string, data: unknown) {
   try { waitUntil(p); } catch { /* not on Vercel */ }
 }
 
-/** Removes a document for good (and its cached copies). Best effort; only the Redis store supports it. */
+/**
+ * Removes a document for good, from the store and from every cached copy.
+ * The last-known and outage copies matter most: readDoc treats "missing from Redis" as "not moved over yet" and restores
+ * the document from them, so a delete that skipped them was undone by the next page load.
+ */
 export async function deleteDoc(name: string): Promise<void> {
+  // Store first, so a reader that runs while we clear the caches can't re-cache the old copy from it.
+  if (storeKind === "Upstash Redis") await redis().del(redisKey(name));
   l1.delete(name);
   try { await l2().delete(l2Key(name)); } catch { /* cache only */ }
-  if (storeKind === "Upstash Redis") await redis().del(redisKey(name));
+  try { await lkCache().delete(path(name)); } catch { /* cache only */ }
+  await fbDelete(name);
 }
 
 /** `fresh` skips the caches and reads the store itself. Writers use it; everything else should not. */
