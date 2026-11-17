@@ -79,20 +79,16 @@
 }
 
 /* The one content column. The top bar and every page sit in it, so their left and right edges always line up.
-   Centered above 80rem so a wide monitor gets even margins instead of a ragged right edge. */
+   Full width (no cap), to match Ad Studio, which the two apps switch between. */
 @utility column {
   width: 100%;
-  max-width: 80rem;
-  margin-inline: auto;
   padding-inline: 16px;
   @media (min-width: 768px) { padding-inline: 32px; }
 }
 
-/* The one page container: the column plus vertical padding. Narrow reading pages add [&>*]:max-w-3xl. */
+/* The one page container: the column plus vertical padding. Narrow reading pages add [&>*]:max-w-3xl on their inner content. */
 @utility page {
   width: 100%;
-  max-width: 80rem;
-  margin-inline: auto;
   padding: 16px;
   @media (min-width: 768px) { padding: 32px; }
 }

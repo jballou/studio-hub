@@ -168,7 +168,7 @@ export function MyBriefs() {
           {shown.length === 0 ? (
             <p className="mt-6 rounded-loose border border-dashed border-control p-8 text-center text-sm text-muted">Nothing here right now.</p>
           ) : (
-            <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <ul className="mt-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))]">
               {shown.map((p) => <BriefCard key={p.jiraKey} p={p} today={today!} people={people} />)}
             </ul>
           )}

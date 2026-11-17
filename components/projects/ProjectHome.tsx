@@ -301,7 +301,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
             <Link href={`/submit?ticket=${project.jiraKey}`} className="btn btn-md btn-secondary">Submit for feedback</Link>
           </div>
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))]">
             {assets.map((a) => (
               <li key={a.id}>
                 <Link href={`/review/${a.id}`} className="block card p-4 hover:border-brand">

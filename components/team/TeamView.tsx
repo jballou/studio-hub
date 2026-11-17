@@ -64,7 +64,7 @@ function Queue({ list, members, today, canAssign, busy, onAssign }: { list: Proj
       {open && (list.length === 0 ? (
         <p className="mt-4 text-sm text-muted">Everything open has someone on it.</p>
       ) : (
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-4 grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))]">
           {list.map((p) => (
             <li key={p.jiraKey} className="flex flex-col gap-2">
               <Card p={p} today={today} />
