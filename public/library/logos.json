@@ -1,0 +1,257 @@
+{
+ "generated": "2026-11-18T01:00:25.594Z",
+ "logos": [
+  {
+   "id": "2165:97998",
+   "brand": "surveymonkey",
+   "kind": "primary",
+   "variant": "green",
+   "path": "/library/logos/surveymonkey/primary-green.svg",
+   "w": 961,
+   "h": 144
+  },
+  {
+   "id": "2165:97981",
+   "brand": "surveymonkey",
+   "kind": "primary",
+   "variant": "black",
+   "path": "/library/logos/surveymonkey/primary-black.svg",
+   "w": 961,
+   "h": 144
+  },
+  {
+   "id": "2165:97979",
+   "brand": "surveymonkey",
+   "kind": "primary",
+   "variant": "white",
+   "path": "/library/logos/surveymonkey/primary-white.svg",
+   "w": 961,
+   "h": 144
+  },
+  {
+   "id": "3714:159032",
+   "brand": "surveymonkey",
+   "kind": "primary",
+   "variant": "muted",
+   "path": "/library/logos/surveymonkey/primary-muted.svg",
+   "w": 961,
+   "h": 144
+  },
+  {
+   "id": "3714:159167",
+   "brand": "surveymonkey",
+   "kind": "secondary",
+   "variant": "green",
+   "path": "/library/logos/surveymonkey/secondary-green.svg",
+   "w": 685,
+   "h": 288
+  },
+  {
+   "id": "3714:159163",
+   "brand": "surveymonkey",
+   "kind": "secondary",
+   "variant": "black",
+   "path": "/library/logos/surveymonkey/secondary-black.svg",
+   "w": 685,
+   "h": 288
+  },
+  {
+   "id": "3714:159159",
+   "brand": "surveymonkey",
+   "kind": "secondary",
+   "variant": "white",
+   "path": "/library/logos/surveymonkey/secondary-white.svg",
+   "w": 685,
+   "h": 288
+  },
+  {
+   "id": "3714:159034",
+   "brand": "surveymonkey",
+   "kind": "secondary",
+   "variant": "muted",
+   "path": "/library/logos/surveymonkey/secondary-muted.svg",
+   "w": 685,
+   "h": 288
+  },
+  {
+   "id": "2165:98009",
+   "brand": "surveymonkey",
+   "kind": "logomark",
+   "variant": "green",
+   "path": "/library/logos/surveymonkey/logomark-green.svg",
+   "w": 184,
+   "h": 128
+  },
+  {
+   "id": "3714:159107",
+   "brand": "surveymonkey",
+   "kind": "logomark",
+   "variant": "black",
+   "path": "/library/logos/surveymonkey/logomark-black.svg",
+   "w": 184,
+   "h": 128
+  },
+  {
+   "id": "3714:159127",
+   "brand": "surveymonkey",
+   "kind": "logomark",
+   "variant": "white",
+   "path": "/library/logos/surveymonkey/logomark-white.svg",
+   "w": 184,
+   "h": 128
+  },
+  {
+   "id": "3714:159147",
+   "brand": "surveymonkey",
+   "kind": "logomark",
+   "variant": "muted",
+   "path": "/library/logos/surveymonkey/logomark-muted.svg",
+   "w": 184,
+   "h": 128
+  },
+  {
+   "id": "7139:2794",
+   "brand": "launchpad",
+   "kind": "primary",
+   "variant": "light",
+   "path": "/library/logos/launchpad/primary-light.svg",
+   "w": 865,
+   "h": 138
+  },
+  {
+   "id": "7139:2790",
+   "brand": "launchpad",
+   "kind": "primary",
+   "variant": "muted",
+   "path": "/library/logos/launchpad/primary-muted.svg",
+   "w": 865,
+   "h": 138
+  },
+  {
+   "id": "7139:2791",
+   "brand": "launchpad",
+   "kind": "primary",
+   "variant": "dark",
+   "path": "/library/logos/launchpad/primary-dark.svg",
+   "w": 865,
+   "h": 138
+  },
+  {
+   "id": "7139:2789",
+   "brand": "launchpad",
+   "kind": "primary",
+   "variant": "periwinkle",
+   "path": "/library/logos/launchpad/primary-periwinkle.svg",
+   "w": 865,
+   "h": 138
+  },
+  {
+   "id": "7139:2796",
+   "brand": "launchpad",
+   "kind": "secondary",
+   "variant": "light",
+   "path": "/library/logos/launchpad/secondary-light.svg",
+   "w": 598,
+   "h": 284
+  },
+  {
+   "id": "7139:2795",
+   "brand": "launchpad",
+   "kind": "secondary",
+   "variant": "muted",
+   "path": "/library/logos/launchpad/secondary-muted.svg",
+   "w": 598,
+   "h": 284
+  },
+  {
+   "id": "7139:2792",
+   "brand": "launchpad",
+   "kind": "secondary",
+   "variant": "dark",
+   "path": "/library/logos/launchpad/secondary-dark.svg",
+   "w": 598,
+   "h": 284
+  },
+  {
+   "id": "7139:2799",
+   "brand": "launchpad",
+   "kind": "secondary",
+   "variant": "periwinkle",
+   "path": "/library/logos/launchpad/secondary-periwinkle.svg",
+   "w": 598,
+   "h": 284
+  },
+  {
+   "id": "7139:2800",
+   "brand": "launchpad",
+   "kind": "mark",
+   "variant": "light",
+   "path": "/library/logos/launchpad/mark-light.svg",
+   "w": 97,
+   "h": 128
+  },
+  {
+   "id": "7139:2798",
+   "brand": "launchpad",
+   "kind": "mark",
+   "variant": "muted",
+   "path": "/library/logos/launchpad/mark-muted.svg",
+   "w": 97,
+   "h": 128
+  },
+  {
+   "id": "7139:2793",
+   "brand": "launchpad",
+   "kind": "mark",
+   "variant": "dark",
+   "path": "/library/logos/launchpad/mark-dark.svg",
+   "w": 97,
+   "h": 128
+  },
+  {
+   "id": "7139:2797",
+   "brand": "launchpad",
+   "kind": "mark",
+   "variant": "periwinkle",
+   "path": "/library/logos/launchpad/mark-periwinkle.svg",
+   "w": 97,
+   "h": 128
+  },
+  {
+   "id": "8345:5528",
+   "brand": "getfeedback",
+   "kind": "logo",
+   "variant": "color",
+   "path": "/library/logos/getfeedback/logo-color.svg",
+   "w": 796,
+   "h": 167
+  },
+  {
+   "id": "8345:5550",
+   "brand": "getfeedback",
+   "kind": "logo",
+   "variant": "white",
+   "path": "/library/logos/getfeedback/logo-white.svg",
+   "w": 796,
+   "h": 167
+  },
+  {
+   "id": "8345:5546",
+   "brand": "getfeedback",
+   "kind": "symbol",
+   "variant": "color",
+   "path": "/library/logos/getfeedback/symbol-color.svg",
+   "w": 129,
+   "h": 129
+  },
+  {
+   "id": "8345:5548",
+   "brand": "getfeedback",
+   "kind": "symbol",
+   "variant": "white",
+   "path": "/library/logos/getfeedback/symbol-white.svg",
+   "w": 129,
+   "h": 129
+  }
+ ]
+}
