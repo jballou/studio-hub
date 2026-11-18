@@ -14,15 +14,6 @@ const COLORS = [
   { name: "White", hex: "#FEFDFB" },
 ];
 
-/** Groups by the first word of the name (arrow, chart, calendar...). Groups under three icons fold into Other. */
-function categorise(icons: BrandIcon[]) {
-  const first = (n: string) => n.split("-")[0];
-  const counts = new Map<string, number>();
-  icons.forEach((i) => counts.set(first(i.name), (counts.get(first(i.name)) ?? 0) + 1));
-  const cat = (i: BrandIcon) => ((counts.get(first(i.name)) ?? 0) >= 3 ? first(i.name) : "other");
-  return { cat, list: [...new Set(icons.map(cat))].sort((a, b) => (a === "other" ? 1 : b === "other" ? -1 : a.localeCompare(b))) };
-}
-
 const Glyph = ({ i, size, color }: { i: BrandIcon; size: number; color?: string }) => (
   <svg width={size} height={size} viewBox={i.vb} fill="none" aria-hidden="true" style={color ? { color } : undefined} dangerouslySetInnerHTML={{ __html: i.svg }} />
 );
@@ -30,24 +21,22 @@ const Glyph = ({ i, size, color }: { i: BrandIcon; size: number; color?: string 
 export function IconLibrary() {
   const { data: icons, error } = useIcons();
   const [q, setQ] = useState("");
-  const [category, setCategory] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [size, setSize] = useState(24);
   const [color, setColor] = useState(COLORS[0].hex);
   const [note, setNote] = useState<string | null>(null);
 
-  const groups = useMemo(() => (icons ? categorise(icons) : null), [icons]);
   const shown = useMemo(() => {
-    if (!icons || !groups) return [];
+    if (!icons) return [];
     const terms = q.toLowerCase().split(/[\s-]+/).filter(Boolean);
-    return icons.filter((i) => (category === "all" || groups.cat(i) === category) && terms.every((t) => i.name.includes(t)));
-  }, [icons, groups, q, category]);
+    return icons.filter((i) => terms.every((t) => i.name.includes(t)));
+  }, [icons, q]);
   const current = icons?.find((i) => i.name === selected) ?? null;
 
   const flash = (m: string) => { setNote(m); setTimeout(() => setNote(null), 2000); };
 
   if (error) return <p className="text-sm text-muted">The icon library couldn&apos;t load. Refresh to try again.</p>;
-  if (!icons || !groups) return <p className="text-sm text-muted">Loading icons…</p>;
+  if (!icons) return <p className="text-sm text-muted">Loading icons…</p>;
 
   const dark = color === "#FEFDFB";
   return (
@@ -58,11 +47,6 @@ export function IconLibrary() {
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${icons.length} icons`} className="block h-10 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
         </label>
-        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Category">
-          {["all", ...groups.list].map((c) => (
-            <button key={c} onClick={() => setCategory(c)} aria-pressed={category === c} className="chip">{c === "all" ? "All" : c[0].toUpperCase() + c.slice(1)}</button>
-          ))}
-        </div>
         <p className="mb-4 mt-4 text-sm text-muted" aria-live="polite">{shown.length} {shown.length === 1 ? "icon" : "icons"}</p>
         {shown.length === 0 ? (
           <p className="card p-6 text-sm text-muted">No icons match &ldquo;{q}&rdquo;. Try a shorter word, like &ldquo;chart&rdquo; or &ldquo;arrow&rdquo;.</p>

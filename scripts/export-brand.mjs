@@ -29,8 +29,12 @@ const fetchText = async (url) => { const r = await fetch(url); if (!r.ok) throw 
 /** One-colour UI icon: drop clip paths and inline styles, paint with currentColor, keep only the shapes. */
 function cleanIcon(svg) {
   const vb = /viewBox="([^"]+)"/.exec(svg)?.[1] ?? "0 0 14 14";
+  // A few icons (chart-donut-filled) draw an inside stroke with <use> and <mask>, which need their <defs> kept.
+  const keepDefs = /<use[\s>]/.test(svg);
   const inner = svg
-    .replace(/<defs>[\s\S]*?<\/defs>/g, "").replace(/<\/?g[^>]*>/g, "").replace(/<svg[^>]*>/, "").replace(/<\/svg>/, "")
+    .replace(/<clipPath[\s\S]*?<\/clipPath>/g, "")
+    .replace(keepDefs ? /$^/ : /<defs>[\s\S]*?<\/defs>/g, "").replace(/<\/?g[^>]*>/g, "").replace(/<svg[^>]*>/, "").replace(/<\/svg>/, "")
+    .replace(/xlink:href=/g, "href=")
     .replace(/\sclip-path="[^"]*"/g, "").replace(/\sstyle="[^"]*"/g, "")
     .replace(/(fill|stroke)="#[0-9A-Fa-f]{3,8}"/g, '$1="currentColor"').replace(/\s+/g, " ").trim();
   return { vb, inner };
@@ -39,7 +43,9 @@ function cleanIcon(svg) {
 async function icons() {
   const j = await api(`/files/${FILE}/nodes?ids=${encodeURIComponent("6022:2756")}&depth=3`);
   const frame = j.nodes["6022:2756"].document;
-  const items = frame.children.map((c) => c.children?.[0]).filter(Boolean).map((n) => ({ id: n.id, name: n.name }));
+  // Figma names are mixed (contactGroup, icon_warning); the library uses lower-case kebab-case.
+  const tidy = (n) => n.replace(/^icon[_-]/i, "").replace(/([a-z0-9])([A-Z])/g, "$1-$2").replace(/[_\s]+/g, "-").toLowerCase();
+  const items = frame.children.map((c) => c.children?.[0]).filter(Boolean).map((n) => ({ id: n.id, name: tidy(n.name) }));
   console.log(`icons: ${items.length} found`);
   const urls = await svgUrls(items.map((i) => i.id));
   const manifest = [];

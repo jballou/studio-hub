@@ -16,6 +16,17 @@ import { Logo } from "@/components/ui/Logo";
 
 const PREF_KEY = "sidebar-pref-v1";
 const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
+const BRAND_OPEN_KEY = "sidebar-brand-open-v1";
+
+/** The Brand Assets folder: each library in the brand area, one click away. */
+const BRAND_ITEMS: { href: string; label: string }[] = [
+  { href: "/brand/logos", label: "Logos" },
+  { href: "/brand/type", label: "Type" },
+  { href: "/brand/colors", label: "Color" },
+  { href: "/brand/photos", label: "Photos" },
+  { href: "/brand/illustrations", label: "Illustrations" },
+  { href: "/brand/icons", label: "Icons" },
+];
 
 type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean; /** shown to the creative team only */ forCreatives?: boolean; /** lets the onboarding tour point at this item */ tour?: string };
 
@@ -25,7 +36,6 @@ const ITEMS: Item[] = [
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new", tour: "projects" },
   { href: "/team", label: "Team", icon: "usersRound", match: (p) => p.startsWith("/team"), forCreatives: true },
   { href: "/reports", label: "Reports", icon: "listChecks", match: (p) => p.startsWith("/reports"), forCreatives: true },
-  { href: "/brand", label: "Brand", icon: "palette", match: (p) => p.startsWith("/brand") },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },
   { href: "/review", label: "Review", icon: "messagesSquare", match: (p) => p.startsWith("/review"), tour: "review" },
   { href: "/blocking", label: "Waiting on you", icon: "ban", match: (p) => p.startsWith("/blocking"), tour: "blocking" },
@@ -45,6 +55,7 @@ export function Sidebar() {
   const favs = useFavorites();
   const [pref, setPref] = useState<"expanded" | "collapsed" | null>(null);
   const [favOpen, setFavOpen] = useState(true);
+  const [brandOpen, setBrandOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [waiting, setWaiting] = useState(0);
@@ -55,6 +66,7 @@ export function Sidebar() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (v === "expanded" || v === "collapsed") setPref(v);
       if (localStorage.getItem(FAV_OPEN_KEY) === "closed") setFavOpen(false);
+      if (localStorage.getItem(BRAND_OPEN_KEY) === "closed") setBrandOpen(false);
     } catch { /* storage unavailable */ }
   }, []);
 
@@ -87,6 +99,11 @@ export function Sidebar() {
     try { localStorage.setItem(PREF_KEY, next); } catch { /* ignore */ }
   };
   const toggle = () => setMode(collapsed ? "expanded" : "collapsed");
+  const toggleBrand = () => {
+    const next = !brandOpen;
+    setBrandOpen(next);
+    try { localStorage.setItem(BRAND_OPEN_KEY, next ? "open" : "closed"); } catch { /* ignore */ }
+  };
   const toggleFav = () => {
     const next = !favOpen;
     setFavOpen(next);
@@ -152,8 +169,39 @@ export function Sidebar() {
         {!collapsed && <p className="mb-2 px-4 text-muted eyebrow">Workspace</p>}
         <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
 
-        {/* Favorites folder */}
+        {/* Brand Assets and Favorites folders share one scrolling area so a short window never pushes into the user row */}
         <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
+        {/* Brand Assets folder */}
+        <div>
+          {collapsed ? (
+            <Link href="/brand" title="Brand Assets" aria-label="Brand Assets" aria-current={pathname.startsWith("/brand") ? "page" : undefined} className={row(pathname.startsWith("/brand"))}>
+              <Icon name="palette" size={18} />
+            </Link>
+          ) : (
+            <section aria-label="Brand Assets">
+              <button onClick={toggleBrand} aria-expanded={brandOpen} className="flex w-full items-center gap-2 rounded-tight px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
+                <Icon name="palette" size={14} />
+                <span className="flex-1 text-left">Brand Assets</span>
+                <span className={brandOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
+              </button>
+              {brandOpen && (
+                <ul>
+                  {BRAND_ITEMS.map((b) => {
+                    const on = pathname === b.href || pathname.startsWith(`${b.href}/`);
+                    return (
+                      <li key={b.href}>
+                        <Link href={b.href} aria-current={on ? "page" : undefined} className={`block truncate rounded-tight py-2 pl-10 pr-4 text-sm ${on ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}>{b.label}</Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
+        </div>
+
+        {/* Favorites folder */}
+        <div className="mt-2">
           {collapsed ? (
             <button onClick={() => setMode("expanded")} title="Favorites" aria-label="Show favorites" className={row(false)}>
               <Icon name="star" size={18} />
@@ -187,6 +235,8 @@ export function Sidebar() {
               )}
             </section>
           )}
+        </div>
+
         </div>
 
         {/* Bottom: utilities between two rules, then you */}

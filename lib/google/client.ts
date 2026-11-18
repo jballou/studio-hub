@@ -254,3 +254,49 @@ export async function driveMedia(email: string, id: string, range: string | null
   if (res.status === 404) throw new GoogleError(404, "That Drive file wasn't found, or you can't open it.");
   return res;
 }
+
+// ---- Brand library: browsing a shared Drive folder with one person's connection ----
+
+export type DriveItem = { id: string; name: string; mimeType: string; folder: boolean; size?: number; width?: number; height?: number };
+export const DRIVE_FOLDER = "application/vnd.google-apps.folder";
+
+/** Children of a Drive folder (folders first, then by name), up to 400. */
+export async function driveList(email: string, folderId: string): Promise<DriveItem[]> {
+  await assertDrive(email);
+  const out: DriveItem[] = [];
+  let page: string | undefined;
+  do {
+    const qs = new URLSearchParams({
+      q: `'${folderId}' in parents and trashed=false`,
+      fields: "nextPageToken,files(id,name,mimeType,size,imageMediaMetadata(width,height))",
+      orderBy: "folder,name_natural",
+      pageSize: "200",
+      supportsAllDrives: "true",
+      includeItemsFromAllDrives: "true",
+    });
+    if (page) qs.set("pageToken", page);
+    const r = await gfetch<{ nextPageToken?: string; files?: { id: string; name: string; mimeType: string; size?: string; imageMediaMetadata?: { width?: number; height?: number } }[] }>(email, `https://www.googleapis.com/drive/v3/files?${qs}`);
+    for (const f of r.files ?? []) out.push({ id: f.id, name: f.name, mimeType: f.mimeType, folder: f.mimeType === DRIVE_FOLDER, size: f.size ? Number(f.size) : undefined, width: f.imageMediaMetadata?.width, height: f.imageMediaMetadata?.height });
+    page = r.nextPageToken;
+  } while (page && out.length < 400);
+  return out;
+}
+
+/** A file's name, type and parent folders. */
+export async function driveNode(email: string, id: string): Promise<{ id: string; name: string; mimeType: string; parents: string[] }> {
+  await assertDrive(email);
+  const qs = new URLSearchParams({ supportsAllDrives: "true", fields: "id,name,mimeType,parents" });
+  const f = await gfetch<{ id: string; name: string; mimeType: string; parents?: string[] }>(email, `https://www.googleapis.com/drive/v3/files/${id}?${qs}`);
+  return { id: f.id, name: f.name, mimeType: f.mimeType, parents: f.parents ?? [] };
+}
+
+/** Drive's own preview image for a file, as a response to stream on. `size` is the longest edge in pixels. */
+export async function driveThumbnail(email: string, id: string, size: number): Promise<Response> {
+  await assertDrive(email);
+  const qs = new URLSearchParams({ supportsAllDrives: "true", fields: "thumbnailLink" });
+  const f = await gfetch<{ thumbnailLink?: string }>(email, `https://www.googleapis.com/drive/v3/files/${id}?${qs}`);
+  if (!f.thumbnailLink) throw new GoogleError(404, "No preview for that file.");
+  const res = await fetch(f.thumbnailLink.replace(/=s\d+$/, `=s${size}`), { cache: "no-store" });
+  if (!res.ok) throw new GoogleError(502, "Drive couldn't make a preview.");
+  return res;
+}

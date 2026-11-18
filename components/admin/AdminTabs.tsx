@@ -9,6 +9,7 @@ const TABS: { href: string; label: string; adminOnly: boolean; icon?: boolean }[
   { href: "/admin/brief", label: "Brief builder", adminOnly: false },
   { href: "/admin/users", label: "Team & access", adminOnly: true },
   { href: "/admin/okr", label: "OKRs", adminOnly: true },
+  { href: "/admin/brand", label: "Brand library", adminOnly: true },
   { href: "/admin/activity", label: "Activity", adminOnly: true },
   { href: "/admin/settings", label: "Settings", adminOnly: true },
   { href: "/admin/system", label: "System", adminOnly: true },

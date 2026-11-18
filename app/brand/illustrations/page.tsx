@@ -1,0 +1,2 @@
+import { DriveLibrary } from "@/components/brand/DriveLibrary";
+export default function Page() { return <DriveLibrary kind="illustrations" title="Illustrations" blurb="Hero, spot, mini and product illustrations. Use the set that matches the size and job of your layout." />; }

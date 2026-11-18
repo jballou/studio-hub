@@ -8,6 +8,8 @@ const TABS = [
   { href: "/brand/logos", label: "Logos" },
   { href: "/brand/colors", label: "Color" },
   { href: "/brand/type", label: "Typography" },
+  { href: "/brand/photos", label: "Photos" },
+  { href: "/brand/illustrations", label: "Illustrations" },
   { href: "/brand/icons", label: "Icons" },
 ];
 
