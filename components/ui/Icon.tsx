@@ -87,6 +87,13 @@ const PATHS = {
   palette: <><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.250a1.750 1.750 0 0 0-1.400 2.800l.3.4a1.750 1.750 0 0 1-1.400 2.800z" /><circle cx="13.500" cy="6.500" r=".5" fill="currentColor" /><circle cx="17.500" cy="10.500" r=".5" fill="currentColor" /><circle cx="6.500" cy="12.500" r=".5" fill="currentColor" /><circle cx="8.500" cy="7.500" r=".5" fill="currentColor" /></>,
   download: <><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></>,
   copy: <><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.100 0-2-.9-2-2V4c0-1.100.9-2 2-2h10c1.100 0 2 .9 2 2" /></>,
+  // Lucide: languages, image, target, pencil-ruler, swatch-book, video
+  languages: <><path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" /><path d="m22 22-5-10-5 10" /><path d="M14 18h6" /></>,
+  image: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></>,
+  target: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></>,
+  pencilRuler: <><path d="m15 5 4 4" /><path d="M13 7 8.700 2.700a2.410 2.410 0 0 0-3.400 0L2.700 5.300a2.410 2.410 0 0 0 0 3.400L7 13" /><path d="m8 6 2-2" /><path d="m18 16 2-2" /><path d="m17 11 4.300 4.300c.94.94.94 2.460 0 3.400l-2.600 2.600c-.94.94-2.460.94-3.400 0L11 17" /><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.830l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.320a2 2 0 0 0 .83-.497z" /></>,
+  swatchBook: <><path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z" /><path d="M16.700 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7" /><path d="M7 17h.01" /><path d="m11 8 2.300-2.300a2.400 2.400 0 0 1 3.404.004L18.600 7.600a2.400 2.400 0 0 1 .026 3.434L9.900 19.800" /></>,
+  video: <><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.870a.5.5 0 0 0-.752-.432L16 10.500" /><rect x="2" y="6" width="14" height="12" rx="2" /></>,
 } as const;
 
 export type IconName = keyof typeof PATHS;

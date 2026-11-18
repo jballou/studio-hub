@@ -16,16 +16,17 @@ import { Logo } from "@/components/ui/Logo";
 
 const PREF_KEY = "sidebar-pref-v1";
 const FAV_OPEN_KEY = "sidebar-favorites-open-v1";
+const WORK_OPEN_KEY = "sidebar-workspace-open-v1";
 const BRAND_OPEN_KEY = "sidebar-brand-open-v1";
 
 /** The Brand Assets folder: each library in the brand area, one click away. */
-const BRAND_ITEMS: { href: string; label: string }[] = [
-  { href: "/brand/logos", label: "Logos" },
-  { href: "/brand/type", label: "Type" },
-  { href: "/brand/colors", label: "Color" },
-  { href: "/brand/photos", label: "Photos" },
-  { href: "/brand/illustrations", label: "Illustrations" },
-  { href: "/brand/icons", label: "Icons" },
+const BRAND_ITEMS: { href: string; label: string; icon: IconName | "goldie" }[] = [
+  { href: "/brand/logos", label: "Logos", icon: "goldie" },
+  { href: "/brand/type", label: "Type", icon: "languages" },
+  { href: "/brand/colors", label: "Color", icon: "swatchBook" },
+  { href: "/brand/photos", label: "Photos", icon: "image" },
+  { href: "/brand/illustrations", label: "Illustrations", icon: "pencilRuler" },
+  { href: "/brand/icons", label: "Icons", icon: "target" },
 ];
 
 type Item = { href: string; label: string; icon: IconName; match: (p: string) => boolean; /** shown to requesters (and in the demo) but not to the creative team, who work from Projects */ forRequesters?: boolean; /** shown to the creative team only */ forCreatives?: boolean; /** lets the onboarding tour point at this item */ tour?: string };
@@ -55,6 +56,7 @@ export function Sidebar() {
   const favs = useFavorites();
   const [pref, setPref] = useState<"expanded" | "collapsed" | null>(null);
   const [favOpen, setFavOpen] = useState(true);
+  const [workOpen, setWorkOpen] = useState(true);
   const [brandOpen, setBrandOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -66,6 +68,7 @@ export function Sidebar() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (v === "expanded" || v === "collapsed") setPref(v);
       if (localStorage.getItem(FAV_OPEN_KEY) === "closed") setFavOpen(false);
+      if (localStorage.getItem(WORK_OPEN_KEY) === "closed") setWorkOpen(false);
       if (localStorage.getItem(BRAND_OPEN_KEY) === "closed") setBrandOpen(false);
     } catch { /* storage unavailable */ }
   }, []);
@@ -99,6 +102,11 @@ export function Sidebar() {
     try { localStorage.setItem(PREF_KEY, next); } catch { /* ignore */ }
   };
   const toggle = () => setMode(collapsed ? "expanded" : "collapsed");
+  const toggleWork = () => {
+    const next = !workOpen;
+    setWorkOpen(next);
+    try { localStorage.setItem(WORK_OPEN_KEY, next ? "open" : "closed"); } catch { /* ignore */ }
+  };
   const toggleBrand = () => {
     const next = !brandOpen;
     setBrandOpen(next);
@@ -166,8 +174,13 @@ export function Sidebar() {
           {!collapsed && (<><span className="flex-1 text-left">Search</span><kbd className="text-xs">⌘K</kbd></>)}
         </button>
 
-        {!collapsed && <p className="mb-2 px-4 text-muted eyebrow">Workspace</p>}
-        <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>
+        {!collapsed && (
+          <button onClick={toggleWork} aria-expanded={workOpen} className="mb-2 flex w-full items-center gap-2 rounded-tight px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
+            <span className="flex-1 text-left">Workspace</span>
+            <span className={workOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
+          </button>
+        )}
+        {(collapsed || workOpen) && <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>}
 
         {/* Brand Assets and Favorites folders share one scrolling area so a short window never pushes into the user row */}
         <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
@@ -190,7 +203,9 @@ export function Sidebar() {
                     const on = pathname === b.href || pathname.startsWith(`${b.href}/`);
                     return (
                       <li key={b.href}>
-                        <Link href={b.href} aria-current={on ? "page" : undefined} className={`block truncate rounded-tight py-2 pl-10 pr-4 text-sm ${on ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}>{b.label}</Link>
+                        <Link href={b.href} aria-current={on ? "page" : undefined} className={row(on)}>{b.icon === "goldie"
+                          ? <span aria-hidden className="inline-block h-[18px] w-[18px] bg-current" style={{ WebkitMask: "url(/library/logos/surveymonkey/logomark-black.svg) center / contain no-repeat", mask: "url(/library/logos/surveymonkey/logomark-black.svg) center / contain no-repeat" }} />
+                          : <Icon name={b.icon} size={18} />}<span className="flex-1">{b.label}</span></Link>
                       </li>
                     );
                   })}
