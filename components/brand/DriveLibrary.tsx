@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Icon } from "@/components/ui/Icon";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { useMe } from "@/hooks/useMe";
 import { isJira } from "@/lib/data/mode";
 
@@ -13,7 +13,14 @@ type Kind = "photos" | "illustrations";
 const file = (kind: Kind, id: string, mode: "thumb" | "download", s?: number, webp?: boolean) => `/api/brand/drive/file/${id}?kind=${kind}&mode=${mode}${s ? `&s=${s}` : ""}${webp ? "&format=webp" : ""}`;
 /** JPG and PNG can also be saved as WebP, which is much smaller. */
 const canWebp = (i: Item) => i.mimeType === "image/jpeg" || i.mimeType === "image/png";
-const extOf = (i: Item) => (i.mimeType === "image/jpeg" ? "JPG" : i.mimeType === "image/png" ? "PNG" : i.mimeType === "application/pdf" ? "PDF" : "File");
+const extOf = (i: Item) => (i.mimeType === "image/jpeg" ? "JPG" : i.mimeType === "image/png" ? "PNG" : i.mimeType === "application/pdf" ? "PDF" : i.mimeType === "image/svg+xml" ? "SVG" : i.mimeType === "image/gif" ? "GIF" : i.mimeType === "image/webp" ? "WebP" : "File");
+type View = "large" | "small" | "list";
+const VIEW_KEY = "brand-gallery-view-v1";
+const VIEWS: { id: View; label: string; icon: IconName }[] = [
+  { id: "large", label: "Large gallery", icon: "layoutGrid" },
+  { id: "small", label: "Small gallery", icon: "grid3x3" },
+  { id: "list", label: "List", icon: "list" },
+];
 const mb = (n?: number) => (n ? (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1000))} KB`) : "");
 
 /** A Drive-backed library: folders become categories, images show Drive's own previews, downloads stream through the Hub. */
@@ -24,6 +31,13 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Item | null>(null);
+  const [view, setView] = useState<View>("large");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    try { const v = localStorage.getItem(VIEW_KEY); if (v === "large" || v === "small" || v === "list") setView(v); } catch { /* storage unavailable */ }
+  }, []);
+  const pick = (v: View) => { setView(v); try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ } };
 
   const load = useCallback(async (f: string | null) => {
     setError(null);
@@ -84,11 +98,21 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
           </span>
         ))}
       </nav>
-      <label className="relative mb-6 block max-w-xl">
-        <span className="sr-only">Search this folder</span>
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this folder" className="block h-10 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
-      </label>
+      <div className="mb-6 flex flex-wrap items-center gap-4">
+        <label className="relative block min-w-0 max-w-xl flex-1">
+          <span className="sr-only">Search this folder</span>
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this folder" className="block h-10 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
+        </label>
+        <div role="radiogroup" aria-label="View" className="flex gap-2 rounded-tight border border-control bg-white p-2">
+          {VIEWS.map((v) => (
+            <button key={v.id} role="radio" aria-checked={view === v.id} aria-label={v.label} title={v.label} onClick={() => pick(v.id)}
+              className={`flex h-8 w-8 items-center justify-center rounded-tight ${view === v.id ? "bg-brand-soft text-brand" : "text-n-800 hover:bg-n-150"}`}>
+              <Icon name={v.icon} size={16} />
+            </button>
+          ))}
+        </div>
+      </div>
 
       {folders.length > 0 && (
         <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
@@ -103,23 +127,48 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
         </ul>
       )}
 
-      {files.length > 0 && (
-        <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+      {files.length > 0 && view !== "list" && (
+        <ul className={`grid gap-4 ${view === "large" ? "grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}`}>
           {files.map((f) => (
             <li key={f.id} className="card overflow-hidden">
               <button onClick={() => setOpen(f)} className="block aspect-[4/3] w-full bg-n-150" aria-label={`Preview ${f.name}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={file(kind, f.id, "thumb", 480)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                <img src={file(kind, f.id, "thumb", view === "large" ? 800 : 320)} alt="" loading="lazy" className="h-full w-full object-cover" />
               </button>
-              <div className="flex items-center justify-between gap-2 p-4">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold" title={f.name}>{f.name}</p>
-                  <p className="truncate text-xs text-muted">{f.width && f.height ? `${f.width}×${f.height} · ` : ""}{mb(f.size)}</p>
+              {view === "large" ? (
+                <div className="flex items-center justify-between gap-2 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold" title={f.name}>{f.name}</p>
+                    <p className="truncate text-xs text-muted">{f.width && f.height ? `${f.width}×${f.height} · ` : ""}{mb(f.size)}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}>{extOf(f)}</a>
+                    {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}>WebP</a>}
+                  </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}>{extOf(f)}</a>
-                  {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}>WebP</a>}
-                </div>
+              ) : (
+                <p className="truncate p-2 text-xs font-medium" title={f.name}>{f.name}</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {files.length > 0 && view === "list" && (
+        <ul className="card divide-y divide-line overflow-hidden">
+          {files.map((f) => (
+            <li key={f.id} className="flex items-center gap-4 p-4">
+              <button onClick={() => setOpen(f)} className="block h-12 w-16 shrink-0 overflow-hidden rounded-tight bg-n-150" aria-label={`Preview ${f.name}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={file(kind, f.id, "thumb", 160)} alt="" loading="lazy" className="h-full w-full object-cover" />
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold" title={f.name}>{f.name}</p>
+                <p className="truncate text-xs text-muted">{f.width && f.height ? `${f.width}×${f.height} · ` : ""}{extOf(f)} · {mb(f.size)}</p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}>{extOf(f)}</a>
+                {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}>WebP</a>}
               </div>
             </li>
           ))}

@@ -94,6 +94,10 @@ const PATHS = {
   pencilRuler: <><path d="m15 5 4 4" /><path d="M13 7 8.700 2.700a2.410 2.410 0 0 0-3.400 0L2.700 5.300a2.410 2.410 0 0 0 0 3.400L7 13" /><path d="m8 6 2-2" /><path d="m18 16 2-2" /><path d="m17 11 4.300 4.300c.94.94.94 2.460 0 3.400l-2.600 2.600c-.94.94-2.460.94-3.400 0L11 17" /><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.830l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.320a2 2 0 0 0 .83-.497z" /></>,
   swatchBook: <><path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z" /><path d="M16.700 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7" /><path d="M7 17h.01" /><path d="m11 8 2.300-2.300a2.400 2.400 0 0 1 3.404.004L18.600 7.600a2.400 2.400 0 0 1 .026 3.434L9.900 19.800" /></>,
   video: <><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.870a.5.5 0 0 0-.752-.432L16 10.500" /><rect x="2" y="6" width="14" height="12" rx="2" /></>,
+  // Lucide: layout-grid, grid-3x3, list
+  layoutGrid: <><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></>,
+  grid3x3: <><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" /></>,
+  list: <><path d="M3 5h.01" /><path d="M3 12h.01" /><path d="M3 19h.01" /><path d="M8 5h13" /><path d="M8 12h13" /><path d="M8 19h13" /></>,
 } as const;
 
 export type IconName = keyof typeof PATHS;
