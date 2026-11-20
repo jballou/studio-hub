@@ -219,6 +219,23 @@ export async function setKrLabel(a: JiraAuth, key: string, label: string, curren
 export const jqlString = (s: string) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 
 /** Looks up the Jira site id for JIRA_SITE_URL among the sites this token can reach. */
+/** Does this person's Atlassian token reach the Jira site? "unknown" when Atlassian couldn't be asked, so a blip never blocks sign-in. */
+export async function siteAccess(accessToken: string): Promise<"yes" | "no" | "unknown"> {
+  const site = (process.env.JIRA_SITE_URL ?? "").replace(/\/$/, "");
+  if (!site) return "unknown";
+  try {
+    const res = await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return "unknown";
+    const sites: { url: string }[] = await res.json();
+    return sites.some((x) => x.url.replace(/\/$/, "") === site) ? "yes" : "no";
+  } catch {
+    return "unknown";
+  }
+}
+
 export async function findCloudId(accessToken: string): Promise<string | undefined> {
   const site = (process.env.JIRA_SITE_URL ?? "").replace(/\/$/, "");
   try {

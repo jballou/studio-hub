@@ -16,6 +16,7 @@ const guarded = auth((req) => {
   if (pathname.startsWith("/api/")) return Response.json({ error: "Not signed in." }, { status: 401 });
   const to = new URL("/signin", req.nextUrl.origin);
   to.searchParams.set("callbackUrl", `${pathname}${search}`);
+  if (req.auth?.error) to.searchParams.set("error", "SessionExpired");
   return NextResponse.redirect(to);
 });
 

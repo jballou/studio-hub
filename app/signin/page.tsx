@@ -5,9 +5,15 @@ import { SignInCard } from "@/components/auth/SignInCard";
 
 const MESSAGES: Record<string, string> = {
   AccessDenied: "That account can't use this app. Sign in with your @surveymonkey.com Atlassian account.",
+  WrongDomain: "Atlassian signed you in with an account that doesn't use a @surveymonkey.com email, often a personal one. Open this page in a private window and choose your SurveyMonkey account.",
+  NoEmail: "Your Atlassian account doesn't share an email address with this app, so we can't tell who you are. Use your @surveymonkey.com Atlassian account, or ask the Brand Creative team for help.",
+  Unverified: "Atlassian says the email on that account isn't verified. Verify it in your Atlassian account settings, then try again.",
+  Disabled: "Your access to the Hub has been turned off. Ask the Brand Creative team to turn it back on.",
+  NoJiraSite: "You're signed in to Atlassian, but that account doesn't have access to the Brand Creative Jira site. Ask the Brand Creative team to add you in Jira.",
+  SessionExpired: "Your Atlassian session ended. Sign in again to continue.",
   Configuration: "Sign-in isn't set up correctly yet. Ask the Brand Creative team to check the Atlassian app settings.",
   OAuthCallbackError: "Atlassian didn't complete the sign-in. Try again.",
-  WrongDomain: "Use your @surveymonkey.com email address.",
+  EmailDomain: "Use your @surveymonkey.com email address.",
 };
 
 /** Only same-site paths, so a crafted link can't bounce someone to another host after sign-in. */
@@ -27,7 +33,7 @@ async function SignIn({ searchParams }: { searchParams: PageProps<"/signin">["se
         const email = String(formData.get("email") ?? "").trim().toLowerCase();
         const to = safePath(String(formData.get("callbackUrl") ?? ""));
         // Checked again on the server; the page's own check is only a convenience.
-        if (!email.endsWith("@surveymonkey.com")) redirect(`/signin?error=WrongDomain&callbackUrl=${encodeURIComponent(to)}`);
+        if (!email.endsWith("@surveymonkey.com")) redirect(`/signin?error=EmailDomain&callbackUrl=${encodeURIComponent(to)}`);
         // First visit goes through a short "connect your tools" step, which sends people on to where they were headed.
         await signIn("atlassian", { redirectTo: `/welcome?next=${encodeURIComponent(to)}` });
       }}

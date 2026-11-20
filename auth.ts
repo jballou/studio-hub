@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Atlassian from "next-auth/providers/atlassian";
-import { findCloudId } from "@/lib/jira/client";
+import { findCloudId, siteAccess } from "@/lib/jira/client";
 import { recordSignIn } from "@/lib/store/users";
 
 const ALLOWED_DOMAIN = "@surveymonkey.com";
@@ -50,16 +50,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     // Only @surveymonkey.com Atlassian accounts with a verified email may sign in, and only while not disabled by an admin.
-    async signIn({ profile }) {
+    // Each refusal redirects to the sign-in page with its own reason, so people (and whoever helps them) can tell
+    // "wrong Atlassian account" from "access turned off" from "no Jira access".
+    async signIn({ profile, account }) {
       const email = String(profile?.email ?? "").toLowerCase();
-      if (!email.endsWith(ALLOWED_DOMAIN) || profile?.email_verified === false) return false;
+      if (!email) return "/signin?error=NoEmail";
+      if (!email.endsWith(ALLOWED_DOMAIN)) return "/signin?error=WrongDomain";
+      if (profile?.email_verified === false) return "/signin?error=Unverified";
       try {
         const { active } = await recordSignIn({ email, name: profile?.name ?? undefined, accountId: String(profile?.account_id ?? "") });
-        return active;
+        if (!active) return "/signin?error=Disabled";
       } catch {
         // If the user store is briefly unreachable, don't lock everyone out. Every API call re-checks access anyway.
-        return true;
       }
+      // Signed in to Atlassian but not on this Jira site: every page would fail, so say so up front.
+      if (account?.access_token && (await siteAccess(account.access_token)) === "no") return "/signin?error=NoJiraSite";
+      return true;
     },
     async jwt({ token, account, profile }) {
       if (account) {
