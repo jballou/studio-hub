@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-20T20:41:03Z",
+  "title": "Design System: Brand Creative Hub",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Interaction Green",
+        "canonical": "#08794a",
+        "tonalRamp": [
+          "#0f2e21",
+          "#10412c",
+          "#105638",
+          "#08794a",
+          "#089b5e",
+          "#7dd9a3",
+          "#b0e8c3",
+          "#d6f5de"
+        ]
+      },
+      "primary-deep": {
+        "role": "primary",
+        "displayName": "Pressed Green",
+        "canonical": "#105638",
+        "tonalRamp": [
+          "#0f2e21",
+          "#10412c",
+          "#105638",
+          "#08794a",
+          "#089b5e",
+          "#7dd9a3",
+          "#b0e8c3",
+          "#d6f5de"
+        ]
+      },
+      "primary-fill": {
+        "role": "primary",
+        "displayName": "Brand Green",
+        "canonical": "#089b5e",
+        "tonalRamp": [
+          "#0f2e21",
+          "#10412c",
+          "#105638",
+          "#08794a",
+          "#089b5e",
+          "#7dd9a3",
+          "#b0e8c3",
+          "#d6f5de"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Mint Wash",
+        "canonical": "#d6f5de",
+        "tonalRamp": [
+          "#0f2e21",
+          "#10412c",
+          "#105638",
+          "#08794a",
+          "#089b5e",
+          "#7dd9a3",
+          "#b0e8c3",
+          "#d6f5de"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Deep Moss Ink",
+        "canonical": "#0f2e21",
+        "tonalRamp": [
+          "#0f2e21",
+          "#10412c",
+          "#105638",
+          "#08794a",
+          "#089b5e",
+          "#7dd9a3",
+          "#b0e8c3",
+          "#d6f5de"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Studio Paper",
+        "canonical": "#f7f5f3",
+        "tonalRamp": [
+          "#757470",
+          "#908d89",
+          "#afaba1",
+          "#c8c4bc",
+          "#d7d3cc",
+          "#e2dfda",
+          "#edebe8",
+          "#f7f5f3"
+        ]
+      },
+      "shell": {
+        "role": "neutral",
+        "displayName": "Shell Stone",
+        "canonical": "#ebe8e3",
+        "tonalRamp": [
+          "#757470",
+          "#908d89",
+          "#afaba1",
+          "#c8c4bc",
+          "#d7d3cc",
+          "#e2dfda",
+          "#edebe8",
+          "#f7f5f3"
+        ]
+      },
+      "focus": {
+        "role": "secondary",
+        "displayName": "Focus Periwinkle",
+        "canonical": "#5568bf",
+        "tonalRamp": [
+          "#252a4d",
+          "#2c3666",
+          "#3f4d94",
+          "#5566bf",
+          "#7084eb",
+          "#abb8f6",
+          "#c5ccf9",
+          "#ededfd"
+        ]
+      },
+      "info-text": {
+        "role": "tertiary",
+        "displayName": "Info",
+        "canonical": "#3f4d94",
+        "tonalRamp": [
+          "#252a4d",
+          "#2c3666",
+          "#3f4d94",
+          "#5566bf",
+          "#7084eb",
+          "#abb8f6",
+          "#c5ccf9",
+          "#ededfd"
+        ]
+      },
+      "progress-text": {
+        "role": "tertiary",
+        "displayName": "Progress",
+        "canonical": "#255b60",
+        "tonalRamp": [
+          "#153537",
+          "#1d484b",
+          "#255b60",
+          "#348289",
+          "#43a6af",
+          "#87d0d7",
+          "#a6dce1",
+          "#d9f0f2"
+        ]
+      },
+      "warn-text": {
+        "role": "tertiary",
+        "displayName": "Warning",
+        "canonical": "#854813",
+        "tonalRamp": [
+          "#351d08",
+          "#4c290b",
+          "#61350e",
+          "#854813",
+          "#a95c18",
+          "#e5944d",
+          "#ebad70",
+          "#f9e8d2"
+        ]
+      },
+      "bad-text": {
+        "role": "tertiary",
+        "displayName": "Bad",
+        "canonical": "#8a3734",
+        "tonalRamp": [
+          "#2d1616",
+          "#3c1d1d",
+          "#4a2523",
+          "#69302d",
+          "#8a3734",
+          "#c76056",
+          "#eab0a9",
+          "#f7dbd4"
+        ]
+      },
+      "gold-text": {
+        "role": "tertiary",
+        "displayName": "Gold",
+        "canonical": "#7c6403",
+        "tonalRamp": [
+          "#372c02",
+          "#463802",
+          "#5a4802",
+          "#7c6403",
+          "#a18102",
+          "#e2bf36",
+          "#ebd370",
+          "#f9f2d2"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The My Day greeting and hero numbers at desktop width. Rare."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Large panel titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Page titles in the top bar and section headings."
+      },
+      "title-sm": {
+        "displayName": "Title Small",
+        "purpose": "Card and panel titles."
+      },
+      "body-lg": {
+        "displayName": "Body Large",
+        "purpose": "Reading text: briefs and descriptions, 65 to 75 characters per line."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "The default 14px size for lists, controls, tables and forms."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Tags, chips, helper text and metadata."
+      },
+      "eyebrow": {
+        "displayName": "Eyebrow",
+        "purpose": "Labels for groups of items: sidebar groups, menu sections and list headings. Never decoration above a title."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 1px 2px rgb(30 40 35 / 0.04), 0 8px 24px -12px rgb(30 40 35 / 0.12)",
+        "purpose": "Every card at rest."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 2px 4px rgb(30 40 35 / 0.06), 0 16px 32px -12px rgb(30 40 35 / 0.18)",
+        "purpose": "Clickable cards on hover, with a 1px upward move and a green border."
+      },
+      {
+        "name": "popover",
+        "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+        "purpose": "Dropdowns, dialogs and the phone drawer (the standard extra-large shadow)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state",
+        "value": "120ms ease",
+        "purpose": "Background and border changes on buttons, chips and segments."
+      },
+      {
+        "name": "lift",
+        "value": "160ms ease",
+        "purpose": "Clickable card hover: shadow, border and 1px move."
+      },
+      {
+        "name": "slide",
+        "value": "220ms cubic-bezier(0.3, 0.9, 0.3, 1)",
+        "purpose": "The segmented-control highlight sliding to the chosen item."
+      },
+      {
+        "name": "panel",
+        "value": "150ms to 200ms",
+        "purpose": "Sidebar width (150ms) and the phone drawer (200ms). Decorative motion is removed for reduced-motion users."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "3xl",
+        "value": "1700px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action in an area. Solid Interaction Green, 8px corners.",
+      "html": "<button class=\"ds-btn-primary\">New project</button>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border:1px solid transparent;border-radius:8px;background:var(--color-brand,#08794a);color:#fefdfb;font-size:14px;line-height:24px;font-weight:500;cursor:pointer;transition:background-color 120ms ease}.ds-btn-primary:hover{background:var(--color-brand-dark,#105638)}.ds-btn-primary:focus-visible{outline:2px solid var(--color-focus,#5568bf);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A supporting action. White fill with a control outline.",
+      "html": "<button class=\"ds-btn-secondary\">Open in Jira</button>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border:1px solid var(--color-control,#908d89);border-radius:8px;background:#fff;color:var(--color-ink,#0f2e21);font-size:14px;line-height:24px;font-weight:500;cursor:pointer;transition:background-color 120ms ease}.ds-btn-secondary:hover{background:var(--color-n-150,#edebe8)}.ds-btn-secondary:focus-visible{outline:2px solid var(--color-focus,#5568bf);outline-offset:2px}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "A filter or option pill; the selected state adds a green border and mint fill.",
+      "html": "<button class=\"ds-chip\">All projects</button> <button class=\"ds-chip\" aria-pressed=\"true\">Assigned to you</button>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-chip{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 16px;border:1px solid #908d89;border-radius:9999px;background:#fff;color:#0f2e21;font-size:14px;line-height:24px;font-weight:500;cursor:pointer;transition:background-color 120ms ease,border-color 120ms ease}.ds-chip:hover{background:#edebe8}.ds-chip[aria-pressed=true]{border-color:#08794a;background:#d6f5de}.ds-chip:focus-visible{outline:2px solid #5568bf;outline-offset:2px}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "refersTo": "segmented-control",
+      "description": "Exclusive choices such as views or ranges; the highlight slides to the selection.",
+      "html": "<div class=\"ds-seg\" role=\"group\"><button class=\"ds-seg-item\" aria-pressed=\"true\">List</button><button class=\"ds-seg-item\">Board</button><button class=\"ds-seg-item\">Calendar</button></div>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-seg{display:inline-flex;height:32px;padding:2px;border:1px solid #908d89;border-radius:9999px;background:#fff}.ds-seg-item{display:inline-flex;align-items:center;justify-content:center;padding:0 16px;border:0;border-radius:9999px;background:transparent;color:#0f2e21;font-size:12px;line-height:20px;font-weight:500;cursor:pointer;transition:background-color 120ms ease,color 120ms ease}.ds-seg-item:hover{background:#edebe8}.ds-seg-item[aria-pressed=true]{background:#08794a;color:#fefdfb}.ds-seg-item:focus-visible{outline:2px solid #5568bf;outline-offset:2px}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The container for a panel or tile: 24px corners, hairline border, faint wide shadow.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Open work</div><div class=\"ds-card-n\">8</div><div class=\"ds-card-note\">Tickets and tasks</div></div>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-card{display:inline-flex;flex-direction:column;align-items:flex-start;min-width:200px;padding:16px;border:1px solid #e2dfda;border-radius:24px;background:#fff;box-shadow:0 1px 2px rgb(30 40 35/.04),0 8px 24px -12px rgb(30 40 35/.12);color:#0f2e21;transition:box-shadow 160ms ease,transform 160ms ease,border-color 160ms ease}.ds-card:hover{border-color:#08794a;box-shadow:0 2px 4px rgb(30 40 35/.06),0 16px 32px -12px rgb(30 40 35/.18);transform:translateY(-1px)}.ds-card-title{font-size:14px;line-height:24px;font-weight:700}.ds-card-n{margin-top:8px;font-size:36px;line-height:40px;font-weight:700;letter-spacing:-.72px}.ds-card-note{margin-top:8px;font-size:12px;line-height:20px;color:#5b5a57}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A 40px field with a control outline; placeholder text is #686764.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search this folder\">",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-input{height:40px;width:260px;padding:0 16px;border:1px solid #908d89;border-radius:8px;background:#fff;color:#0f2e21;font-size:14px;line-height:24px}.ds-input::placeholder{color:#686764;opacity:1}.ds-input:focus-visible{outline:2px solid #5568bf;outline-offset:2px}"
+    },
+    {
+      "name": "Status Tag",
+      "kind": "chip",
+      "refersTo": "tag-ok",
+      "description": "A tinted pill with an icon and a word. Six tones: neutral, info, progress, warn, ok, bad, gold.",
+      "html": "<span class=\"ds-tag ds-tag-ok\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg>Delivered</span> <span class=\"ds-tag ds-tag-warn\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 8v4\"/><path d=\"M12 16h.01\"/></svg>Action required</span> <span class=\"ds-tag ds-tag-bad\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6\"/><path d=\"m9 9 6 6\"/></svg>Blocked</span>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-tag{display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 8px;border:1px solid;border-radius:9999px;font-size:12px;line-height:20px;font-weight:500;white-space:nowrap}.ds-tag-ok{background:#d6f5de;border-color:#b0e8c3;color:#0f2e21}.ds-tag-warn{background:#f9e8d2;border-color:#f2d0a3;color:#854813}.ds-tag-bad{background:#f7dbd4;border-color:#eab0a9;color:#8a3734}"
+    },
+    {
+      "name": "Callout",
+      "kind": "card",
+      "refersTo": "tag-warn",
+      "description": "A full-width notice: tinted surface, icon, text. Same tones as tags.",
+      "html": "<div class=\"ds-callout\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 8v4\"/><path d=\"M12 16h.01\"/></svg><span>1 project needs your action</span></div>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-callout{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid #f2d0a3;border-radius:24px;background:#f9e8d2;color:#854813;font-size:14px;line-height:24px;font-weight:500}"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "A sidebar row: 18px icon, 14px label. The active row is a white pill.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/></svg>My Day</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"/></svg>Projects</a></nav>",
+      "css": "font-family:'National 2',system-ui,sans-serif;.ds-nav{display:flex;flex-direction:column;width:224px;padding:16px;border-radius:24px;background:#ebe8e3}.ds-nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;color:#464543;font-size:14px;line-height:24px;font-weight:500;text-decoration:none}.ds-nav-item:hover{background:rgb(255 255 255/.6)}.ds-nav-active{background:#fff;color:#0f2e21;box-shadow:0 1px 2px rgb(0 0 0/.08)}.ds-nav-item:focus-visible{outline:2px solid #5568bf;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Studio Desk",
+    "overview": "The Hub is the desk the brand team works at: warm paper under a soft dot grid, white cards laid on it, and one confident green for the things you can act on. Nothing competes with the work itself. Photos, logos and designs carry the color; the interface stays quiet, legible and precise. Brand lives in the details: National 2 type, the SurveyMonkey palette used by its exact values, and three corner shapes used everywhere.\n\nThe system is an operating tool, not a marketing page. It is dense where people scan lists (projects, reviews, calendars) and spacious where they read or decide (a brief, a comment thread). Surfaces are flat and hairline-bordered until something is clickable, then they lift slightly. Status is always icon plus label plus tint, never color alone. A dark theme swaps the same tokens, so a screen built from the tokens works in both.\n\nThis file is meant to travel. Build a new app or dashboard from the frontmatter tokens and the component rules below, or bring an existing tool in line by replacing its colors, type, corners and spacing with these values.",
+    "keyCharacteristics": [
+      "Warm paper (#f7f5f3) over a darker shell (#ebe8e3), with white cards on the paper.",
+      "One accent, Green 600 (#08794a), for actions; Green 500 (#089b5e) only for graphics and large fills.",
+      "National 2 only: 400 regular, 500 medium, 700 bold. Roles are carried by size and weight, never by a second typeface.",
+      "Three corner shapes (8px, 24px, pill) and an 8px spacing grid, enforced by a script in the repo.",
+      "Status uses six tinted families, each with a surface, a border and a text tone, always with an icon and a label.",
+      "Full-width pages with a single content column; the sidebar is a drawer on phones."
+    ],
+    "rules": [
+      {
+        "name": "The Green-For-Action Rule",
+        "body": "Anything that carries white text on green uses Green 600 or darker. Green 500 never sits under text. Green text on light surfaces uses the link green (#08794a); in dark mode it becomes #3fd08f.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tokens-Only Rule",
+        "body": "No literal hex in components. Components read the named tokens, so a theme change is one file.",
+        "section": "colors"
+      },
+      {
+        "name": "The Icon-And-Label Rule",
+        "body": "A status is a tinted pill with an icon and a word. Color alone never says what state something is in.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Scale Rule",
+        "body": "Use only the sizes above. Weights are 400, 500 and 700 (a 600 maps to bold; there is no semibold file).",
+        "section": "typography"
+      },
+      {
+        "name": "The Balanced-Heading Rule",
+        "body": "Headings use balanced wrapping and paragraphs use pretty wrapping, so no word is left alone on a last line.",
+        "section": "typography"
+      },
+      {
+        "name": "The 8px Grid Rule",
+        "body": "Margins, padding and gaps are multiples of 8px. A script in the repo (`check:design`) fails the build on anything else.",
+        "section": "layout"
+      },
+      {
+        "name": "The 44px Touch Rule",
+        "body": "On coarse pointers, every control is at least 44px tall.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-Until-Touched Rule",
+        "body": "A card gets its lift on hover only if clicking it does something. Static cards stay still.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No-Nesting Rule",
+        "body": "A card never contains another bordered card. Use spacing, dividers or a tinted row (Neutral 100, no border) inside a card.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Three Corners Rule",
+        "body": "Use `tight`, `loose` or `round`. No other radius, and no `rounded-[\u2026]` values except the logo.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** build from the frontmatter tokens (`primary`, `ink`, `paper`, `card`, the status families) and the three corners.",
+      "**Do** use Green 600 (#08794a) for anything solid green that holds text; keep Green 500 (#089b5e) for graphics and the brand swatch.",
+      "**Do** show status as a pill with an icon and a word, in one of the six tint families.",
+      "**Do** keep every margin, padding and gap on the 8px grid, and every font size on the scale.",
+      "**Do** use `tap`-sized (44px) controls on touch screens and keep a visible 2px focus ring on every interactive element.",
+      "**Do** write controls that name their action (\"Save\", \"Download WebP\"), and errors that name the problem and the next step.",
+      "**Do** support both themes by reading tokens, and test a new screen at 390px and at full width."
+    ],
+    "donts": [
+      "**Don't** nest a bordered card inside a card.",
+      "**Don't** use another typeface, a font size off the scale, or a radius other than 8px, 24px or pill.",
+      "**Don't** put white text on Green 500, or leave placeholder text lighter than #686764.",
+      "**Don't** use color alone for status, and don't use gradient text, glows or colored shadows.",
+      "**Don't** use the eyebrow style as decoration above a page title or hero; it labels groups of items only.",
+      "**Don't** hard-code hex values in components, or add a second accent color.",
+      "**Don't** hide core functions on phones; adapt the layout instead."
+    ]
+  }
+}
