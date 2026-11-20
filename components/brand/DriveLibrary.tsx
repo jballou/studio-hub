@@ -10,7 +10,10 @@ type Item = { id: string; name: string; mimeType: string; folder: boolean; size?
 type Listing = { configured: false } | { configured: true; folder: string; trail: { id: string; name: string }[]; items: Item[] };
 type Kind = "photos" | "illustrations";
 
-const file = (kind: Kind, id: string, mode: "thumb" | "download", s?: number) => `/api/brand/drive/file/${id}?kind=${kind}&mode=${mode}${s ? `&s=${s}` : ""}`;
+const file = (kind: Kind, id: string, mode: "thumb" | "download", s?: number, webp?: boolean) => `/api/brand/drive/file/${id}?kind=${kind}&mode=${mode}${s ? `&s=${s}` : ""}${webp ? "&format=webp" : ""}`;
+/** JPG and PNG can also be saved as WebP, which is much smaller. */
+const canWebp = (i: Item) => i.mimeType === "image/jpeg" || i.mimeType === "image/png";
+const extOf = (i: Item) => (i.mimeType === "image/jpeg" ? "JPG" : i.mimeType === "image/png" ? "PNG" : i.mimeType === "application/pdf" ? "PDF" : "File");
 const mb = (n?: number) => (n ? (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1000))} KB`) : "");
 
 /** A Drive-backed library: folders become categories, images show Drive's own previews, downloads stream through the Hub. */
@@ -113,7 +116,10 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
                   <p className="truncate text-sm font-bold" title={f.name}>{f.name}</p>
                   <p className="truncate text-xs text-muted">{f.width && f.height ? `${f.width}×${f.height} · ` : ""}{mb(f.size)}</p>
                 </div>
-                <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary shrink-0" aria-label={`Download ${f.name}`}><Icon name="download" size={14} /></a>
+                <div className="flex shrink-0 gap-2">
+                  <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}>{extOf(f)}</a>
+                  {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}>WebP</a>}
+                </div>
               </div>
             </li>
           ))}
@@ -127,7 +133,8 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
             <div className="flex items-center justify-between gap-4 border-b border-line p-4">
               <p className="min-w-0 truncate text-sm font-bold">{open.name}</p>
               <div className="flex shrink-0 gap-2">
-                <a href={file(kind, open.id, "download")} download className="btn btn-md btn-primary"><Icon name="download" size={16} />Download</a>
+                <a href={file(kind, open.id, "download")} download className="btn btn-md btn-primary"><Icon name="download" size={16} />Download {extOf(open)}{open.size ? ` (${mb(open.size)})` : ""}</a>
+                {canWebp(open) && <a href={file(kind, open.id, "download", undefined, true)} download className="btn btn-md btn-secondary"><Icon name="download" size={16} />Download WebP</a>}
                 <button onClick={() => setOpen(null)} className="btn btn-md btn-secondary" autoFocus>Close</button>
               </div>
             </div>

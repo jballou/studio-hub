@@ -291,6 +291,18 @@ export async function driveList(email: string, folderId: string): Promise<DriveI
   return out;
 }
 
+/** Image files whose name contains the text, across everything the connected account can see (callers must check each is inside the library). */
+export async function driveSearch(email: string, text: string): Promise<{ id: string; name: string }[]> {
+  await assertDrive(email);
+  const safe = text.replace(/[\\']/g, " ").slice(0, 80);
+  const qs = new URLSearchParams({
+    q: `name contains '${safe}' and trashed=false and mimeType contains 'image/'`,
+    fields: "files(id,name)", pageSize: "30", supportsAllDrives: "true", includeItemsFromAllDrives: "true",
+  });
+  const r = await gfetch<{ files?: { id: string; name: string }[] }>(email, `https://www.googleapis.com/drive/v3/files?${qs}`);
+  return r.files ?? [];
+}
+
 /** A file's name, type and parent folders. */
 export async function driveNode(email: string, id: string): Promise<{ id: string; name: string; mimeType: string; parents: string[] }> {
   const kept = remembered<{ id: string; name: string; mimeType: string; parents: string[] }>(`node|${id}`, 600_000);

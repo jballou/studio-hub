@@ -1,7 +1,9 @@
 // Exports brand assets from the Project Catalyst Figma file into the repo.
-// Run: node --env-file=.env.local scripts/export-brand.mjs [icons|logos|all]
+// Run: node --env-file=.env.local scripts/export-brand.mjs [icons|logos|colors|all]
+//      node --env-file=.env.local scripts/export-brand.mjs photos <destination folder> [--dry]   (photography, as files, into a Drive folder)
 // Needs FIGMA_ACCESS_TOKEN (file read). Re-run any time the Figma file changes; output is overwritten.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 const FILE = "CzW7fiCLPbvpOisNRxI7TG";
 const TOKEN = process.env.FIGMA_ACCESS_TOKEN;
@@ -113,6 +115,59 @@ async function colors() {
   console.log(`colors: ${out.length} families, ${out.reduce((n, f) => n + f.shades.length, 0)} shades`);
 }
 
+/**
+ * Photography page (0:1): every visible layer with an image fill, saved as a file in a folder named after its section
+ * (or, in the full-bleed library, after its category frame). Full-bleed photos are JPG; cut-outs are PNG for transparency.
+ */
+async function photos(dest, dry) {
+  const j = await api(`/files/${FILE}/nodes?ids=${encodeURIComponent("0:1")}&depth=8`);
+  const page = j.nodes["0:1"].document;
+  const clean = (n) => n.replace(/[\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim();
+  const hasImg = (n) => (n.fills ?? []).some((f) => f.type === "IMAGE" && f.visible !== false);
+  const collect = (n, out = []) => { if (n.visible === false) return out; if (hasImg(n)) out.push(n); (n.children ?? []).forEach((c) => collect(c, out)); return out; };
+  const jobs = [];
+  for (const sec of page.children) {
+    if (/guidelines/i.test(sec.name)) continue;
+    const full = /full-bleed/i.test(sec.name);
+    const fmt = full ? "jpg" : "png";
+    // "PROFESSIONALS ON LAPTOPS" -> "Professionals on laptops", keeping HR, eNPS and CX as written.
+    const sentence = (t) => t.toLowerCase().replace(/^./, (m) => m.toUpperCase()).replace(/\bhr\b/g, "HR").replace(/\benps\b/g, "eNPS").replace(/\bcx\b/g, "CX");
+    const groupOf = (c) => full ? sentence(clean(c.name === "label" ? "" : c.name)) || "Uncategorized" : "";
+    const base = full ? "Full-bleed" : /wide/i.test(sec.name) ? "Wide cut-outs" : "Cut-outs";
+    for (const c of sec.children ?? []) {
+      if (c.name === "label") continue;
+      const folder = full && c.type === "FRAME" ? join(base, groupOf(c)) : full ? join(base, "Uncategorized") : base;
+      for (const n of collect(c)) jobs.push({ id: n.id, name: clean(n.name) || n.id.replace(":", "-"), folder, fmt });
+    }
+  }
+  // Same name twice in one folder gets -2, -3.
+  const seen = new Map();
+  for (const jb of jobs) { const k = `${jb.folder}/${jb.name}.${jb.fmt}`.toLowerCase(); const n = (seen.get(k) ?? 0) + 1; seen.set(k, n); jb.file = join(jb.folder, n === 1 ? `${jb.name}.${jb.fmt}` : `${jb.name}-${n}.${jb.fmt}`); }
+  const byFolder = {}; for (const jb of jobs) byFolder[jb.folder] = (byFolder[jb.folder] ?? 0) + 1;
+  console.log(`photos: ${jobs.length} images`); console.table(byFolder);
+  if (dry) return;
+  mkdirSync(dest, { recursive: true });
+  let done = 0, skipped = 0; const failed = [];
+  for (const fmt of ["jpg", "png"]) {
+    const set = jobs.filter((x) => x.fmt === fmt);
+    for (let i = 0; i < set.length; i += 40) {
+      const batch = set.slice(i, i + 40);
+      const r = await api(`/images/${FILE}?ids=${encodeURIComponent(batch.map((x) => x.id).join(","))}&format=${fmt}&scale=2`);
+      await Promise.all(batch.map(async (jb) => {
+        const out = join(dest, jb.file);
+        if (existsSync(out)) { skipped++; return; }
+        const url = r.images[jb.id];
+        if (!url) { failed.push(jb.file); return; }
+        try { const res = await fetch(url); if (!res.ok) throw new Error(String(res.status)); mkdirSync(join(dest, jb.folder), { recursive: true }); writeFileSync(out, Buffer.from(await res.arrayBuffer())); done++; } catch { failed.push(jb.file); }
+      }));
+      console.log(`  ${fmt}: ${Math.min(i + 40, set.length)}/${set.length}`);
+    }
+  }
+  console.log(`photos: wrote ${done}, already there ${skipped}, failed ${failed.length}`);
+  if (failed.length) console.log(failed.join("\n"));
+}
+
+if (what === "photos") await photos(process.argv[3], process.argv.includes("--dry") || !process.argv[3]);
 if (what === "icons" || what === "all") await icons();
 if (what === "logos" || what === "all") await logos();
 if (what === "colors" || what === "all") await colors();

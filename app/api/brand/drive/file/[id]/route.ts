@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import { driveMedia, driveNode, driveThumbnail } from "@/lib/google/client";
 import { apiError } from "@/lib/google/http";
 import { jiraSession } from "@/lib/jira/session";
@@ -16,6 +17,14 @@ export async function GET(req: Request, ctx: RouteContext<"/api/brand/drive/file
     if (!ID_RE.test(id) || (kind !== "photos" && kind !== "illustrations")) throw new AdminError(404, "Not found.");
     const cfg = await getBrandConfig();
     if (!cfg.owner || !(await inBrandTree(cfg, kind, id))) throw new AdminError(404, "Not found.");
+    if (u.searchParams.get("mode") === "download" && u.searchParams.get("format") === "webp") {
+      // WebP is made on request from the original in Drive, so the library holds one copy of each photo, not two.
+      const [node, up] = await Promise.all([driveNode(cfg.owner, id), driveMedia(cfg.owner, id, null)]);
+      if (!/^image\/(jpeg|png)$/.test(node.mimeType)) throw new AdminError(400, "Only JPG and PNG images can be saved as WebP.");
+      const out = await sharp(Buffer.from(await up.arrayBuffer())).rotate().webp({ quality: 85 }).toBuffer();
+      const name = node.name.replace(/\.[A-Za-z0-9]+$/, "") + ".webp";
+      return new Response(new Uint8Array(out), { status: 200, headers: { "Content-Type": "image/webp", "Content-Length": String(out.length), "Cache-Control": "private, max-age=600", "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(name)}` } });
+    }
     if (u.searchParams.get("mode") === "download") {
       const [node, up] = await Promise.all([driveNode(cfg.owner, id), driveMedia(cfg.owner, id, null)]);
       const h = new Headers({ "Cache-Control": "private, max-age=600", "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(node.name)}` });

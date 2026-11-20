@@ -1,5 +1,6 @@
 import { driveFile, driveNode } from "@/lib/google/client";
 import { readDoc, updateDoc } from "./doc";
+import { getConnection } from "./google";
 import { AdminError, audit } from "./users";
 
 // The brand library keeps big files (photos, illustrations) in shared Google Drive folders. An admin points the Hub at
@@ -29,7 +30,12 @@ export async function setBrandConfig(admin: string, input: { photos?: unknown; i
     const id = folderIdFrom(raw);
     if (!id) throw new AdminError(400, `The ${k} link isn't a Google Drive folder link.`);
     let f;
-    try { f = await driveFile(admin, id); } catch { throw new AdminError(400, `Your Google account can't open the ${k} folder. Check the link and that it's shared with you.`); }
+    try { f = await driveFile(admin, id); } catch (e) {
+      // Say which Google account was tried and what Google answered, so "no access" and "wrong account" look different.
+      const who = (await getConnection(admin).catch(() => null))?.googleEmail;
+      const why = e instanceof Error ? e.message : "";
+      throw new AdminError(400, `The Google account${who ? ` ${who}` : ""} can't open the ${k} folder${why ? ` (${why})` : ""}. Check the link, and that this is the Google account that can see the folder.`);
+    }
     if (f.mimeType !== "application/vnd.google-apps.folder") throw new AdminError(400, `The ${k} link is a file, not a folder.`);
     next[k] = id;
   }
