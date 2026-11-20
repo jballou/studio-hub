@@ -99,7 +99,11 @@ async function gfetch<T>(email: string, url: string, init?: { method?: string; b
   if (res.status === 204) return undefined as T;
   if (!res.ok) {
     if (res.status === 401) throw new GoogleError(401, "Reconnect Google.", "reconnect");
-    if (res.status === 403) throw new GoogleError(403, "Google didn't allow that. Reconnect and accept every permission.", "reconnect");
+    if (res.status === 403) {
+      // Google says why in the body (API not turned on, quota, no access to this file). Pass its words along.
+      const why = ((await res.json().catch(() => null)) as { error?: { message?: string } } | null)?.error?.message;
+      throw new GoogleError(403, `Google didn't allow that${why ? `: ${why.slice(0, 240)}` : ". Reconnect and accept every permission."}`, "reconnect");
+    }
     if (res.status === 404 || res.status === 410) throw new GoogleError(404, "Not found in Google.");
     throw new GoogleError(502, `Google returned HTTP ${res.status}.`);
   }

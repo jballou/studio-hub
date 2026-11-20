@@ -3,7 +3,7 @@
 One-time, done by whoever owns the Google Cloud project. Use a company-owned project, not a personal one, so the app survives people leaving.
 
 1. Google Cloud console > create (or pick) a project owned by the company.
-2. APIs & Services > Library: enable **Google Calendar API** and **Google Tasks API**.
+2. APIs & Services > Library: enable **Google Calendar API**, **Google Tasks API**, **Google Drive API** (the brand photo and illustration libraries, and video previews) and **Google Sheets API** (OKR sync).
 3. APIs & Services > OAuth consent screen: User type **Internal** (limits sign-in to @surveymonkey.com and avoids Google verification). App name "Brand Creative Hub". Add scopes:
    - `.../auth/calendar.events.readonly`
    - `.../auth/tasks`
