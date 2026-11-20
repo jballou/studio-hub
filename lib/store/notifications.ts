@@ -2,7 +2,7 @@
 import type { AppNotification } from "@/lib/types";
 import { readDoc, updateDoc } from "./doc";
 
-type Doc = { items: AppNotification[] };
+type Doc = { items: AppNotification[]; /** newest Jira comment time already turned into notifications */ commentsSeenAt?: string; /** last time a check started, so polls from several tabs run one check */ commentsCheckedAt?: number };
 const empty = (): Doc => ({ items: [] });
 const KEEP = 100;
 const name = (accountId: string) => `notifications-${accountId.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 80)}`;
@@ -43,4 +43,23 @@ export async function markRead(accountId: string, ids?: string[]): Promise<void>
     for (const x of d.items) if (!x.readAt && (!ids || ids.includes(x.id))) x.readAt = at;
     return { data: d, result: undefined };
   });
+}
+
+const CHECK_EVERY_MS = 120_000;
+
+/** Starts a Jira comment check if one is due. Returns the time to look back to, or null when this poll should skip. First time ever: starts from now, so old comments never flood the bell. */
+export async function claimCommentCheck(accountId: string): Promise<{ since: string } | null> {
+  return updateDoc(name(accountId), empty, (d) => {
+    const now = Date.now();
+    if (d.commentsCheckedAt && now - d.commentsCheckedAt < CHECK_EVERY_MS) return { data: d, result: null };
+    d.commentsCheckedAt = now;
+    const first = !d.commentsSeenAt;
+    if (first) d.commentsSeenAt = new Date(now).toISOString();
+    return { data: d, result: first ? null : { since: d.commentsSeenAt! } };
+  }).catch(() => null);
+}
+
+/** Moves the cursor forward once the comments up to `at` have been handled. */
+export async function finishCommentCheck(accountId: string, at: string): Promise<void> {
+  await updateDoc(name(accountId), empty, (d) => { d.commentsSeenAt = at; return { data: d, result: undefined }; }).catch(() => undefined);
 }

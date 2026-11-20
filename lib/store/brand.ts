@@ -39,6 +39,12 @@ export async function setBrandConfig(admin: string, input: { photos?: unknown; i
 }
 
 const seen = new Map<string, { ok: boolean; at: number }>();
+/** Things listed inside a folder already checked to be in the library are in the library too, so opening each one needs no climb up the tree. */
+export function markInTree(kind: BrandKind, ids: string[]): void {
+  const at = Date.now();
+  for (const id of ids) seen.set(`${kind}:${id}`, { ok: true, at });
+  if (seen.size > 5000) for (const k of [...seen.keys()].slice(0, 1000)) seen.delete(k);
+}
 /** True when `id` is the configured folder or somewhere inside it (up to 8 levels), so the Hub never serves other Drive files. */
 export async function inBrandTree(cfg: BrandConfig, kind: BrandKind, id: string): Promise<boolean> {
   const root = cfg[kind];

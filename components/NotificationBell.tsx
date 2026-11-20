@@ -17,6 +17,7 @@ function message(n: AppNotification): { who: string; what: string } {
     case "new-version": return { who: n.fromName, what: many ? `uploaded new versions in “${n.assetName}” (${n.count})` : `uploaded a new version of “${n.assetName}”` };
     case "added": return { who: n.fromName, what: `added you to “${n.assetName}”` };
     case "approved": return { who: n.fromName, what: `approved “${n.assetName}”` };
+    case "jira-comment": return { who: n.fromName, what: many ? `left ${n.count} new comments on “${n.assetName}”` : `commented on “${n.assetName}”` };
     case "changes": return { who: n.fromName, what: `asked for changes on “${n.assetName}”` };
   }
 }
@@ -53,7 +54,7 @@ export function NotificationBell({ waiting, collapsed, ready }: { waiting: numbe
     setOpen(false);
     if (!n.readAt) setInbox((cur) => ({ items: cur.items.map((x) => (x.id === n.id ? { ...x, readAt: new Date().toISOString() } : x)), unread: Math.max(0, cur.unread - 1) }));
     void notificationsRepo.markRead([n.id]).catch(() => {});
-    router.push(`/review/${n.assetId}`);
+    router.push(n.kind === "jira-comment" ? `/projects/${n.projectKey}` : `/review/${n.assetId}`);
   };
 
   return (

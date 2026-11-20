@@ -337,6 +337,26 @@ export async function searchIssuesWithChangelog(a: JiraAuth, jql: string, fields
   return data.issues;
 }
 
+export type RawComment = { id: string; author?: { displayName?: string; accountId?: string }; created: string; updated: string; body: unknown; jsdPublic?: boolean };
+
+/** Every comment on a ticket, oldest first. `jsdPublic: false` marks internal notes on service-desk tickets. */
+export async function listIssueComments(a: JiraAuth, key: string): Promise<RawComment[]> {
+  const out: RawComment[] = [];
+  for (let start = 0; start < 500; ) {
+    const page = await request<{ comments: RawComment[]; total: number }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment?orderBy=created&maxResults=100&startAt=${start}`);
+    out.push(...page.comments);
+    start += page.comments.length;
+    if (page.comments.length === 0 || start >= page.total) break;
+  }
+  return out;
+}
+
+/** The 20 newest comments on a ticket, newest first. Enough to see what arrived since the last check. */
+export async function recentIssueComments(a: JiraAuth, key: string): Promise<RawComment[]> {
+  const page = await request<{ comments: RawComment[] }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment?orderBy=-created&maxResults=20`);
+  return page.comments;
+}
+
 /** Adds a plain-text comment (one paragraph per line) as the signed-in person. Returns Jira's comment id. */
 export async function addIssueComment(a: JiraAuth, key: string, lines: string[]): Promise<string> {
   const body = {

@@ -10,7 +10,7 @@ import { StatusMenu } from "./StatusMenu";
 import { IssueIcon } from "@/components/ui/IssueIcon";
 import { IssueLink, openBlockers, RelationsCard } from "./RelationsCard";
 import { pastDueDays, pastDueWords } from "@/lib/pastdue";
-import { localDay } from "@/lib/myday/plan";
+import { localDay, relativeTime } from "@/lib/myday/plan";
 import { TYPE_TONE, TYPE_SHORT } from "@/components/calendar/meta";
 import { dayLabel } from "@/lib/calendar/dates";
 import { formatDue } from "@/lib/time";
@@ -25,7 +25,7 @@ import { daysSince, FlagTags } from "@/components/blocks/BlockedTag";
 import { StarButton } from "@/components/ui/StarButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useMe } from "@/hooks/useMe";
-import type { Asset, BriefInput, Block, JiraSync, Project, Relations, Stage, User } from "@/lib/types";
+import type { Asset, BriefInput, Block, JiraComment, JiraSync, Project, Relations, Stage, User } from "@/lib/types";
 
 const JIRA_BASE = "https://surveymonkey.atlassian.net";
 // The timeline shows four steps. A ticket in Jira's review stage counts as In progress, so "In review" is not a step.
@@ -74,22 +74,35 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
   const me = useMe();
   const favs = useFavorites();
   const [today, setToday] = useState<string | null>(null);
+  const [calLoaded, setCalLoaded] = useState(false);
   const [rel, setRel] = useState<Relations | null>(null);
+  const [comments, setComments] = useState<JiraComment[] | null>(null);
 
   useEffect(() => {
     // Read in the browser so "today" is the viewer's own day.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(localDay());
+    setCalLoaded(false);
+    setItems([]);
     projectsRepo.getProject(jiraKey, "u-avery").then(setProject);
     projectsRepo.relations(jiraKey).then(setRel);
+    projectsRepo.comments(jiraKey).then(setComments);
     const loadBlock = () => blocksRepo.list([jiraKey]).then((b) => setBlock(b[0])).catch(() => {});
     loadBlock();
     window.addEventListener("blocks-changed", loadBlock);
     repo.listUsers().then(setUsers);
-    repo.listAssets().then((a) => setAssets(a.filter((x) => x.projectKey === jiraKey)));
-    Promise.all(loadSources().map(loadSource)).then((rs) => setItems(rs.flatMap((r) => r.items).filter((i) => i.jiraKey === jiraKey).sort((a, b) => a.date.localeCompare(b.date))));
+    repo.listAssets(jiraKey).then((a) => setAssets(a.filter((x) => x.projectKey === jiraKey)));
     return () => window.removeEventListener("blocks-changed", loadBlock);
   }, [jiraKey]);
+
+  // Every calendar source (the Jira calendar, each linked sheet) is read only when the Calendar tab is first opened,
+  // not on every project page view.
+  useEffect(() => {
+    if (tab !== "calendar" || calLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCalLoaded(true);
+    Promise.all(loadSources().map(loadSource)).then((rs) => setItems(rs.flatMap((r) => r.items).filter((i) => i.jiraKey === jiraKey).sort((a, b) => a.date.localeCompare(b.date))));
+  }, [tab, calLoaded, jiraKey]);
 
   if (project === undefined) return <p className="p-8 text-sm text-muted">Loading…</p>;
   if (project === null) {
@@ -166,7 +179,7 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
       </div>
 
       <div role="tablist" aria-label="Project sections" className="mb-6 flex gap-6 border-b border-line">
-        {([["overview", "Overview", null], ["designs", "Designs", assets.length], ["calendar", "Calendar", items.length]] as const).map(([id, label, n]) => (
+        {([["overview", "Overview", null], ["designs", "Designs", assets.length], ["calendar", "Calendar", calLoaded ? items.length : 0]] as const).map(([id, label, n]) => (
           <button
             key={id}
             role="tab"
@@ -274,6 +287,21 @@ export function ProjectHome({ jiraKey }: { jiraKey: string }) {
                 </div>
               )}
             </Card>
+
+            {comments && (
+              <Card title={comments.length ? `Jira comments (${comments.length})` : "Jira comments"} action={<a href={`${JIRA_BASE}/browse/${project.jiraKey}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-brand hover:underline">Reply in Jira<span className="sr-only"> (opens in Jira)</span></a>}>
+                {comments.length === 0 ? <p className="text-sm text-muted">No comments on this ticket yet.</p> : (
+                  <ol className="space-y-4">
+                    {comments.map((c) => (
+                      <li key={c.id}>
+                        <p className="text-sm"><b>{c.authorName}</b> <span className="text-muted">· {relativeTime(c.created)}{c.updated !== c.created ? " (edited)" : ""}</span></p>
+                        <div className="mt-2"><Adf doc={c.bodyAdf} /></div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </Card>
+            )}
           </div>
 
           <aside className="space-y-6">

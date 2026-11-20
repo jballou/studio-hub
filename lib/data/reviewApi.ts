@@ -26,7 +26,7 @@ const versionOf = (threadId: string) => {
 export const apiRepo: ReviewRepo = {
   // People come from Jira search and the names saved on each request or comment, not from a list.
   listUsers: async (): Promise<User[]> => [],
-  listAssets: async (): Promise<Asset[]> => (await call<{ assets: Asset[] }>("/api/review/assets")).assets,
+  listAssets: async (projectKey?: string): Promise<Asset[]> => (await call<{ assets: Asset[] }>(`/api/review/assets${projectKey ? `?project=${encodeURIComponent(projectKey)}` : ""}`)).assets,
   async getAsset(id) {
     try {
       const r = await call<{ asset: Asset; versions: AssetVersion[] }>(`/api/review/assets/${encodeURIComponent(id)}`);

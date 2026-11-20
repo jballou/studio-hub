@@ -1,4 +1,4 @@
-import type { Project, Relations } from "@/lib/types";
+import type { JiraComment, Project, Relations } from "@/lib/types";
 import type { ProjectsRepo } from "./projects";
 
 /** Browser-side adapter: talks to our own /api/jira routes, which call Jira with the user's token. */
@@ -54,6 +54,13 @@ export const jiraProjects: ProjectsRepo = {
   },
   async myBriefs() {
     return (await get<{ projects: Project[] }>("/api/jira/briefs")).projects;
+  },
+  async comments(jiraKey) {
+    try {
+      return (await get<{ comments: JiraComment[] }>(`/api/jira/projects/${encodeURIComponent(jiraKey)}/comments`)).comments;
+    } catch {
+      return null;
+    }
   },
   async relations(jiraKey) {
     try {

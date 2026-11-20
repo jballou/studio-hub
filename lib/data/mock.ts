@@ -73,7 +73,7 @@ export const mockControls = { simulatePushFailure: false };
 export const mockRepo: ReviewRepo = {
   // Real mode has no demo people; names come from Jira user search and the signed-in account.
   listUsers: () => delay(isJira ? [] : users),
-  listAssets: () => delay(assets.filter((a) => !a.deletedAt)),
+  listAssets: (projectKey) => delay(assets.filter((a) => !a.deletedAt && (!projectKey || a.projectKey === projectKey))),
   getAsset: (id) => delay(assets.find((a) => a.id === id && !a.deletedAt) ?? null),
   getVersion: (id) => delay(versions.find((v) => v.id === id) ?? null),
   listThreads: (versionId) => delay(threads.filter((t) => t.versionId === versionId)),

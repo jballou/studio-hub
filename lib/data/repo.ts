@@ -8,7 +8,8 @@ import type { Asset, ReviewState, ShareChange, AssetVersion, Anchor, NewThread, 
 export interface ReviewRepo {
   listUsers(): Promise<User[]>;
   getAsset(assetId: string): Promise<Asset | null>;
-  listAssets(): Promise<Asset[]>;
+  /** Designs you can open; pass a ticket key to ask only for that ticket's designs. */
+  listAssets(projectKey?: string): Promise<Asset[]>;
   getVersion(versionId: string): Promise<AssetVersion | null>;
   listThreads(versionId: string): Promise<Thread[]>;
   createThread(input: NewThread): Promise<Thread>;

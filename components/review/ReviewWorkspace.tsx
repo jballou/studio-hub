@@ -68,7 +68,7 @@ export function ReviewWorkspace({ assetId }: { assetId: string }) {
       const vs = (await Promise.all(a.versionIds.map((id) => repo.getVersion(id)))).filter((v): v is AssetVersion => !!v);
       setAsset(a);
       // Other items sent in the same batch, in the order they were added.
-      if (a.batch) repo.listAssets().then((all) => setSiblings(all.filter((x) => x.batch?.id === a.batch!.id).sort((x, y) => x.batch!.index - y.batch!.index)));
+      if (a.batch) repo.listAssets(a.projectKey).then((all) => setSiblings(all.filter((x) => x.batch?.id === a.batch!.id).sort((x, y) => x.batch!.index - y.batch!.index)));
       else setSiblings([]);
       setVersions(vs);
       setVersionId(vs[vs.length - 1]?.id ?? null);

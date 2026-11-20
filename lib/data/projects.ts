@@ -1,5 +1,5 @@
 import { startDateProblem } from "@/lib/startdate";
-import type { BriefSubmission, Project, Relations } from "@/lib/types";
+import type { BriefSubmission, JiraComment, Project, Relations } from "@/lib/types";
 
 /** Data boundary for projects/briefs; the Jira-backed adapter replaces the mock later. */
 export interface ProjectsRepo {
@@ -16,6 +16,8 @@ export interface ProjectsRepo {
   myBriefs(viewerId: string): Promise<Project[]>;
   /** Parents, children and linked tickets. Null when they can't be read; the page still works without them. */
   relations(jiraKey: string): Promise<Relations | null>;
+  /** The ticket's Jira comments, oldest first. Null when they can't be read; the page still works without them. */
+  comments(jiraKey: string): Promise<JiraComment[] | null>;
   /** Sets the ticket's start date (YYYY-MM-DD). Rejects with a plain message. */
   setStartDate(jiraKey: string, date: string): Promise<void>;
   /** Sets the ticket's due date (YYYY-MM-DD). Rejects with a plain message. */
@@ -70,6 +72,13 @@ for (const p of projects) if (p.assigneeId) p.assigneeName ??= DEMO_NAMES[p.assi
 const ref = (key: string, title: string, typeName: string, level: number, status: string, statusCategory: "new" | "indeterminate" | "done", inHub = true) => ({ key, title, typeName, level, status, statusCategory, inHub });
 const initiative = ref("BRAND-4", "2026 brand refresh", "Initiative", 2, "In Progress", "indeterminate", false);
 const springEpic = ref("MKTGCRTV-95", "Spring campaign", "Epic", 1, "In Progress", "indeterminate");
+const adf = (...lines: string[]) => ({ type: "doc", version: 1, content: lines.map((t) => ({ type: "paragraph", content: [{ type: "text", text: t }] })) });
+const DEMO_COMMENTS: Record<string, JiraComment[]> = {
+  "MKTGCRTV-101": [
+    { id: "c1", authorName: "Riley Brooks", created: "2026-10-06T16:05:00.000Z", updated: "2026-10-06T16:05:00.000Z", bodyAdf: adf("Can we also get a 9:16 version for Stories?") },
+    { id: "c2", authorName: "Avery Chen", created: "2026-10-07T09:30:00.000Z", updated: "2026-10-07T09:30:00.000Z", bodyAdf: adf("Yes. Adding it to the same file, first round Thursday.") },
+  ],
+};
 const DEMO_RELATIONS: Record<string, Relations> = {
   "MKTGCRTV-101": {
     ancestors: [initiative, springEpic],
@@ -130,6 +139,9 @@ export const mockProjects: ProjectsRepo = {
     // Demo: the demo person is a creative, so show the briefs of the demo requester instead (Riley, who also "sends" new ones).
     const who = viewerId === "u-avery" ? "u-riley" : viewerId;
     return structuredClone(projects.filter((p) => p.requesterId === who).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt) || b.jiraKey.localeCompare(a.jiraKey)));
+  },
+  async comments(jiraKey) {
+    return structuredClone(DEMO_COMMENTS[jiraKey] ?? []);
   },
   async relations(jiraKey) {
     return structuredClone(DEMO_RELATIONS[jiraKey] ?? { ancestors: [], children: [], links: [] });

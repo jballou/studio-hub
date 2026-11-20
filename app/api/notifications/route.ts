@@ -1,10 +1,12 @@
 import { errorResponse, jiraSession } from "@/lib/jira/session";
+import { syncCommentNotifications } from "@/lib/jira/commentNotify";
 import { listNotifications, markRead } from "@/lib/store/notifications";
 
 /** GET: your latest notifications and how many are unread. */
 export async function GET(req: Request) {
   try {
     const s = await jiraSession(req);
+    await syncCommentNotifications(s);
     return Response.json(await listNotifications(s.accountId));
   } catch (e) {
     return errorResponse(e);

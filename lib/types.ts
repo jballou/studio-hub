@@ -183,6 +183,9 @@ export type Relations = {
   links: LinkRef[];
 };
 
+/** A comment on the Jira ticket, as written there. Read-only in the Hub. */
+export type JiraComment = { id: string; authorName: string; authorId?: string; created: string; updated: string; /** Jira's rich-text document */ bodyAdf: unknown };
+
 /** Jira statuses that need attention without being a stage. */
 export type ProjectFlag = "blocked" | "at-risk" | "on-hold" | "needs-info";
 
@@ -294,11 +297,12 @@ export type PersonalTask = {
 /** Something that happened that a person should know about. Shown in the bell. */
 export type AppNotification = {
   id: string;
-  kind: "review-request" | "new-version" | "added" | "approved" | "changes";
+  kind: "review-request" | "new-version" | "added" | "approved" | "changes" | "jira-comment";
   /** same key again (e.g. more items of one batch) updates this one instead of adding another */
   key: string;
+  /** empty for a Jira comment, which opens the project instead */
   assetId: string;
-  /** the design's name, or the batch title */
+  /** the design's name, the batch title, or the ticket title for a Jira comment */
   assetName: string;
   projectKey: string;
   fromName: string;
