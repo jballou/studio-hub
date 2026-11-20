@@ -374,7 +374,7 @@ export function Composer({
 
   return (
     <div
-      className="relative mx-auto w-full max-w-2xl rounded-loose border border-line bg-white p-4 shadow-md"
+      className="field-ring relative mx-auto w-full max-w-2xl rounded-loose border border-line bg-white p-4 shadow-md"
       onFocusCapture={() => setFocused(true)}
       onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false); }}
     >

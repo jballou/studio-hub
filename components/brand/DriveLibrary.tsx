@@ -142,8 +142,8 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
                     <p className="truncate text-xs text-muted">{f.width && f.height ? `${f.width}×${f.height} · ` : ""}{mb(f.size)}</p>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}>{extOf(f)}</a>
-                    {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}>WebP</a>}
+                    <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}><Icon name="download" size={14} />{extOf(f)}</a>
+                    {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}><Icon name="download" size={14} />WebP</a>}
                   </div>
                 </div>
               ) : (
@@ -167,8 +167,8 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
                 <p className="truncate text-xs text-muted">{f.width && f.height ? `${f.width}×${f.height} · ` : ""}{extOf(f)} · {mb(f.size)}</p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}>{extOf(f)}</a>
-                {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}>WebP</a>}
+                <a href={file(kind, f.id, "download")} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as ${extOf(f)}`}><Icon name="download" size={14} />{extOf(f)}</a>
+                {canWebp(f) && <a href={file(kind, f.id, "download", undefined, true)} download className="btn btn-sm btn-secondary" aria-label={`Download ${f.name} as WebP`}><Icon name="download" size={14} />WebP</a>}
               </div>
             </li>
           ))}

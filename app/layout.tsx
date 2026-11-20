@@ -21,10 +21,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://prod.smassets.net/assets/static/fonts/national2/bold.woff2" />
       </head>
       <body className="flex min-h-full flex-row">
-        <Suspense fallback={<div className="w-16 shrink-0" />}>
+        <Suspense fallback={<div className="w-16 shrink-0 max-md:hidden" />}>
           <Sidebar />
         </Suspense>
-        <div className="shell my-2 mr-2 flex min-h-[calc(100vh-16px)] min-w-0 flex-1 flex-col overflow-clip rounded-loose border border-line bg-paper shadow-sm first:ml-2">
+        <div className="shell my-2 mr-2 flex min-h-[calc(100vh-16px)] min-w-0 flex-1 flex-col overflow-clip rounded-loose border border-line bg-paper shadow-sm first:ml-2 max-md:ml-2">
           <Suspense fallback={null}><TopBar /></Suspense>
           <SegIndicator />
           <div className="paper flex min-w-0 flex-1 flex-col">{children}</div>

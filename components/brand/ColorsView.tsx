@@ -4,11 +4,14 @@ import { useState } from "react";
 import { copyText } from "@/lib/brand/download";
 import { useColors, type Shade } from "@/lib/brand/data";
 
-// Text color that stays readable on a swatch.
+// Text color that stays readable on a swatch: the first of off-white, brand ink or black that reaches 4.5:1 (WCAG AA),
+// or whichever is best when none do.
+const channel = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+const luminance = (hex: string) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * channel((n >> 16) & 255) + 0.7152 * channel((n >> 8) & 255) + 0.0722 * channel(n & 255); };
+const ratio = (a: string, b: string) => { const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
 const textOn = (hex: string) => {
-  const n = parseInt(hex.slice(1), 16);
-  const lum = (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
-  return lum > 0.55 ? "#0F2E21" : "#FEFDFB";
+  const options = ["#FEFDFB", "#0F2E21", "#000000"];
+  return options.find((c) => ratio(c, hex) >= 4.5) ?? options.reduce((best, c) => (ratio(c, hex) > ratio(best, hex) ? c : best));
 };
 
 export function ColorsView() {

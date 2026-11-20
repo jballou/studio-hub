@@ -79,7 +79,7 @@ function BriefCard({ p, today, people }: { p: Project; today: string; people: Ma
         ) : <span className="text-muted">Waiting to be picked up</span>}
         <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
           <Icon name="calendar" size={13} />
-          {p.group === "closed" ? <span className="text-muted">{p.resolvedAt ? `Delivered ${dayLabel(p.resolvedAt)}` : "Delivered"}</span>
+          {p.group === "closed" ? <span className="text-muted">{p.resolvedAt ? `Finished ${dayLabel(p.resolvedAt)}` : "Finished"}</span>
             : late !== null ? <span className="font-bold text-bad-fg">Was due {dayLabel(p.deadline)}</span>
             : left !== null ? <span className={left <= 2 ? "font-bold text-warn-fg" : "text-muted"}>{left === 0 ? "Due today" : left === 1 ? "Due tomorrow" : `Due ${dayLabel(p.deadline)} · ${left} days`}</span>
             : <span className="text-muted">No deadline</span>}

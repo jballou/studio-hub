@@ -151,7 +151,7 @@ export function TeamDay({ person, members, picker, onPick }: { person: string; m
                     {focus.slice(0, 12).map((f) => f.kind === "ticket" && (
                       <li key={f.id} className="flex flex-wrap items-center gap-2 rounded-tight border border-line px-4 py-2">
                         <IssueIcon level={f.project.issueType?.level ?? 0} typeName={f.project.issueType?.name} size={18} />
-                        <Link href={`/projects/${f.key}`} className="font-bold hover:underline">{f.title}</Link>
+                        <Link href={`/projects/${f.key}`} className="tap font-bold hover:underline">{f.title}</Link>
                         <Tag tone={f.reason.startsWith("Overdue") ? "bad" : f.reason.includes("Blocked") ? "warn" : "info"}>{f.reason}</Tag>
                         {everyone && f.project.assigneeName && <span className="text-xs text-muted">{f.project.assigneeName}</span>}
                         <span className="ml-auto"><StatusTag project={f.project} /></span>

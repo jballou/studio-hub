@@ -198,7 +198,7 @@ export function MyDay({ headerExtra }: { /** shown beside the Add new task butto
 
       {loading ? <p className="mt-6 text-sm text-muted">Loading…</p> : (
         <>
-          <div className="mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_352px]">
+          <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[minmax(0,1fr)_352px]">
           <div className="min-w-0">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <Tile label="Open work" n={tiles.open.count} onClick={() => setTileOpen("open")} note="Tickets and tasks" />
@@ -217,12 +217,12 @@ export function MyDay({ headerExtra }: { /** shown beside the Add new task butto
             />
           )}
 
-          <div className="mt-4 grid gap-4 3xl:grid-cols-3">
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 3xl:grid-cols-3">
             <Card
               className="3xl:col-span-2"
               title="Project timeline"
               action={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center gap-2">
                     <button onClick={() => setShift(shift - 1)} aria-label="Earlier" className="flex h-7 w-7 items-center justify-center rounded-tight border border-control hover:bg-n-150"><span className="rotate-180"><Icon name="chevronRight" size={12} /></span></button>
                     <button onClick={() => setShift(0)} className="btn btn-sm btn-secondary">Today</button>
@@ -369,7 +369,7 @@ export function MyDay({ headerExtra }: { /** shown beside the Add new task butto
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-round bg-n-150 text-xs font-bold" aria-hidden>{a.who.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</span>
                       <div className="min-w-0 flex-1 text-sm">
                         <p><b>{a.mine ? "You" : a.who}</b> {a.what}</p>
-                        <p className="truncate"><Link href={`/projects/${a.key}`} className="text-muted hover:underline">{a.key} · {a.title}</Link></p>
+                        <p className="truncate"><Link href={`/projects/${a.key}`} className="tap text-muted hover:underline">{a.key} · {a.title}</Link></p>
                         <p className="text-xs text-muted">{relativeTime(a.at, now)}</p>
                       </div>
                     </li>
@@ -480,7 +480,7 @@ function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKin
               <li key={p.jiraKey} className="flex items-start gap-2 rounded-tight border border-line px-4 py-2 text-sm">
                 <span className="mt-0"><IssueIcon level={p.issueType?.level ?? 0} typeName={p.issueType?.name} /></span>
                 <div className="min-w-0 flex-1">
-                  <Link href={`/projects/${p.jiraKey}`} className="font-medium hover:underline">{p.title}</Link>
+                  <Link href={`/projects/${p.jiraKey}`} className="tap font-medium hover:underline">{p.title}</Link>
                   <div className="mt-0 flex flex-wrap items-center gap-2 text-xs text-muted">
                     {isJira ? (
                       <a href={`${JIRA_BASE}/browse/${p.jiraKey}`} target="_blank" rel="noopener noreferrer" className="rounded-round hover:opacity-80">
@@ -565,7 +565,7 @@ function FocusRow({ f, today, slot, planned, onDone, canPlan, onPlanned }: { f: 
           : <span className="mt-0 shrink-0"><IssueIcon level={f.kind === "ticket" ? f.project.issueType?.level ?? 0 : 0} typeName={f.kind === "ticket" ? f.project.issueType?.name : undefined} size={18} /></span>}
         <div className="min-w-0 flex-1">
           {f.kind === "ticket"
-            ? <Link href={`/projects/${f.key}`} className="font-bold hover:underline">{f.title}</Link>
+            ? <Link href={`/projects/${f.key}`} className="tap font-bold hover:underline">{f.title}</Link>
             : <span className="font-bold">{f.title}</span>}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Tag tone={hot ? "bad" : f.reason.includes("Blocked") ? "warn" : "info"}>{f.reason}</Tag>

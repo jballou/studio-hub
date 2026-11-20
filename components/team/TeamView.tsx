@@ -40,7 +40,7 @@ function Person({ name, count }: { name: string; count?: number }) {
 function Card({ p, today }: { p: Project; today: string }) {
   const due = dueLabel(p.deadline, today);
   return (
-    <Link href={`/projects/${p.jiraKey}`} className="block rounded-tight border border-line bg-white p-2 text-sm shadow-sm hover:border-brand">
+    <Link href={`/projects/${p.jiraKey}`} className="block rounded-tight bg-n-100 p-2 text-sm hover:bg-n-150">
       <span className="line-clamp-2 font-medium">{p.title}</span>
       <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs">
         <span className="font-mono text-muted">{p.jiraKey.replace("MKTGCRTV-", "#")}</span>

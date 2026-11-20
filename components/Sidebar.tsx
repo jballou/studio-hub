@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
@@ -61,6 +61,31 @@ export function Sidebar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [waiting, setWaiting] = useState(0);
+  // Under 768px the sidebar is a drawer over the page, closed until someone opens it.
+  const [phone, setPhone] = useState(false);
+  // The drawer is open for the page it was opened on, so going to another page closes it.
+  const [openAt, setOpenAt] = useState<string | null>(null);
+  const drawer = openAt === pathname;
+  const setDrawer = useCallback((v: boolean) => setOpenAt(v ? pathname : null), [pathname]);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const q = window.matchMedia("(max-width: 767px)");
+    const on = () => { setPhone(q.matches); if (!q.matches) setOpenAt(null); };
+    on();
+    q.addEventListener("change", on);
+    const open = () => setOpenAt(window.location.pathname);
+    window.addEventListener("sidebar-open", open);
+    return () => { q.removeEventListener("change", on); window.removeEventListener("sidebar-open", open); };
+  }, []);
+  // Escape closes the drawer, and focus moves into it when it opens.
+  useEffect(() => {
+    if (!drawer) return;
+    toggleRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawer(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawer, setDrawer]);
 
   useEffect(() => {
     try {
@@ -95,13 +120,13 @@ export function Sidebar() {
 
   if (pathname === "/signin" || pathname === "/welcome") return null;
   const inWorkspace = /^\/review\/[^/]+/.test(pathname);
-  const collapsed = (pref ?? (inWorkspace ? "collapsed" : "expanded")) === "collapsed";
+  const collapsed = !phone && (pref ?? (inWorkspace ? "collapsed" : "expanded")) === "collapsed";
 
   const setMode = (next: "expanded" | "collapsed") => {
     setPref(next);
     try { localStorage.setItem(PREF_KEY, next); } catch { /* ignore */ }
   };
-  const toggle = () => setMode(collapsed ? "expanded" : "collapsed");
+  const toggle = () => (phone ? setDrawer(false) : setMode(collapsed ? "expanded" : "collapsed"));
   const toggleWork = () => {
     const next = !workOpen;
     setWorkOpen(next);
@@ -140,10 +165,11 @@ export function Sidebar() {
 
   const toggleBtn = (
     <button
+      ref={toggleRef}
       onClick={toggle}
-      aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      aria-expanded={!collapsed}
-      title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      aria-label={phone ? "Close menu" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      aria-expanded={phone ? drawer : !collapsed}
+      title={phone ? "Close menu" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
       className="btn btn-ghost btn-icon shrink-0 text-n-800"
     >
       <Icon name="panel" size={18} />
@@ -152,9 +178,15 @@ export function Sidebar() {
 
   return (
     <>
+      {phone && drawer && <div onClick={() => setDrawer(false)} aria-hidden="true" className="fixed inset-0 z-40 bg-n-1000/50" />}
+      {/* The workspace has no top bar, so phones get their own menu button there. */}
+      {phone && inWorkspace && !drawer && (
+        <button onClick={() => setDrawer(true)} aria-label="Open menu" className="btn btn-secondary btn-icon fixed left-2 top-2 z-30"><Icon name="menu" size={20} /></button>
+      )}
       <nav
         aria-label="Main"
-        className={`sticky top-0 z-40 flex h-screen shrink-0 flex-col p-4 motion-safe:transition-[width] motion-safe:duration-150 ${collapsed ? "w-16" : "w-64"}`}
+        inert={phone && !drawer}
+        className={`sticky top-0 z-40 flex h-screen shrink-0 flex-col p-4 motion-safe:transition-[width] motion-safe:duration-150 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-64 max-md:bg-(--shell) max-md:shadow-xl motion-safe:max-md:transition-transform motion-safe:max-md:duration-200 ${drawer ? "" : "max-md:-translate-x-full"} ${collapsed ? "w-16" : "w-64"}`}
       >
         <div className={`mb-4 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
           <Link href="/my-day" title="Brand Creative Hub" className={`flex min-w-0 flex-1 items-center gap-2 text-sm font-bold text-ink ${collapsed ? "justify-center" : ""}`}>

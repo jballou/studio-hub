@@ -309,9 +309,9 @@ export function ProjectsView() {
               {!shown ? null : collapsible && closedList === null ? <p className="text-sm text-muted">Loading closed projects…</p> : rows.length === 0 ? <p className="text-sm text-muted">Nothing here.</p> : (
                 <ul className="space-y-2">
                   {nest(rows).map(({ p, depth }) => (
-                    <li key={p.id} style={{ marginLeft: depth * 32 }} className={`flex items-center gap-2 rounded-tight border bg-white pl-2 hover:border-brand border-line`}>
+                    <li key={p.id} style={{ "--depth": depth } as React.CSSProperties} className="nest flex items-center gap-2 rounded-tight border border-line bg-white pl-2 hover:border-brand max-md:flex-wrap">
                       <StarButton starred={favs.isStarred(p.jiraKey)} onToggle={() => favs.toggle(p.jiraKey, p.title)} label={p.title} />
-                      <Link href={`/projects/${p.jiraKey}`} className="flex min-w-0 flex-1 items-center gap-4 p-4 pl-2">
+                      <Link href={`/projects/${p.jiraKey}`} className="flex min-w-0 flex-1 items-center gap-4 p-4 pl-2 max-md:basis-[calc(100%-48px)]">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
                             {p.issueType && <IssueIcon level={p.issueType.level} typeName={p.issueType.name} />}
@@ -329,7 +329,7 @@ export function ProjectsView() {
                         {!canPlan && <span className={`w-24 text-right text-xs ${today && pastDueDays(p, today) !== null ? "font-bold text-bad-fg" : "text-muted"}`}>{p.deadline ? `Due ${p.deadline}` : "No due date"}</span>}
                       </Link>
                       {canPlan && (
-                        <div className="flex shrink-0 items-center gap-4 pr-4">
+                        <div className="flex shrink-0 items-center gap-4 pr-4 max-md:basis-full max-md:pb-4 max-md:pl-12">
                           <StatusMenu project={p} canChange onChanged={() => setTick((t) => t + 1)} />
                           <DueDateEdit project={p} late={!!today && pastDueDays(p, today) !== null} onSaved={() => setTick((t) => t + 1)} />
                         </div>

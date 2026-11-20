@@ -16,7 +16,7 @@ export function TypeView() {
             <p key={w.name} className="text-2xl" style={{ fontWeight: w.w }}>{w.name}</p>
           ))}
         </div>
-        <p className="mt-6 text-xl">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />abcdefghijklmnopqrstuvwxyz<br />0123456789 !?&amp;@#%</p>
+        <p className="mt-6 text-xl [overflow-wrap:anywhere]">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />abcdefghijklmnopqrstuvwxyz<br />0123456789 !?&amp;@#%</p>
       </section>
 
       <section aria-labelledby="scale">

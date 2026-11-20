@@ -62,7 +62,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
           if (e.key === "Enter") go(hits[active]);
         }}
       >
-        <div className="flex items-center gap-2 border-b border-line px-4 py-4">
+        <div className="field-ring flex items-center gap-2 border-b border-line px-4 py-4">
           <Icon name="search" size={18} />
           <input
             ref={input}

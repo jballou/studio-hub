@@ -135,7 +135,7 @@ export function ReviewIndex() {
       {assets === null ? <p className="text-sm text-muted">Loading…</p> : (
         <>
           <section aria-labelledby="mine-h">
-            <h2 id="mine-h" className="text-lg font-bold">Submitted by you</h2>
+            <h2 id="mine-h" className="text-xl font-bold">Submitted by you</h2>
             <div role="tablist" aria-label="Filter by status" className="mb-4 mt-2 flex flex-wrap gap-2">
               {([{ id: "all", label: "All", n: mine.length }, ...STATES.map((s) => ({ id: s.id, label: s.label, n: count(s.id) }))] as const).map((f) => (
                 <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className="chip">
@@ -150,7 +150,7 @@ export function ReviewIndex() {
                 const list = mine.filter((g) => stateOf(g) === s.id);
                 return (
                   <div key={s.id} className="mb-6">
-                    <h3 className="mb-2 flex items-center gap-2 text-sm font-bold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
+                    <h3 className="mb-2 flex items-center gap-2 text-base font-bold"><Tag tone={s.tone} icon={s.icon}>{s.label}</Tag><span className="text-muted">{list.length}</span></h3>
                     {list.length === 0 ? <p className="rounded-loose border border-dashed border-line p-4 text-sm text-muted">{s.empty}</p> : (
                       <ul className="space-y-2">{list.map((g) => <Row key={g.id} g={g} users={users} showState onTrash={g.items.every(mayTrash) ? (items, label) => setAsking({ items, label }) : undefined} />)}</ul>
                     )}
@@ -162,13 +162,13 @@ export function ReviewIndex() {
 
           {(teamWide ? asked : others).length > 0 && (
             <section aria-labelledby="others-h" className="mt-8">
-              <h2 id="others-h" className="mb-2 text-lg font-bold">{teamWide ? "Needs your review" : "Sent to you"}</h2>
+              <h2 id="others-h" className="mb-2 text-xl font-bold">{teamWide ? "Needs your review" : "Sent to you"}</h2>
               <ul className="space-y-2">{(teamWide ? asked : others).map((g) => <Row key={g.id} g={g} users={users} showState={false} />)}</ul>
             </section>
           )}
           {teamWide && rest.length > 0 && (
             <section aria-labelledby="rest-h" className="mt-8">
-              <h2 id="rest-h" className="text-lg font-bold">Everyone else&apos;s</h2>
+              <h2 id="rest-h" className="text-xl font-bold">Everyone else&apos;s</h2>
               <p className="mb-2 text-sm text-muted">Designs from the rest of the team. You can open all of them, but you weren&apos;t asked to review these.</p>
               <ul className="space-y-2">{rest.map((g) => <Row key={g.id} g={g} users={users} showState={false} />)}</ul>
             </section>

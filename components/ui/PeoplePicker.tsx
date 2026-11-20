@@ -64,7 +64,7 @@ export function PeoplePicker({
     <div ref={box} className="text-sm">
       <label htmlFor={id} className="mb-2 block font-bold">{label}</label>
       <div className="relative">
-        <div className="flex flex-wrap items-center gap-2 rounded-tight border border-control bg-white px-2 py-2">
+        <div className="field-ring flex flex-wrap items-center gap-2 rounded-tight border border-control bg-white px-2 py-2">
           {value.map((p) => (
             <span key={p.id} className="inline-flex items-center gap-2 rounded-round border border-brand bg-brand-soft py-0 pl-4 pr-2 text-sm">
               {p.name}

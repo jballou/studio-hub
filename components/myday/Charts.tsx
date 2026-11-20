@@ -110,7 +110,7 @@ export function Gantt({ bars, days, today, start }: { bars: GanttBar[]; days: st
           <ul>
             {bars.map((b) => (
               <li key={b.key} className="grid items-center border-b border-dashed border-line py-2" style={{ gridTemplateColumns: `9rem repeat(${n}, minmax(0, 1fr))` }}>
-                <Link href={`/projects/${b.key}`} className="truncate pr-4 text-sm hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
+                <Link href={`/projects/${b.key}`} className="tap truncate pr-4 text-sm hover:underline" title={`${b.key} · ${b.title}`}>{b.key.replace("MKTGCRTV-", "#")}</Link>
                 <Link
                   href={`/projects/${b.key}`}
                   title={`${b.title}: ${b.project.statusName ?? b.project.stage}, ${b.project.startDate || b.project.submittedAt} to ${b.project.deadline}${b.late ? " (late)" : ""}`}

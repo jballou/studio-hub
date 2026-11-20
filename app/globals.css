@@ -16,8 +16,8 @@
   --radius-round: 9999px;
 
   /* Core */
-  --color-brand: #089b5e; /* Green 500: primary interaction color (buttons, selection, focus of action) */
-  --color-brand-dark: #08794a; /* Green 600: hover/pressed */
+  --color-brand: #08794a; /* Green 600: primary interaction color (buttons, selection, focus of action). 500 is only 3.5:1 under white text; 600 is 5.4:1 */
+  --color-brand-dark: #105638; /* Green 700: hover/pressed */
   --color-brand-fill: #089b5e; /* Green 500: large fills, icons, graphics only */
   --color-brand-soft: #d6f5de; /* Green 100 */
   --color-ink: #0f2e21; /* Green 900: primary text [CONFIRM vs Neutral 900] */
@@ -93,6 +93,14 @@
   @media (min-width: 768px) { padding: 32px; }
 }
 
+/* No single word left alone on the last line of a paragraph; headings break evenly. */
+p, li, dd { text-wrap: pretty; }
+h1, h2, h3, h4 { text-wrap: balance; }
+
+/* A child ticket indents under its parent: half as far on phones, where there is little width to spare. */
+.nest { margin-left: calc(var(--depth, 0) * 16px); }
+@media (min-width: 768px) { .nest { margin-left: calc(var(--depth, 0) * 32px); } }
+
 /* Keep the scrollbar's width reserved so pages with and without one share the same right edge. */
 html { scrollbar-gutter: stable; }
 
@@ -120,7 +128,13 @@ html { scrollbar-gutter: stable; }
   .btn-icon { width: 32px; height: 32px; padding: 0; }
   .btn-icon.btn-icon-lg { width: 40px; height: 40px; }
   /* Touch screens get the 44px target. */
-  @media (pointer: coarse) { .btn-icon { width: 44px; height: 44px; } }
+  @media (pointer: coarse) {
+    .btn-icon { width: 44px; height: 44px; }
+    .btn-sm, .btn-md, .seg { height: 44px; }
+    .seg-item { padding-inline: 16px; }
+  }
+  /* A text link that sits alone on a row gets a 44px target on touch screens. */
+  @media (pointer: coarse) { .tap { display: inline-flex; align-items: center; min-height: 44px; } }
 
   /* Segmented control: a group of exclusive choices (views, ranges, tabs). Items use aria-pressed / aria-selected.
      The green highlight is ::before, positioned by SegIndicator, so it slides to the chosen item. */
@@ -177,6 +191,9 @@ body:has([role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="tr
 /* Green 500 is too light for small text on white (3.6:1), so text uses the darker link green. */
 .text-brand, .hover\:text-brand:hover { color: var(--link); }
 
+/* Placeholders read as hints, not as filled-in text, and still pass 4.5:1. */
+::placeholder { color: var(--color-n-650); opacity: 1; }
+
 body {
   background: var(--shell);
   color: var(--color-ink);
@@ -190,7 +207,9 @@ body {
   background-size: 16px 16px;
 }
 
-:focus-visible {
+/* Fields that draw their own box around a borderless input show the same ring when the input has focus. */
+:focus-visible,
+.field-ring:has(input:focus-visible, textarea:focus-visible) {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
