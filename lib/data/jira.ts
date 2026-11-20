@@ -7,14 +7,28 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /** Tells the page "this is an older copy because Jira is busy", so it can say so. */
 export const STALE_EVENT = "jira-stale";
 
+const BOUNCE_KEY = "hub-signin-bounce";
+
 async function get<T>(url: string, tries = 0): Promise<T> {
   const res = await fetch(url, { cache: "no-store" });
   if (res.status === 401) {
+    // Sent to sign in twice within two minutes means signing in is not the problem (Jira or the account is refusing the
+    // request), and going round again would loop forever. Show Jira's reason instead.
+    let justSignedIn = false;
+    try {
+      justSignedIn = Date.now() - Number(sessionStorage.getItem(BOUNCE_KEY) ?? 0) < 120_000;
+      sessionStorage.setItem(BOUNCE_KEY, String(Date.now()));
+    } catch { /* storage unavailable: fall back to a single bounce */ }
+    if (justSignedIn) {
+      const why = (await res.json().catch(() => ({}))).error ?? "Not signed in.";
+      throw new Error(`Signing in again didn't fix this: ${why} Tell the Brand Creative team exactly what this says.`);
+    }
     // Hard navigation on purpose: a full page load sends the user through the server-side sign-in.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = `/signin?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`;
     throw new Error("Not signed in.");
   }
+  if (res.ok) { try { sessionStorage.removeItem(BOUNCE_KEY); } catch { /* ignore */ } }
   const body = await res.json().catch(() => ({}));
   if (res.status === 429) {
     // Jira said slow down. Wait as long as it asked (at most 8 seconds), try again twice, then give a plain message.

@@ -91,6 +91,7 @@ export function errorResponse(e: unknown): Response {
     );
   }
   if (e instanceof JiraError) {
+    if (e.status === 401) console.warn("[auth] 401:", e.message);
     const status = e.status === 401 || e.status === 403 || e.status === 404 || e.status === 400 ? e.status : 502;
     return Response.json({ error: e.message }, { status });
   }

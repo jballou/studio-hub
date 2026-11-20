@@ -343,7 +343,7 @@ export type RawComment = { id: string; author?: { displayName?: string; accountI
 export async function listIssueComments(a: JiraAuth, key: string): Promise<RawComment[]> {
   const out: RawComment[] = [];
   for (let start = 0; start < 500; ) {
-    const page = await request<{ comments: RawComment[]; total: number }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment?orderBy=created&maxResults=100&startAt=${start}`);
+    const page = await request<{ comments: RawComment[]; total: number }>(a, `/issue/${encodeURIComponent(key)}/comment?orderBy=created&maxResults=100&startAt=${start}`);
     out.push(...page.comments);
     start += page.comments.length;
     if (page.comments.length === 0 || start >= page.total) break;
@@ -353,7 +353,7 @@ export async function listIssueComments(a: JiraAuth, key: string): Promise<RawCo
 
 /** The 20 newest comments on a ticket, newest first. Enough to see what arrived since the last check. */
 export async function recentIssueComments(a: JiraAuth, key: string): Promise<RawComment[]> {
-  const page = await request<{ comments: RawComment[] }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment?orderBy=-created&maxResults=20`);
+  const page = await request<{ comments: RawComment[] }>(a, `/issue/${encodeURIComponent(key)}/comment?orderBy=-created&maxResults=20`);
   return page.comments;
 }
 
@@ -363,7 +363,7 @@ export async function addIssueComment(a: JiraAuth, key: string, lines: string[])
     type: "doc", version: 1,
     content: lines.map((l) => ({ type: "paragraph", content: l ? [{ type: "text", text: l.slice(0, 3000) }] : [] })),
   };
-  const res = await request<{ id: string }>(a, `/rest/api/3/issue/${encodeURIComponent(key)}/comment`, { method: "POST", body: { body } });
+  const res = await request<{ id: string }>(a, `/issue/${encodeURIComponent(key)}/comment`, { method: "POST", body: { body } });
   return res.id;
 }
 
