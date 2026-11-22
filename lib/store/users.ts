@@ -120,9 +120,14 @@ export async function recordSignIn(p: { email: string; name?: string; accountId?
 
 /** The creative team: active creatives and admins who have signed in once (so they have a Jira account id). */
 export async function teamMembers(): Promise<{ id: string; name: string; email: string }[]> {
+  return (await teamRoster()).filter((u) => u.id).map((u) => ({ id: u.id!, name: u.name, email: u.email }));
+}
+
+/** Active creatives and admins, including people who haven't signed in since tracking began (no Jira id yet). */
+export async function teamRoster(): Promise<{ id?: string; name: string; email: string }[]> {
   return (await listUsers())
-    .filter((u) => u.status === "active" && (u.role === "creative" || u.role === "admin") && u.accountId)
-    .map((u) => ({ id: u.accountId!, name: u.name || u.email, email: u.email }))
+    .filter((u) => u.status === "active" && (u.role === "creative" || u.role === "admin"))
+    .map((u) => ({ id: u.accountId, name: u.name || u.email, email: u.email }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
