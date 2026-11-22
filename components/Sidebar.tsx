@@ -35,6 +35,7 @@ const ITEMS: Item[] = [
   { href: "/my-day", label: "My Day", icon: "layoutDashboard", match: (p) => p.startsWith("/my-day") },
   { href: "/briefs", label: "My briefs", icon: "brief", match: (p) => p.startsWith("/briefs"), forRequesters: true },
   { href: "/projects", label: "Projects", icon: "folder", match: (p) => p === "/projects" || p === "/projects/new", tour: "projects" },
+  { href: "/intake", label: "Intake", icon: "inbox", match: (p) => p.startsWith("/intake"), forCreatives: true },
   { href: "/team", label: "Team", icon: "usersRound", match: (p) => p.startsWith("/team"), forCreatives: true },
   { href: "/reports", label: "Reports", icon: "listChecks", match: (p) => p.startsWith("/reports"), forCreatives: true },
   { href: "/calendar", label: "Calendar", icon: "calendar", match: (p) => p.startsWith("/calendar") },

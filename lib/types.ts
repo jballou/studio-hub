@@ -186,6 +186,11 @@ export type Relations = {
 /** A comment on the Jira ticket, as written there. Read-only in the Hub. */
 export type JiraComment = { id: string; authorName: string; authorId?: string; created: string; updated: string; /** Jira's rich-text document */ bodyAdf: unknown };
 
+/** What the creative team can do with a ticket nobody owns yet, besides assigning it. */
+export type IntakeAction = "info" | "wontdo" | "duplicate";
+export type IntakeInput = { action: IntakeAction; /** why, in the team's own words; required when asking for more info */ note?: string; /** the ticket this one repeats, for "duplicate" */ duplicateOf?: string };
+export type IntakeResult = { ok: true; status: string; /** parts that didn't go through (the move did), in plain words */ notes: string[] };
+
 /** Jira statuses that need attention without being a stage. */
 export type ProjectFlag = "blocked" | "at-risk" | "on-hold" | "needs-info";
 

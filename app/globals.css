@@ -130,7 +130,7 @@ html { scrollbar-gutter: stable; }
   /* Touch screens get the 44px target. */
   @media (pointer: coarse) {
     .btn-icon { width: 44px; height: 44px; }
-    .btn-sm, .btn-md, .seg { height: 44px; }
+    .btn-sm, .btn-md, .seg, .chip { height: 44px; }
     .seg-item { padding-inline: 16px; }
   }
   /* A text link that sits alone on a row gets a 44px target on touch screens. */

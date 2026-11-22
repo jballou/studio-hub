@@ -1,5 +1,5 @@
 import { startDateProblem } from "@/lib/startdate";
-import type { BriefSubmission, JiraComment, Project, Relations } from "@/lib/types";
+import type { BriefSubmission, IntakeInput, IntakeResult, JiraComment, Project, Relations } from "@/lib/types";
 
 /** Data boundary for projects/briefs; the Jira-backed adapter replaces the mock later. */
 export interface ProjectsRepo {
@@ -7,6 +7,10 @@ export interface ProjectsRepo {
   listProjects(viewerId: string, scope?: "mine" | "all", group?: "open" | "closed" | "all", limit?: number): Promise<Project[]>;
   /** Tickets resolved in the last `range` days (for Analytics). */
   closedWork(range: number): Promise<{ projects: Project[]; truncated: boolean }>;
+  /** Open tickets nobody owns yet (Backlog and On Hold left out), oldest first. Creative team only. */
+  listIntake(): Promise<Project[]>;
+  /** Sends an unassigned ticket back for more information, or closes it as won't do or a duplicate. Creative team only. */
+  intakeAction(jiraKey: string, input: IntakeInput): Promise<IntakeResult>;
   /** Assigns a ticket to a person, or to nobody (null). Creative team only. */
   assign(jiraKey: string, accountId: string | null): Promise<void>;
   getProject(jiraKey: string, viewerId: string): Promise<Project | null>;
@@ -168,6 +172,19 @@ export const mockProjects: ProjectsRepo = {
   async closedWork(range) {
     const cutoff = new Date(Date.now() - range * 86_400_000).toISOString().slice(0, 10);
     return { projects: structuredClone(projects.filter((p) => p.group === "closed" && (p.resolvedAt ?? "") >= cutoff)), truncated: false };
+  },
+  async listIntake() {
+    const parked = ["On Hold", "Backlog"];
+    return structuredClone(projects.filter((p) => !p.assigneeId && p.group !== "closed" && !parked.includes(p.statusName ?? "")).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt)));
+  },
+  async intakeAction(jiraKey, input) {
+    const p = projects.find((x) => x.jiraKey === jiraKey);
+    if (!p) throw new Error("That ticket doesn't exist.");
+    if (input.action === "info" && (input.note ?? "").trim().length < 3) throw new Error("Say what you need to know, so they can answer.");
+    if (input.action === "duplicate" && !/^[A-Z][A-Z0-9]+-\d+$/i.test((input.duplicateOf ?? "").trim())) throw new Error("Enter the ticket this repeats, like MKTGCRTV-123.");
+    if (input.action === "info") { p.statusName = "Need more info"; p.flag = "needs-info"; p.assigneeId = undefined; }
+    else { p.group = "closed"; p.stage = "Delivered"; p.statusName = input.action === "wontdo" ? "Won't Do" : "Duplicate"; }
+    return { ok: true, status: p.statusName ?? "", notes: [] };
   },
   async assign(jiraKey, accountId) {
     const p = projects.find((x) => x.jiraKey === jiraKey);

@@ -126,6 +126,9 @@ const REQUESTOR_TOKEN = "@requestor";
 /** My Briefs: a list plus the Requestor, labels (to tell Hub-made briefs apart) and the description for the card's summary. */
 export const BRIEF_FIELDS = [...LIST_FIELDS, "description", REQUESTOR_TOKEN];
 
+/** The Intake queue: a list plus the Requestor, so a ticket can be sent back to the person who asked for it. */
+export const INTAKE_FIELDS = [...LIST_FIELDS, REQUESTOR_TOKEN];
+
 export const ISSUE_FIELDS = ["summary", "status", "issuetype", "reporter", "assignee", "duedate", "created", "description", "customfield_10142", "resolutiondate", "parent", "labels"];
 
 // Some fields have site-specific ids (Start date, Requestor), so they are found by name once and remembered, both in
@@ -382,6 +385,23 @@ export async function addIssueComment(a: JiraAuth, key: string, lines: string[])
   };
   const res = await request<{ id: string }>(a, `/issue/${encodeURIComponent(key)}/comment`, { method: "POST", body: { body } });
   return res.id;
+}
+
+/** A comment that can @mention one person (they get Jira's own notification). Plain text otherwise, one paragraph per line. */
+export async function addIssueCommentMentioning(a: JiraAuth, key: string, mention: { id: string; name: string } | null, lines: string[]): Promise<string> {
+  const text = (t: string) => ({ type: "text", text: t.slice(0, 3000) });
+  const first = lines[0] ?? "";
+  const content = [
+    { type: "paragraph", content: [...(mention ? [{ type: "mention", attrs: { id: mention.id, text: `@${mention.name}` } }, text(" ")] : []), ...(first ? [text(first)] : [])] },
+    ...lines.slice(1).map((l) => ({ type: "paragraph", content: l ? [text(l)] : [] })),
+  ];
+  const res = await request<{ id: string }>(a, `/issue/${encodeURIComponent(key)}/comment`, { method: "POST", body: { body: { type: "doc", version: 1, content } } });
+  return res.id;
+}
+
+/** Marks `key` as a duplicate of `otherKey` with Jira's own Duplicate link. */
+export async function linkAsDuplicate(a: JiraAuth, key: string, otherKey: string): Promise<void> {
+  await request<void>(a, "/issueLink", { method: "POST", body: { type: { name: "Duplicate" }, outwardIssue: { key }, inwardIssue: { key: otherKey } } });
 }
 
 /** Assigns the ticket to someone, or to nobody when accountId is null. Needs write:jira-work and the Assign issues permission. */

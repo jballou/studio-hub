@@ -98,6 +98,15 @@ export const jiraProjects: ProjectsRepo = {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error ?? `Couldn't save the KR (${res.status}).`);
   },
+  async listIntake() {
+    return (await get<{ projects: Project[] }>("/api/jira/intake")).projects;
+  },
+  async intakeAction(jiraKey, input) {
+    const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/intake`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error ?? `Couldn't do that (${res.status}).`);
+    return body;
+  },
   async moveTo(jiraKey, status) {
     const res = await fetch(`/api/jira/projects/${encodeURIComponent(jiraKey)}/status`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     const body = await res.json().catch(() => ({}));

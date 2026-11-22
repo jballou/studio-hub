@@ -100,6 +100,8 @@ const PATHS = {
   list: <><path d="M3 5h.01" /><path d="M3 12h.01" /><path d="M3 19h.01" /><path d="M8 5h13" /><path d="M8 12h13" /><path d="M8 19h13" /></>,
   // Lucide: menu
   menu: <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>,
+  // Lucide: inbox
+  inbox: <><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.450 5.110 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.450-6.890A2 2 0 0 0 16.760 4H7.240a2 2 0 0 0-1.790 1.110z" /></>,
 } as const;
 
 export type IconName = keyof typeof PATHS;
