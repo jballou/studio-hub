@@ -1,5 +1,6 @@
 import { getToken } from "next-auth/jwt";
-import { AdminError, resolveAccess, visibilityRole } from "@/lib/store/users";
+import { waitUntil } from "@vercel/functions";
+import { AdminError, resolveAccess, touchActive, visibilityRole } from "@/lib/store/users";
 import { findCloudId, JiraError, type JiraAuth } from "./client";
 
 export type JiraSession = {
@@ -43,6 +44,9 @@ export async function jiraSession(req: Request): Promise<JiraSession> {
   const email = String(token.email ?? "");
   const access = await resolveAccess(email);
   if (!access.active) throw new JiraError(403, "Your access has been removed. Ask a Brand Creative admin.");
+  // "Last active" in the admin list. Background polling (the bell, who-am-I, avatars) doesn't count as activity.
+  const path = new URL(req.url).pathname;
+  if (!/^\/api\/(notifications|me$|avatars)/.test(path)) waitUntil(touchActive(email).catch(() => {}));
   const cloudId = token.cloudId ?? (await cloudFor(token.accessToken));
   if (!cloudId) throw new JiraError(403, "Your Atlassian account can't reach the configured Jira site.");
   return {

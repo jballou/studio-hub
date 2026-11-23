@@ -149,6 +149,8 @@ html { scrollbar-gutter: stable; }
 
   /* Chip: a filter or option pill. Selected via aria-pressed / aria-selected / data-on. chip-lg is the roomier wizard answer. */
   .chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 16px; border: 1px solid var(--color-control); border-radius: var(--radius-round); background: var(--card); font-size: 14px; line-height: 24px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease; }
+  /* Transparent cut-outs sit on a checkerboard so they can't be mistaken for a photo on a black background. */
+  .checker { background-color: var(--card); background-image: linear-gradient(45deg, var(--color-n-150) 25%, transparent 25%, transparent 75%, var(--color-n-150) 75%), linear-gradient(45deg, var(--color-n-150) 25%, transparent 25%, transparent 75%, var(--color-n-150) 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
   .chip:hover { background: var(--color-n-150); }
   .chip[aria-pressed="true"], .chip[aria-selected="true"], .chip[data-on="true"] { border-color: var(--color-brand); background: var(--color-brand-soft); }
   .chip-lg { height: 40px; }

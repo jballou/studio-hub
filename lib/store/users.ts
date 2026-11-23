@@ -15,6 +15,8 @@ export type UserRecord = {
   addedAt: string;
   firstSignIn?: string;
   lastSignIn?: string;
+  /** The last time this person did anything in the Hub (any request except background polling), saved at most every 10 minutes. */
+  lastActive?: string;
 };
 
 export type AuditEntry = { at: string; actor: string; action: string; target: string; detail?: string };
@@ -218,4 +220,20 @@ export async function audit(e: Omit<AuditEntry, "at">): Promise<void> {
 export async function readAudit(limit = 50): Promise<AuditEntry[]> {
   const { data } = await readDoc("audit", emptyAudit);
   return data.entries.slice(-limit).reverse();
+}
+
+const touched = new Map<string, number>();
+const TOUCH_EVERY = 10 * 60_000;
+/** Notes that this person just used the Hub. At most one write per person every 10 minutes, so busy pages cost nothing extra. */
+export async function touchActive(emailRaw: string): Promise<void> {
+  const email = normalizeEmail(emailRaw);
+  const last = touched.get(email);
+  if (last && Date.now() - last < TOUCH_EVERY) return;
+  touched.set(email, Date.now());
+  await updateDoc("users", emptyUsers, (d) => {
+    const rec = d.users[email];
+    if (!rec || (rec.lastActive && Date.now() - Date.parse(rec.lastActive) < TOUCH_EVERY)) return { data: d, result: undefined };
+    rec.lastActive = now();
+    return { data: d, result: undefined };
+  });
 }

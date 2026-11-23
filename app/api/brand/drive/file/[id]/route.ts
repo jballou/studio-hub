@@ -32,6 +32,14 @@ export async function GET(req: Request, ctx: RouteContext<"/api/brand/drive/file
       return new Response(up.body, { status: 200, headers: h });
     }
     const size = Math.min(1600, Math.max(64, Number(u.searchParams.get("s")) || 480));
+    const node = await driveNode(cfg.owner, id).catch(() => null);
+    if (node?.mimeType === "image/png") {
+      // Drive's own preview flattens transparency to black, which makes a cut-out look like a photo on a black
+      // background. For PNGs we shrink the original ourselves and keep the transparent pixels (as WebP).
+      const up = await driveMedia(cfg.owner, id, null);
+      const out = await sharp(Buffer.from(await up.arrayBuffer())).rotate().resize({ width: size, withoutEnlargement: true }).webp({ quality: 82, alphaQuality: 90 }).toBuffer();
+      return new Response(new Uint8Array(out), { status: 200, headers: { "Content-Type": "image/webp", "Content-Length": String(out.length), "Cache-Control": "private, max-age=86400" } });
+    }
     const up = await driveThumbnail(cfg.owner, id, size);
     const h = new Headers({ "Cache-Control": "private, max-age=3600", "Content-Type": up.headers.get("content-type") ?? "image/jpeg" });
     return new Response(up.body, { status: 200, headers: h });

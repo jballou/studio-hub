@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Avatar } from "@/components/review/Avatar";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { StaleNotice } from "@/components/ui/StaleNotice";
@@ -24,10 +25,10 @@ const initialsOf = (n: string) => n.split(/\s+/).map((w) => w[0]).slice(0, 2).jo
 const DUE_TONE = { bad: "text-bad-fg font-bold", warn: "text-warn-fg font-bold", muted: "text-muted" } as const;
 const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", o);
 
-function Person({ name, count }: { name: string; count?: number }) {
+function Person({ id, name, count }: { id?: string; name: string; count?: number }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
-      <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-round bg-brand-dark text-xs font-bold text-n-50">{initialsOf(name)}</span>
+      <Avatar user={{ id: id ?? "", name, initials: initialsOf(name), role: "creative" }} size={32} />
       <span className="min-w-0">
         <span className="block truncate text-sm font-bold">{name}</span>
         {count !== undefined && <span className="block text-xs text-muted">{count} open</span>}
@@ -96,7 +97,7 @@ function Kanban({ lanes, today }: { lanes: Lane[]; today: string }) {
         </div>
         {lanes.map((l) => (
           <div key={l.id} className="grid border-b border-line last:border-b-0" style={{ gridTemplateColumns: `12rem repeat(${COLS.length}, minmax(0, 1fr))` }}>
-            <div className="p-4"><Person name={l.name} count={l.projects.length} /></div>
+            <div className="p-4"><Person id={l.id} name={l.name} count={l.projects.length} /></div>
             {COLS.map((c) => {
               const cards = l.projects.filter((p) => columnOfProject(p) === c.id);
               return (
@@ -147,7 +148,7 @@ function Gantt({ lanes, today }: { lanes: Lane[]; today: string }) {
               const { bars, undated } = ganttBars(l.projects, start, n, today);
               return (
                 <section key={l.id} aria-label={l.name} className="border-b border-line py-2 last:border-b-0">
-                  <div className="mb-2"><Person name={l.name} count={l.projects.length} /></div>
+                  <div className="mb-2"><Person id={l.id} name={l.name} count={l.projects.length} /></div>
                   {bars.length === 0 && <p className="py-2 pl-10 text-xs text-muted">{l.projects.length === 0 ? "Nothing assigned." : "Nothing scheduled in this window."}</p>}
                   <ul>
                     {bars.map((b) => (
@@ -201,7 +202,7 @@ function CalendarGrid({ lanes, today }: { lanes: Lane[]; today: string }) {
             const outside = l.projects.length - placed.filter((x) => x.at).length;
             return (
               <div key={l.id} className="grid border-b border-line last:border-b-0" style={{ gridTemplateColumns: cols }}>
-                <div className="p-2"><Person name={l.name} count={l.projects.length} />{outside > 0 && <p className="mt-2 pl-10 text-xs text-muted">{outside} due other weeks</p>}</div>
+                <div className="p-2"><Person id={l.id} name={l.name} count={l.projects.length} />{outside > 0 && <p className="mt-2 pl-10 text-xs text-muted">{outside} due other weeks</p>}</div>
                 {week.map((d) => (
                   <ul key={d} aria-label={`${l.name}, ${fmt(d, { weekday: "long", month: "long", day: "numeric" })}`} className={`min-h-16 space-y-2 border-l border-line p-2 ${d === today ? "bg-brand-soft/30" : ""}`}>
                     {placed.filter((x) => x.at?.day === d).map(({ p, at }) => (

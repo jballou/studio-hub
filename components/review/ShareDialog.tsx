@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Avatar } from "./Avatar";
 import { Icon } from "@/components/ui/Icon";
 import { PeoplePicker } from "@/components/ui/PeoplePicker";
 import { repo } from "@/lib/data";
@@ -96,7 +97,7 @@ export function ShareDialog({ asset, users, canManage, onClose, onChange }: { as
         <ul className="max-h-64 divide-y divide-line overflow-y-auto">
           {rows.map((r) => (
             <li key={r.id} className="flex items-center gap-4 py-2">
-              <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-round bg-brand-dark text-xs font-bold text-n-50">{initialsOf(r.name)}</span>
+              <Avatar user={{ id: r.id, name: r.name, initials: initialsOf(r.name), role: "creative" }} size={36} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{r.name}</span>
                 {r.email && <span className="block truncate text-xs text-muted">{r.email}</span>}

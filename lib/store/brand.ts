@@ -6,11 +6,20 @@ import { AdminError, audit } from "./users";
 // The brand library keeps big files (photos, illustrations) in shared Google Drive folders. An admin points the Hub at
 // the folders; the Hub reads them with that admin's Google connection and serves them to signed-in staff.
 export type BrandKind = "photos" | "illustrations";
-export type BrandConfig = { photos: string; illustrations: string; /** the admin whose Google connection reads Drive */ owner: string };
+export type BrandConfig = { photos: string; illustrations: string; /** one Drive file (a .zip of the National 2 font files) staff download after accepting the license */ fonts?: string; /** the admin whose Google connection reads Drive */ owner: string };
 
-const empty = (): BrandConfig => ({ photos: "", illustrations: "", owner: "" });
+const empty = (): BrandConfig => ({ photos: "", illustrations: "", fonts: "", owner: "" });
 export async function getBrandConfig(): Promise<BrandConfig> {
   return (await readDoc("brand/config", empty)).data;
+}
+
+/** A file id from a Drive link (…/file/d/<id>) or a bare id. */
+export function fileIdFrom(input: string): string {
+  const t = input.trim();
+  if (!t) return "";
+  const m = /\/file\/d\/([A-Za-z0-9_-]{10,100})/.exec(t) ?? /[?&]id=([A-Za-z0-9_-]{10,100})/.exec(t);
+  if (m) return m[1];
+  return /^[A-Za-z0-9_-]{10,100}$/.test(t) ? t : "";
 }
 
 /** A folder id from a Drive link (…/folders/<id>) or a bare id. */
@@ -22,8 +31,8 @@ export function folderIdFrom(input: string): string {
   return /^[A-Za-z0-9_-]{10,100}$/.test(t) ? t : "";
 }
 
-export async function setBrandConfig(admin: string, input: { photos?: unknown; illustrations?: unknown }): Promise<BrandConfig> {
-  const next: BrandConfig = { photos: "", illustrations: "", owner: admin };
+export async function setBrandConfig(admin: string, input: { photos?: unknown; illustrations?: unknown; fonts?: unknown }): Promise<BrandConfig> {
+  const next: BrandConfig = { photos: "", illustrations: "", fonts: "", owner: admin };
   for (const k of ["photos", "illustrations"] as const) {
     const raw = String(input[k] ?? "").trim();
     if (!raw) continue;
@@ -39,8 +48,21 @@ export async function setBrandConfig(admin: string, input: { photos?: unknown; i
     if (f.mimeType !== "application/vnd.google-apps.folder") throw new AdminError(400, `The ${k} link is a file, not a folder.`);
     next[k] = id;
   }
+  const rawFonts = String(input.fonts ?? "").trim();
+  if (rawFonts) {
+    const id = fileIdFrom(rawFonts);
+    if (!id) throw new AdminError(400, "The fonts link isn't a Google Drive file link. Share a single .zip file, not a folder.");
+    let f;
+    try { f = await driveFile(admin, id); } catch (e) {
+      const why = e instanceof Error ? e.message : "";
+      throw new AdminError(400, `Google can't open the fonts file${why ? ` (${why})` : ""}. Check the link and that your connected Google account can see it.`);
+    }
+    if (f.mimeType === "application/vnd.google-apps.folder") throw new AdminError(400, "The fonts link is a folder. Put the font files in one .zip and link that file.");
+    if (f.mimeType.startsWith("application/vnd.google-apps.")) throw new AdminError(400, "The fonts link is a Google Doc type, not a file. Upload a .zip of the font files.");
+    next.fonts = id;
+  }
   await updateDoc("brand/config", empty, () => ({ data: next, result: undefined }));
-  await audit({ actor: admin, action: "brand.config", target: "brand", detail: `photos ${next.photos ? "set" : "off"}, illustrations ${next.illustrations ? "set" : "off"}` });
+  await audit({ actor: admin, action: "brand.config", target: "brand", detail: `photos ${next.photos ? "set" : "off"}, illustrations ${next.illustrations ? "set" : "off"}, fonts ${next.fonts ? "set" : "off"}` });
   return next;
 }
 

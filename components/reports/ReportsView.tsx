@@ -140,7 +140,7 @@ export function ReportsView() {
           <h3 id="empty-h" className="text-lg font-bold">No report for this week yet</h3>
           <p className="mb-4 mt-2 text-sm text-muted">The check-in asks a few questions about things Jira can&apos;t see, then drafts your report from your tickets, review comments, notes and calendar. Or skip the questions and draft straight away.</p>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setInterview(true)} className="btn btn-md btn-primary">Start the check-in</button>
+            <button onClick={() => setInterview(true)} className="btn btn-md btn-primary"><Icon name="notepadText" size={16} /> Start the check-in</button>
             <button onClick={() => generate(false)} disabled={busy !== null} className="btn btn-md btn-secondary">{busy === "generate" ? "Drafting…" : "Draft it now"}</button>
           </div>
         </section>

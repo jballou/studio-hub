@@ -8,7 +8,7 @@ async function overview(email: string) {
   const conn = configured() ? await getConnection(email) : null;
   const cfg = await getBrandConfig();
   return {
-    config: { photos: cfg.photos ? `https://drive.google.com/drive/folders/${cfg.photos}` : "", illustrations: cfg.illustrations ? `https://drive.google.com/drive/folders/${cfg.illustrations}` : "", owner: cfg.owner },
+    config: { photos: cfg.photos ? `https://drive.google.com/drive/folders/${cfg.photos}` : "", illustrations: cfg.illustrations ? `https://drive.google.com/drive/folders/${cfg.illustrations}` : "", fonts: cfg.fonts ? `https://drive.google.com/file/d/${cfg.fonts}/view` : "", owner: cfg.owner },
     google: { configured: configured(), connected: !!conn && !conn.broken, canReadDrive: !!conn?.scopes.includes(DRIVE_SCOPE) && !conn.broken },
   };
 }
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   }
 }
 
-/** PUT { photos, illustrations }  Saves the Drive folder links. This admin's Google connection is what reads them. */
+/** PUT { photos, illustrations, fonts }  Saves the Drive folder links. This admin's Google connection is what reads them. */
 export async function PUT(req: Request) {
   try {
     const s = await adminSession(req);

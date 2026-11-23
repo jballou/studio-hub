@@ -7,7 +7,7 @@ import { isJira } from "@/lib/data/mode";
 import { PageTitle } from "@/components/PageTitle";
 
 type Role = "requester" | "creative" | "admin";
-type UserRow = { email: string; name: string; role: Role; lead?: boolean; status: "active" | "disabled"; addedBy: string; addedAt: string; lastSignIn?: string };
+type UserRow = { email: string; name: string; role: Role; lead?: boolean; status: "active" | "disabled"; addedBy: string; addedAt: string; lastSignIn?: string; lastActive?: string };
 type AuditRow = { at: string; actor: string; action: string; target: string; detail?: string };
 
 const ROLE_HELP: Record<Role, string> = {
@@ -18,10 +18,13 @@ const ROLE_HELP: Record<Role, string> = {
 const ROLES = Object.keys(ROLE_HELP) as Role[];
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 const ACTION_LABEL: Record<string, string> = {
-  "user.add": "added", "user.update": "changed", "user.remove": "removed", "user.first_signin": "signed in for the first time",
+  "user.add": "added", "user.update": "changed", "user.remove": "removed", "user.first_signin": "signed in for the first time", "font.download": "accepted the font license and downloaded", "profile.avatar.set": "set a profile photo for", "profile.avatar.remove": "removed the profile photo for",
   "block.create": "marked as blocked", "block.reassign": "changed who is blocking", "block.resolve": "cleared the block on",
   "flow.update": "edited", "flow.restore": "restored", "flow.reset": "reset",
 };
+
+/** Signing in counts as activity too, so someone who only ever signed in still shows a time. */
+const latest = (a?: string, b?: string) => (a && b ? (a > b ? a : b) : a ?? b);
 
 const when = (iso?: string) =>
   iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Never";
@@ -126,7 +129,7 @@ export function AdminUsers() {
       <div className="overflow-x-auto card">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-n-150 text-xs text-n-800">
-            <tr><th className="px-4 py-2 font-bold">Person</th><th className="px-4 py-2 font-bold">Role</th><th className="px-4 py-2 font-bold">Team lead</th><th className="px-4 py-2 font-bold">Status</th><th className="px-4 py-2 font-bold">Last sign-in</th><th className="px-4 py-2" /></tr>
+            <tr><th className="px-4 py-2 font-bold">Person</th><th className="px-4 py-2 font-bold">Role</th><th className="px-4 py-2 font-bold">Team lead</th><th className="px-4 py-2 font-bold">Status</th><th className="px-4 py-2 font-bold">Last active</th><th className="px-4 py-2" /></tr>
           </thead>
           <tbody>
             {users === null && <tr><td colSpan={6} className="px-4 py-6 text-center text-muted">Loading…</td></tr>}
@@ -150,7 +153,7 @@ export function AdminUsers() {
                     </label>
                   </td>
                   <td className="px-4 py-2"><Tag tone={u.status === "active" ? "ok" : "neutral"} icon={u.status === "active" ? "check" : "close"}>{u.status === "active" ? "Active" : "Disabled"}</Tag></td>
-                  <td className="px-4 py-2 text-xs text-muted">{when(u.lastSignIn)}</td>
+                  <td className="px-4 py-2 text-xs text-muted">{when(latest(u.lastActive, u.lastSignIn))}</td>
                   <td className="px-4 py-2 text-right text-xs">
                     {!locked && !self && (
                       <span className="flex justify-end gap-4">
