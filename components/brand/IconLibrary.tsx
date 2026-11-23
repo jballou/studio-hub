@@ -54,7 +54,7 @@ export function IconLibrary() {
           <ul className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(7rem,1fr))]">
             {shown.map((i) => (
               <li key={i.name}>
-                <button onClick={() => setSelected(i.name)} aria-pressed={selected === i.name} title={i.name} className="card card-hover flex h-24 w-full flex-col items-center justify-center gap-2 p-2 aria-pressed:border-brand aria-pressed:bg-brand-soft">
+                <button onClick={() => setSelected(i.name)} aria-pressed={selected === i.name} title={i.name} className="card card-hover rounded-tight flex h-24 w-full flex-col items-center justify-center gap-2 p-2 aria-pressed:border-brand aria-pressed:bg-brand-soft">
                   <Glyph i={i} size={24} color="#0F2E21" />
                   <span className="w-full truncate text-center text-xs text-muted">{i.name}</span>
                 </button>
