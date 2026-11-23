@@ -32,7 +32,7 @@ export function TypeView() {
                 <p className="text-sm font-bold">{t.name}</p>
                 <p className="text-xs text-muted">{t.size}px / {t.line}px · {t.weight === 400 ? "Regular" : t.weight === 500 ? "Medium" : "Bold"}</p>
               </div>
-              <p className="min-w-0 truncate" style={{ fontSize: t.size, lineHeight: `${t.line}px`, fontWeight: t.weight }}>{t.sample}</p>
+              <p className="min-w-0 truncate" style={{ fontSize: t.size, lineHeight: `${t.line}px`, fontWeight: t.weight, paddingBottom: Math.round(t.size * 0.25) }}>{t.sample}</p>
             </div>
           ))}
         </div>
