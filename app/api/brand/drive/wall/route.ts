@@ -22,7 +22,12 @@ export async function GET(req: Request) {
     // Walking the folders is slow, so the whole list is remembered for ten minutes and each visit just draws from it.
     const { value: all } = await cached("brand", `wall|${kind}|${root}`, 10 * 60_000, async () => {
       const out: Pic[] = [];
-      let level = [root];
+      // Only the full-bleed retouched images make the wall; a library with no such folder uses everything.
+      const top = await driveList(owner, root);
+      markInTree(kind, top.map((i) => i.id));
+      const bleed = top.filter((i) => i.folder && /full[\s_-]*bleed/i.test(i.name)).map((i) => i.id);
+      for (const i of top) if (!i.folder && IMAGE.test(i.mimeType) && !bleed.length) out.push({ id: i.id, name: i.name, mimeType: i.mimeType, size: i.size, width: i.width, height: i.height });
+      let level = bleed.length ? bleed : top.filter((i) => i.folder).map((i) => i.id);
       for (let depth = 0; depth < 5 && level.length && out.length < 3000; depth++) {
         const next: string[] = [];
         for (const folder of level) {
@@ -41,7 +46,7 @@ export async function GET(req: Request) {
 
     const pool = [...all];
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-    return Response.json({ items: pool.slice(0, 24) }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ items: pool.slice(0, 8) }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     return apiError(e);
   }

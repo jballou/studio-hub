@@ -27,7 +27,7 @@ const VIEWS: { id: View; label: string; icon: IconName }[] = [
 const mb = (n?: number) => (n ? (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1000))} KB`) : "");
 
 /** A Drive-backed library: folders become categories, images show Drive's own previews, downloads stream through the Hub. */
-export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string; blurb: string }) {
+export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
   const me = useMe();
   const [folder, setFolder] = useState<string | null>(null);
   const [data, setData] = useState<Listing | null>(null);
@@ -133,7 +133,6 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
   const trail = data.trail;
   return (
     <div>
-      <p className="mb-4 max-w-3xl text-sm text-muted">{blurb}</p>
       {tagFilter && (
         <p className="mb-4 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted">Photos tagged</span>
@@ -143,7 +142,7 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
           <span className="text-muted">{files.length} in all folders</span>
         </p>
       )}
-      <nav aria-label="Folder" hidden={!!tagFilter} className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+      <nav aria-label="Folder" hidden={!!tagFilter || trail.length < 2} className="mb-4 flex flex-wrap items-center gap-2 text-sm">
         {trail.map((t, i) => (
           <span key={t.id} className="flex items-center gap-2">
             {i > 0 && <Icon name="chevronRight" size={14} />}
@@ -151,11 +150,24 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
           </span>
         ))}
       </nav>
+      {folders.length > 0 && !tagFilter && (
+        <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+          {folders.map((f) => (
+            <li key={f.id}>
+              <button onClick={() => { setFolder(f.id); setQ(""); }} className="card card-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-brand-soft"><Icon name="folder" size={20} /></span>
+                <span className="min-w-0 truncate text-sm font-bold">{f.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <label className="relative block min-w-0 max-w-xl flex-1">
           <span className="sr-only">Search this folder</span>
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this folder" className="block h-12 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="image" size={16} /></span>
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="What are you looking for?" className="block h-12 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
         </label>
         {files.length > 0 && (
           <div role="radiogroup" aria-label="View" className="ml-auto flex h-12 items-center gap-2 rounded-tight border border-control bg-white px-2">
@@ -169,20 +181,7 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
         )}
       </div>
 
-      {trail.length === 1 && !tagFilter && !q && <InspirationWall kind={kind} title={title} onOpen={(i) => setOpen({ ...i, folder: false })} />}
-
-      {folders.length > 0 && !tagFilter && (
-        <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
-          {folders.map((f) => (
-            <li key={f.id}>
-              <button onClick={() => { setFolder(f.id); setQ(""); }} className="card card-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-brand-soft"><Icon name="folder" size={20} /></span>
-                <span className="min-w-0 truncate text-sm font-bold">{f.name}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {trail.length === 1 && !tagFilter && !q && <InspirationWall kind={kind} onOpen={(i) => setOpen({ ...i, folder: false })} />}
 
       {files.length > 0 && view !== "list" && (
         <ul className={`grid gap-4 ${view === "large" ? "grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}`}>
