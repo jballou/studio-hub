@@ -77,6 +77,7 @@ export function AdminTags() {
       for (let n = 0; n < 40; n++) {
         const r = await api("POST", { kind, run: true });
         failed += r.failed;
+        if (r.error) setError(`Tagging failed: ${r.error}`);
         setRun({ left: r.remaining, failed });
         if (r.remaining === 0 || r.done === 0) break;
       }

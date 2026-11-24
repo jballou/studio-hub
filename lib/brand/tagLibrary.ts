@@ -7,16 +7,16 @@ import { allTags, releaseTagLock, saveTags, takeTagLock } from "@/lib/store/tags
 const TAGGABLE = /^image\/(jpeg|png|webp)$/;
 
 /** Tags images that have no tags yet, a few at a time, until the time budget runs out. Returns how many are left. */
-export async function tagBatch(kind: BrandKind, budgetMs: number): Promise<{ done: number; failed: number; remaining: number }> {
+export async function tagBatch(kind: BrandKind, budgetMs: number): Promise<{ done: number; failed: number; remaining: number; error?: string }> {
   const cfg = await getBrandConfig();
   const owner = cfg.owner;
   if (!cfg[kind] || !owner) return { done: 0, failed: 0, remaining: 0 };
   const have = await allTags(kind);
   const todo = (await libraryIndex(kind)).filter((p) => TAGGABLE.test(p.mimeType) && !have[p.id]);
   const stop = Date.now() + budgetMs;
-  let i = 0, done = 0, failed = 0;
+  let i = 0, done = 0, failed = 0, error: string | undefined;
   await Promise.all(Array.from({ length: 4 }, async () => {
-    while (i < todo.length && Date.now() < stop) {
+    while (i < todo.length && Date.now() < stop && !(done === 0 && failed >= 6)) {
       const p = todo[i++];
       try {
         const up = await driveThumbnail(owner, p.id, 768);
@@ -25,10 +25,14 @@ export async function tagBatch(kind: BrandKind, budgetMs: number): Promise<{ don
         const tags = await tagImage(bytes, /^image\/(jpeg|png|webp|gif)$/.test(type) ? type : "image/jpeg");
         await saveTags(kind, p.id, { n: p.name, m: p.mimeType, s: p.size, t: tags, at: Date.now() });
         done++;
-      } catch { failed++; }
+      } catch (e) {
+        failed++;
+        error ??= e instanceof Error ? e.message.slice(0, 300) : "Unknown error";
+        console.error("tagging failed", p.id, e);
+      }
     }
   }));
-  return { done, failed, remaining: Math.max(0, todo.length - done) };
+  return { done, failed, remaining: Math.max(0, todo.length - done), ...(error && !done ? { error } : {}) };
 }
 
 /** Starts tagging in the background if nothing else is already doing it. Safe to call on every visit. */

@@ -66,7 +66,7 @@ export async function tagImage(image: Uint8Array, mediaType: string, opts: { mod
   const { output } = await generateText({
     model: opts.model ?? TAG_MODEL(),
     system: SYSTEM,
-    messages: [{ role: "user", content: [{ type: "text", text: "Label this image." }, { type: "image", image, mediaType }] }],
+    messages: [{ role: "user", content: [{ type: "text", text: "Label this image." }, { type: "file", data: image, mediaType }] }],
     output: Output.object({ schema: Form }),
     abortSignal: AbortSignal.timeout(30_000),
     maxOutputTokens: 500,
