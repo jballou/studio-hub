@@ -30,6 +30,18 @@ const mb = (n?: number) => (n ? (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}
 export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
   const me = useMe();
   const [folder, setFolder] = useState<string | null>(null);
+  // The folder lives in the address (?folder=<id>) so a link lands in the same place.
+  const go = (id: string | null) => {
+    setFolder(id);
+    setQ("");
+    try { window.history.pushState(null, "", id ? `?folder=${encodeURIComponent(id)}` : window.location.pathname); } catch { /* ignore */ }
+  };
+  useEffect(() => {
+    const read = () => { const f = new URLSearchParams(window.location.search).get("folder"); setFolder(f && /^[A-Za-z0-9_-]{10,100}$/.test(f) ? f : null); };
+    read();
+    window.addEventListener("popstate", read);
+    return () => window.removeEventListener("popstate", read);
+  }, []);
   const [data, setData] = useState<Listing | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -146,23 +158,10 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
         {trail.map((t, i) => (
           <span key={t.id} className="flex items-center gap-2">
             {i > 0 && <Icon name="chevronRight" size={14} />}
-            {i === trail.length - 1 ? <span className="font-bold">{i === 0 ? title : t.name}</span> : <button onClick={() => { setFolder(i === 0 ? null : t.id); setQ(""); }} className="text-brand hover:underline">{i === 0 ? title : t.name}</button>}
+            {i === trail.length - 1 ? <span className="font-bold">{i === 0 ? title : t.name}</span> : <button onClick={() => go(i === 0 ? null : t.id)} className="text-brand hover:underline">{i === 0 ? title : t.name}</button>}
           </span>
         ))}
       </nav>
-      {folders.length > 0 && !tagFilter && (
-        <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
-          {folders.map((f) => (
-            <li key={f.id}>
-              <button onClick={() => { setFolder(f.id); setQ(""); }} className="card card-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-brand-soft"><Icon name="folder" size={20} /></span>
-                <span className="min-w-0 truncate text-sm font-bold">{f.name}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <label className="relative block min-w-0 max-w-xl flex-1">
           <span className="sr-only">Search this folder</span>
@@ -180,6 +179,19 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
           </div>
         )}
       </div>
+
+      {folders.length > 0 && !tagFilter && (
+        <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+          {folders.map((f) => (
+            <li key={f.id}>
+              <button onClick={() => go(f.id)} className="card card-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-brand-soft"><Icon name="folder" size={20} /></span>
+                <span className="min-w-0 truncate text-sm font-bold">{f.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {trail.length === 1 && !tagFilter && !q && <InspirationWall kind={kind} onOpen={(i) => setOpen({ ...i, folder: false })} />}
 
