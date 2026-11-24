@@ -6,7 +6,8 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { useMe } from "@/hooks/useMe";
 import { isJira } from "@/lib/data/mode";
 import { labelOf, relatedTo, type TagInfo } from "@/lib/brand/related";
-import { Goldie, LoadingImg } from "@/components/ui/Goldie";
+import { LoadingImg } from "@/components/ui/LoadingImg";
+import { LogoLoader } from "@/components/ui/LogoLoader";
 import { InspirationWall } from "@/components/brand/InspirationWall";
 
 type Item = { id: string; name: string; mimeType: string; folder: boolean; size?: number; width?: number; height?: number };
@@ -125,7 +126,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
 
   if (!isJira) return <p className="text-sm text-muted">{title} appear once sign-in is turned on. They&apos;re read from the brand team&apos;s Google Drive.</p>;
   if (error) return <p className="card max-w-3xl p-6 text-sm text-muted">{error}</p>;
-  if (!data) return <div className="flex justify-center py-24"><Goldie size={48} label={`Loading ${title.toLowerCase()}`} /></div>;
+  if (!data) return <div className="flex justify-center py-24 text-brand"><LogoLoader size={96} label={`Loading ${title.toLowerCase()}`} /></div>;
   if (!data.configured) {
     return (
       <div className="card max-w-3xl p-6">

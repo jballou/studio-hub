@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoadingImg } from "@/components/ui/Goldie";
+import { LoadingImg } from "@/components/ui/LoadingImg";
 
 export type WallItem = { id: string; name: string; mimeType: string; size?: number; width?: number; height?: number };
 type Kind = "photos" | "illustrations";
