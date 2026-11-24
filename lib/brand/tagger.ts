@@ -2,10 +2,11 @@
 // plain tags. Because the form is fixed, the vocabulary stays small and consistent, and the model can't add free-form
 // descriptions of people. Age is only ever a broad band, gender only "woman" or "man" when clearly apparent, and
 // there is deliberately no field for race, ethnicity, religion, health, or who someone is.
+import { pickModel } from "@/lib/ai/model";
 import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 
-export const TAG_MODEL = process.env.TAG_MODEL ?? "anthropic/claude-haiku-5.5";
+export const TAG_MODEL = () => pickModel(process.env.TAG_MODEL, "anthropic/claude-haiku-5.5");
 
 const Form = z.object({
   peopleCount: z.enum(["none", "one", "two", "three_to_five", "six_or_more"]),
@@ -63,7 +64,7 @@ export function tagsFromForm(f: TagForm): string[] {
 /** `model` is injectable for tests. Uses the AI Gateway with zero data retention, like the other model calls. */
 export async function tagImage(image: Uint8Array, mediaType: string, opts: { model?: LanguageModel } = {}): Promise<string[]> {
   const { output } = await generateText({
-    model: opts.model ?? TAG_MODEL,
+    model: opts.model ?? TAG_MODEL(),
     system: SYSTEM,
     messages: [{ role: "user", content: [{ type: "text", text: "Label this image." }, { type: "image", image, mediaType }] }],
     output: Output.object({ schema: Form }),

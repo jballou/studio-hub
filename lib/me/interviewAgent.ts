@@ -1,11 +1,12 @@
 // Lets a model choose which gap to ask about next and phrase it naturally, using what the person already said.
 // The model never sees more than the gap evidence and the person's own earlier answers, and it can only pick from gaps
 // we found, so it can't invent topics. If it fails or is slow, the plain question goes out instead.
+import { pickModel } from "@/lib/ai/model";
 import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 import { MAX_QUESTIONS, plainNext, remainingGaps, type Gap, type NextQuestion, type Turn } from "./interview.ts";
 
-export const INTERVIEW_MODEL = process.env.INTERVIEW_MODEL ?? "anthropic/claude-haiku-5.5";
+export const INTERVIEW_MODEL = () => pickModel(process.env.INTERVIEW_MODEL, "anthropic/claude-haiku-5.5");
 const TIMEOUT_MS = 9_000;
 
 const Schema = z.object({
@@ -47,7 +48,7 @@ export async function askNext(gaps: Gap[], asked: readonly string[], history: Tu
 
   try {
     const { output } = await generateText({
-      model: opts.model ?? INTERVIEW_MODEL,
+      model: opts.model ?? INTERVIEW_MODEL(),
       system: SYSTEM,
       prompt,
       output: Output.object({ schema: Schema }),

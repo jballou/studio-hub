@@ -1,8 +1,9 @@
 // The Brand Creative bot's brain: one function from a conversation to a reply. Slack, and the admin sandbox, both call it.
+import { pickModel } from "@/lib/ai/model";
 import { ToolLoopAgent, isStepCount, type ModelMessage } from "ai";
 import { brandTools } from "./brandTools";
 
-export const AGENT_MODEL = process.env.AGENT_MODEL ?? "anthropic/claude-sonnet-5.5";
+export const AGENT_MODEL = () => pickModel(process.env.AGENT_MODEL, "anthropic/claude-sonnet-5.5");
 const TIMEOUT_MS = 45_000;
 
 const INSTRUCTIONS = `You are the Brand Creative bot for SurveyMonkey's Brand Creative team. Staff ask you for brand assets and brand facts.
@@ -17,7 +18,7 @@ export type AgentResult = { reply: string; steps: { tool: string; input: unknown
 
 export async function runAgent(messages: AgentMessage[], opts: { base: string }): Promise<AgentResult> {
   const agent = new ToolLoopAgent({
-    model: AGENT_MODEL,
+    model: AGENT_MODEL(),
     instructions: INSTRUCTIONS,
     tools: brandTools(opts.base),
     stopWhen: isStepCount(6),

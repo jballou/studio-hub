@@ -1,12 +1,13 @@
 // Turns a week of facts into the report's narrative. The model writes prose only; KPI numbers are computed in reportDraft.ts.
 // It is told to use only what it is given, and any failure returns the facts-only draft instead.
+import { pickModel } from "@/lib/ai/model";
 import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 import { draftFromSignals, kpiText, type KrFacts } from "./reportDraft.ts";
 import { groupByKr, type TicketSignal, type WeekSignals } from "./signals.ts";
 import type { ReportBody } from "./types.ts";
 
-export const REPORT_MODEL = process.env.REPORT_MODEL ?? "anthropic/claude-sonnet-5.5";
+export const REPORT_MODEL = () => pickModel(process.env.REPORT_MODEL, "anthropic/claude-sonnet-5.5");
 const TIMEOUT_MS = 40_000;
 
 const list = z.array(z.string().max(300)).max(8);
@@ -64,7 +65,7 @@ export async function generateReport(
   if (!s.tickets.length && !s.notes.length && !s.meetings.length) return { body: fallback, usedModel: false };
   try {
     const { output } = await generateText({
-      model: ctx.model ?? REPORT_MODEL,
+      model: ctx.model ?? REPORT_MODEL(),
       system: SYSTEM,
       prompt: buildPrompt(s, krs, ctx.prev ?? null, openAhead),
       output: Output.object({ schema: Schema }),

@@ -12,6 +12,7 @@
     "check:private": "node scripts/check-private-store.mjs"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.126",
     "@upstash/redis": "^1.40.0",
     "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.4",
