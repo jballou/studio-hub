@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       return Response.json({ total, todo });
     }
 
-    if (s.role !== "creative") throw new AdminError(403, "Only the creative team can generate tags.");
+    if (s.role !== "creative" && !s.isAdmin) throw new AdminError(403, "Only the creative team can generate tags.");
     const id = String(b.id ?? "");
     if (!ID_RE.test(id) || !(await inBrandTree(cfg, kind, id))) throw new AdminError(404, "Not found.");
     const f = await driveFile(cfg.owner, id);

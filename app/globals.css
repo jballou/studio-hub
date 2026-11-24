@@ -217,6 +217,7 @@ body {
 }
 
 /* Wizard messages ease in; skipped entirely for people who prefer reduced motion. */
+@keyframes wall-in { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease-out both; }
 @media (prefers-reduced-motion: reduce) {

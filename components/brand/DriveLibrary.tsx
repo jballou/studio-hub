@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { useMe } from "@/hooks/useMe";
 import { isJira } from "@/lib/data/mode";
 import { labelOf, relatedTo, type TagInfo } from "@/lib/brand/related";
+import { InspirationWall } from "@/components/brand/InspirationWall";
 
 type Item = { id: string; name: string; mimeType: string; folder: boolean; size?: number; width?: number; height?: number };
 type Listing = { configured: false } | { configured: true; folder: string; trail: { id: string; name: string }[]; items: Item[] };
@@ -37,7 +38,8 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
   const [tags, setTags] = useState<Record<string, TagInfo>>({});
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [tagging, setTagging] = useState<string | null>(null);
-  const canTag = me?.role === "creative";
+  const [tagError, setTagError] = useState<{ id: string; message: string } | null>(null);
+  const canTag = me?.role === "creative" || !!me?.isAdmin;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -77,19 +79,16 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTagging(id);
     fetch("/api/brand/tags", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, id }) })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((b) => { if (live && b?.entry) setTags((t) => ({ ...t, [id]: b.entry })); })
-      .catch(() => {})
+      .then(async (r) => {
+        const b = await r.json().catch(() => ({}));
+        if (!live) return;
+        if (r.ok && b?.entry) { setTags((t) => ({ ...t, [id]: b.entry })); setTagError(null); }
+        else setTagError({ id, message: b?.error ?? `Couldn't read this image (${r.status}).` });
+      })
+      .catch(() => { if (live) setTagError({ id, message: "Couldn't reach the server." }); })
       .finally(() => { if (live) setTagging((x) => (x === id ? null : x)); });
     return () => { live = false; };
   }, [open, tags, canTag, kind]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(null); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
 
   const items = useMemo<Item[]>(() => {
     // A tag search looks across every folder, not only the one you're in.
@@ -103,6 +102,20 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
   }, [items, q]);
   const folders = shown.filter((i) => i.folder);
   const files = shown.filter((i) => !i.folder);
+  const at = open ? files.findIndex((f) => f.id === open.id) : -1;
+  const prev = at > 0 ? files[at - 1] : null;
+  const next = at >= 0 && at < files.length - 1 ? files[at + 1] : null;
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+      else if (e.key === "ArrowLeft" && prev) setOpen(prev);
+      else if (e.key === "ArrowRight" && next) setOpen(next);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, prev, next]);
 
   if (!isJira) return <p className="text-sm text-muted">{title} appear once sign-in is turned on. They&apos;re read from the brand team&apos;s Google Drive.</p>;
   if (error) return <p className="card max-w-3xl p-6 text-sm text-muted">{error}</p>;
@@ -142,23 +155,27 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
         <label className="relative block min-w-0 max-w-xl flex-1">
           <span className="sr-only">Search this folder</span>
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this folder" className="block h-10 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this folder" className="block h-12 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
         </label>
-        <div role="radiogroup" aria-label="View" className="flex gap-2 rounded-tight border border-control bg-white p-2">
-          {VIEWS.map((v) => (
-            <button key={v.id} role="radio" aria-checked={view === v.id} aria-label={v.label} title={v.label} onClick={() => pick(v.id)}
-              className={`flex h-8 w-8 items-center justify-center rounded-tight ${view === v.id ? "bg-brand-soft text-brand" : "text-n-800 hover:bg-n-150"}`}>
-              <Icon name={v.icon} size={16} />
-            </button>
-          ))}
-        </div>
+        {files.length > 0 && (
+          <div role="radiogroup" aria-label="View" className="ml-auto flex h-12 items-center gap-2 rounded-tight border border-control bg-white px-2">
+            {VIEWS.map((v) => (
+              <button key={v.id} role="radio" aria-checked={view === v.id} aria-label={v.label} title={v.label} onClick={() => pick(v.id)}
+                className={`flex h-8 w-8 items-center justify-center rounded-tight ${view === v.id ? "bg-brand-soft text-brand" : "text-n-800 hover:bg-n-150"}`}>
+                <Icon name={v.icon} size={16} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {trail.length === 1 && !tagFilter && !q && <InspirationWall kind={kind} title={title} onOpen={(i) => setOpen({ ...i, folder: false })} />}
 
       {folders.length > 0 && !tagFilter && (
         <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
           {folders.map((f) => (
             <li key={f.id}>
-              <button onClick={() => { setFolder(f.id); setQ(""); }} className="card card-hover flex w-full items-center gap-4 p-4 text-left">
+              <button onClick={() => { setFolder(f.id); setQ(""); }} className="card card-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-brand-soft"><Icon name="folder" size={20} /></span>
                 <span className="min-w-0 truncate text-sm font-bold">{f.name}</span>
               </button>
@@ -221,10 +238,16 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
           <div className="card flex max-h-full w-full max-w-5xl flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between gap-4 border-b border-line p-4">
               <p className="min-w-0 truncate text-sm font-bold">{open.name}</p>
-              <div className="flex shrink-0 gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <a href={file(kind, open.id, "download")} download className="btn btn-md btn-primary"><Icon name="download" size={16} />Download {extOf(open)}{open.size ? ` (${mb(open.size)})` : ""}</a>
                 {canWebp(open) && <a href={file(kind, open.id, "download", undefined, true)} download className="btn btn-md btn-secondary"><Icon name="download" size={16} />Download WebP</a>}
-                <button onClick={() => setOpen(null)} className="btn btn-md btn-secondary" autoFocus>Close</button>
+                {at >= 0 && (
+                  <div className="flex gap-2" role="group" aria-label="Browse">
+                    <button onClick={() => prev && setOpen(prev)} disabled={!prev} aria-label="Previous image" title="Previous" className="btn btn-icon btn-icon-lg btn-secondary"><Icon name="chevronLeft" size={16} /></button>
+                    <button onClick={() => next && setOpen(next)} disabled={!next} aria-label="Next image" title="Next" className="btn btn-icon btn-icon-lg btn-secondary"><Icon name="chevronRight" size={16} /></button>
+                  </div>
+                )}
+                <button onClick={() => setOpen(null)} className="btn btn-icon btn-icon-lg btn-secondary" aria-label="Close" title="Close" autoFocus><Icon name="x" size={16} /></button>
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto">
@@ -233,17 +256,22 @@ export function DriveLibrary({ kind, title, blurb }: { kind: Kind; title: string
                 <img src={file(kind, open.id, "thumb", 1600)} alt={open.name} className={`max-h-[60vh] max-w-full object-contain ${bgOf(open)}`} />
               </div>
               <div className="space-y-6 p-6">
-                {(tags[open.id] || tagging === open.id) && (
+                {(tags[open.id] || tagging === open.id || tagError?.id === open.id) && (
                   <section aria-labelledby="tags-h">
-                    <h3 id="tags-h" className="text-sm font-bold">Tags</h3>
-                    {tags[open.id] ? (
-                      <ul className="mt-2 flex flex-wrap gap-2">
-                        {tags[open.id].t.map((t) => (
-                          <li key={t}><button onClick={() => { setTagFilter(t); setOpen(null); setQ(""); }} className="chip">{labelOf(t)}</button></li>
-                        ))}
-                      </ul>
-                    ) : <p className="mt-2 text-sm text-muted" role="status">Reading the photo…</p>}
-                    <p className="mt-2 text-xs text-muted">Tags are suggested automatically from the picture and can be wrong. Age and gender are broad guesses from how someone looks.</p>
+                    <div className="flex items-start gap-6">
+                      <h3 id="tags-h" className="flex h-8 shrink-0 items-center gap-2 text-sm font-bold"><Icon name="tag" size={16} />Tags</h3>
+                      <div className="min-w-0 flex-1 self-stretch border-l border-line pl-6">
+                        {tags[open.id] ? (
+                          <ul className="flex flex-wrap gap-2">
+                            {tags[open.id].t.map((t) => (
+                              <li key={t}><button onClick={() => { setTagFilter(t); setOpen(null); setQ(""); }} className="chip">{labelOf(t)}</button></li>
+                            ))}
+                          </ul>
+                        ) : tagging === open.id ? <p className="flex h-8 items-center text-sm text-muted" role="status">Reading the photo…</p>
+                          : <p className="flex min-h-8 items-center text-sm text-bad-fg" role="alert">Couldn&apos;t make tags: {tagError?.message}</p>}
+                      </div>
+                    </div>
+                    {tags[open.id] && <p className="mt-4 text-xs text-muted">Tags are suggested automatically from the picture and can be wrong. Age and gender are broad guesses from how someone looks.</p>}
                   </section>
                 )}
                 {related.length > 0 && (
