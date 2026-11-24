@@ -49,9 +49,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
   const [view, setView] = useState<View>("large");
   const [tags, setTags] = useState<Record<string, TagInfo>>({});
   const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [tagging, setTagging] = useState<string | null>(null);
-  const [tagError, setTagError] = useState<{ id: string; message: string } | null>(null);
-  const canTag = me?.role === "creative" || !!me?.isAdmin;
+  const [found, setFound] = useState<{ q: string; items: Item[] } | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -83,35 +81,28 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
     fetch(`/api/brand/tags?kind=${kind}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((b) => { if (b?.items) setTags(b.items); }).catch(() => {});
   }, [kind]);
 
-  // A photo nobody has opened since tagging began gets its tags the first time the creative team looks at it.
+  // Search looks through every folder, by file name and by tag.
+  const term = q.trim();
   useEffect(() => {
-    if (!open || open.folder || tags[open.id] || !canTag || !/^image\/(jpeg|png|webp)$/.test(open.mimeType)) return;
+    if (!isJira || !term) return;
     let live = true;
-    const id = open.id;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTagging(id);
-    fetch("/api/brand/tags", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, id }) })
-      .then(async (r) => {
-        const b = await r.json().catch(() => ({}));
-        if (!live) return;
-        if (r.ok && b?.entry) { setTags((t) => ({ ...t, [id]: b.entry })); setTagError(null); }
-        else setTagError({ id, message: b?.error ?? `Couldn't read this image (${r.status}).` });
-      })
-      .catch(() => { if (live) setTagError({ id, message: "Couldn't reach the server." }); })
-      .finally(() => { if (live) setTagging((x) => (x === id ? null : x)); });
-    return () => { live = false; };
-  }, [open, tags, canTag, kind]);
+    const t = setTimeout(() => {
+      fetch(`/api/brand/drive/search?kind=${kind}&q=${encodeURIComponent(term)}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((b) => { if (live) setFound({ q: term, items: Array.isArray(b?.items) ? b.items : [] }); })
+        .catch(() => { if (live) setFound({ q: term, items: [] }); });
+    }, 250);
+    return () => { live = false; clearTimeout(t); };
+  }, [term, kind]);
 
   const items = useMemo<Item[]>(() => {
     // A tag search looks across every folder, not only the one you're in.
     if (tagFilter) return Object.entries(tags).filter(([, e]) => e.t.includes(tagFilter)).map(([id, e]) => ({ id, name: e.n, mimeType: e.m, folder: false, size: e.s }));
+    if (term) return found?.q === term ? found.items : [];
     return data && data.configured ? data.items : [];
-  }, [data, tagFilter, tags]);
+  }, [data, tagFilter, tags, term, found]);
   const related = useMemo(() => (open ? relatedTo(open.id, tags) : []), [open, tags]);
-  const shown = useMemo(() => {
-    const t = q.toLowerCase().split(/\s+/).filter(Boolean);
-    return items.filter((i) => t.every((w) => i.name.toLowerCase().includes(w)));
-  }, [items, q]);
+  const shown = items;
   const folders = shown.filter((i) => i.folder);
   const files = shown.filter((i) => !i.folder);
   const at = open ? files.findIndex((f) => f.id === open.id) : -1;
@@ -147,7 +138,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
     <div>
       {tagFilter && (
         <p className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted">Photos tagged</span>
+          <span className="text-muted">{title} tagged</span>
           <span className="inline-flex items-center gap-2 rounded-round border border-brand bg-brand-soft py-0 pl-4 pr-2 font-bold">{labelOf(tagFilter)}
             <button onClick={() => setTagFilter(null)} aria-label="Clear tag" className="flex h-5 w-5 items-center justify-center rounded-round hover:bg-white/60"><Icon name="x" size={12} /></button>
           </span>
@@ -164,7 +155,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
       </nav>
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <label className="relative block min-w-0 max-w-xl flex-1">
-          <span className="sr-only">Search this folder</span>
+          <span className="sr-only">Search the library</span>
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="image" size={16} /></span>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="What are you looking for?" className="block h-12 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
         </label>
@@ -192,6 +183,8 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
           ))}
         </ul>
       )}
+
+      {term && found?.q === term && <p className="mb-4 text-sm text-muted" role="status">{files.length} {files.length === 1 ? "result" : "results"} for “{term}” across all folders</p>}
 
       {trail.length === 1 && !tagFilter && !q && <InspirationWall kind={kind} onOpen={(i) => setOpen({ ...i, folder: false })} />}
 
@@ -242,7 +235,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
           ))}
         </ul>
       )}
-      {shown.length === 0 && <p className="card p-6 text-sm text-muted">{q ? `Nothing here matches “${q}”.` : "This folder is empty."}</p>}
+      {shown.length === 0 && <p className="card p-6 text-sm text-muted">{term ? (found?.q === term ? `Nothing matches “${term}” in any folder.` : "Searching…") : "This folder is empty."}</p>}
 
       {open && (
         <div role="dialog" aria-modal="true" aria-label={open.name} className="fixed inset-0 z-50 flex items-center justify-center bg-n-1000/80 p-6" onClick={() => setOpen(null)}>
@@ -267,22 +260,19 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
                 <img src={file(kind, open.id, "thumb", 1600)} alt={open.name} className={`max-h-[60vh] max-w-full object-contain ${bgOf(open)}`} />
               </div>
               <div className="space-y-6 p-6">
-                {(tags[open.id] || tagging === open.id || tagError?.id === open.id) && (
+                {tags[open.id] && (
                   <section aria-labelledby="tags-h">
                     <div className="flex items-start gap-6">
                       <h3 id="tags-h" className="flex h-8 shrink-0 items-center gap-2 text-sm font-bold"><Icon name="tag" size={16} />Tags</h3>
                       <div className="min-w-0 flex-1 self-stretch border-l border-line pl-6">
-                        {tags[open.id] ? (
-                          <ul className="flex flex-wrap gap-2">
-                            {tags[open.id].t.map((t) => (
-                              <li key={t}><button onClick={() => { setTagFilter(t); setOpen(null); setQ(""); }} className="chip">{labelOf(t)}</button></li>
-                            ))}
-                          </ul>
-                        ) : tagging === open.id ? <p className="flex h-8 items-center text-sm text-muted" role="status">Reading the photo…</p>
-                          : <p className="flex min-h-8 items-center text-sm text-bad-fg" role="alert">Couldn&apos;t make tags: {tagError?.message}</p>}
+                        <ul className="flex flex-wrap gap-2">
+                          {tags[open.id].t.map((t) => (
+                            <li key={t}><button onClick={() => { setTagFilter(t); setOpen(null); setQ(""); }} className="chip">{labelOf(t)}</button></li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-                    {tags[open.id] && <p className="mt-4 text-xs text-muted">Tags are suggested automatically from the picture and can be wrong. Age and gender are broad guesses from how someone looks.</p>}
+                    <p className="mt-4 text-xs text-muted">Tags are suggested automatically from the picture and can be wrong. Age and gender are broad guesses from how someone looks.</p>
                   </section>
                 )}
                 {related.length > 0 && (

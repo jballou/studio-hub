@@ -1,3 +1,6 @@
+import { waitUntil } from "@vercel/functions";
+import { kickTagging } from "@/lib/brand/tagLibrary";
+import { releaseTagLock } from "@/lib/store/tags";
 import { DRIVE_SCOPE, configured } from "@/lib/google/client";
 import { apiError } from "@/lib/google/http";
 import { adminSession } from "@/lib/jira/session";
@@ -24,11 +27,18 @@ export async function GET(req: Request) {
 }
 
 /** PUT { photos, illustrations, fonts }  Saves the Drive folder links. This admin's Google connection is what reads them. */
+export const maxDuration = 300;
+
 export async function PUT(req: Request) {
   try {
     const s = await adminSession(req);
     const body = await req.json().catch(() => ({}));
-    await setBrandConfig(s.email, body);
+    const before = await getBrandConfig();
+    const after = await setBrandConfig(s.email, body);
+    // A newly attached folder is tagged right away, in the background.
+    for (const k of ["photos", "illustrations"] as const) {
+      if (after[k] && (after[k] !== before[k] || after.owner !== before.owner)) waitUntil(releaseTagLock(k, 0).then(() => kickTagging(k)).catch(() => {}));
+    }
     return Response.json(await overview(s.email));
   } catch (e) {
     return apiError(e);

@@ -106,7 +106,7 @@ export function AdminBrand() {
 
       <section className="card mt-4 p-6" aria-labelledby="autotags">
         <h2 id="autotags" className="text-lg font-bold">Automatic tags</h2>
-        <p className="mt-2 text-sm text-muted">A model looks at each image and adds plain tags (how many people, device, setting, mood, colors) that power the tags and Related photos in the preview. Images are also tagged the first time the creative team opens them. This tags everything that isn&apos;t tagged yet.</p>
+        <p className="mt-2 text-sm text-muted">A model looks at each image and adds plain tags (how many people, device, setting, mood, colors) that power the tags and Related photos in the preview. New folders are tagged automatically when you save their links, and anything added later is picked up as people browse. This tags everything that isn&apos;t tagged yet, right now. Edit the tags in Image tags.</p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <button onClick={() => tagAll("photos")} disabled={!g?.canReadDrive || !data?.config.photos || (!!tagRun && tagRun.state !== "finished")} className="btn btn-md btn-secondary">Tag all photos</button>
           <button onClick={() => tagAll("illustrations")} disabled={!g?.canReadDrive || !data?.config.illustrations || (!!tagRun && tagRun.state !== "finished")} className="btn btn-md btn-secondary">Tag all illustrations</button>

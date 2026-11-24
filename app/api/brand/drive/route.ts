@@ -1,8 +1,12 @@
+import { waitUntil } from "@vercel/functions";
+import { kickTagging } from "@/lib/brand/tagLibrary";
 import { driveList } from "@/lib/google/client";
 import { apiError } from "@/lib/google/http";
 import { jiraSession } from "@/lib/jira/session";
 import { brandTrail, getBrandConfig, inBrandTree, markInTree, type BrandKind } from "@/lib/store/brand";
 import { AdminError } from "@/lib/store/users";
+
+export const maxDuration = 300;
 
 const ID_RE = /^[A-Za-z0-9_-]{10,100}$/;
 
@@ -20,6 +24,8 @@ export async function GET(req: Request) {
     if (!ID_RE.test(folder) || !(await inBrandTree(cfg, kind, folder))) throw new AdminError(404, "Not found.");
     const [items, trail] = await Promise.all([driveList(cfg.owner, folder), brandTrail(cfg, kind, folder)]);
     markInTree(kind, items.map((i) => i.id));
+    // Anything new in the library gets tagged in the background, once, without anyone opening it.
+    waitUntil(kickTagging(kind as BrandKind));
     const keep = items.filter((i) => i.folder || i.mimeType.startsWith("image/") || i.mimeType === "application/pdf");
     return Response.json({ configured: true, folder, trail, items: keep }, { headers: { "Cache-Control": "private, max-age=60" } });
   } catch (e) {

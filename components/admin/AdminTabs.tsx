@@ -10,6 +10,7 @@ const TABS: { href: string; label: string; adminOnly: boolean; icon?: boolean }[
   { href: "/admin/users", label: "Team & access", adminOnly: true },
   { href: "/admin/okr", label: "OKRs", adminOnly: true },
   { href: "/admin/brand", label: "Brand library", adminOnly: true },
+  { href: "/admin/tags", label: "Image tags", adminOnly: false },
   { href: "/admin/agent", label: "Bot sandbox", adminOnly: true },
   { href: "/admin/activity", label: "Activity", adminOnly: true },
   { href: "/admin/settings", label: "Settings", adminOnly: true },
