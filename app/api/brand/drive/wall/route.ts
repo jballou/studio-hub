@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 
     // Walking the folders is slow, so the whole list is remembered for ten minutes and each visit just draws from it.
     // Walking the folders is slow, so the list is remembered for ten minutes and each visit just draws from it.
-    const { value: all } = await cached("brand", `wall2|${kind}|${root}`, 10 * 60_000, async () => {
+    const { value: all } = await cached("brand", `wall2|${kind}|${root}`, 60 * 60_000, async () => {
       const walk = async (start: string[], keep: (folderName: string) => boolean) => {
         const out: Pic[] = [];
         let level = start;

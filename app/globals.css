@@ -218,6 +218,10 @@ body {
 
 /* Wizard messages ease in; skipped entirely for people who prefer reduced motion. */
 @keyframes wall-in { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes goldie-hop { 0%, 100% { transform: translateY(0) scale(1.08, 0.92); } 40% { transform: translateY(-24%) scale(0.94, 1.08); } 70% { transform: translateY(0) scale(1.04, 0.96); } }
+@keyframes goldie-fade { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.goldie { transform-origin: 50% 100%; animation: goldie-fade 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: no-preference) { .goldie { animation: goldie-hop 900ms ease-in-out infinite; } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease-out both; }
 @media (prefers-reduced-motion: reduce) {

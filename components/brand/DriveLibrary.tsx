@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { useMe } from "@/hooks/useMe";
 import { isJira } from "@/lib/data/mode";
 import { labelOf, relatedTo, type TagInfo } from "@/lib/brand/related";
+import { Goldie, LoadingImg } from "@/components/ui/Goldie";
 import { InspirationWall } from "@/components/brand/InspirationWall";
 
 type Item = { id: string; name: string; mimeType: string; folder: boolean; size?: number; width?: number; height?: number };
@@ -15,6 +16,8 @@ type Kind = "photos" | "illustrations";
 const file = (kind: Kind, id: string, mode: "thumb" | "download", s?: number, webp?: boolean) => `/api/brand/drive/file/${id}?kind=${kind}&mode=${mode}${s ? `&s=${s}` : ""}${webp ? "&format=webp" : ""}`;
 /** JPG and PNG can also be saved as WebP, which is much smaller. */
 const canWebp = (i: Item) => i.mimeType === "image/jpeg" || i.mimeType === "image/png";
+/** A preview URL. Saying it is a PNG saves the server a lookup. */
+const thumb = (kind: Kind, id: string, mime: string, s: number) => `${file(kind, id, "thumb", s)}&m=${mime === "image/png" ? "png" : "x"}`;
 const bgOf = (i: Item) => (i.mimeType === "image/png" ? "checker" : "bg-n-150");
 const extOf = (i: Item) => (i.mimeType === "image/jpeg" ? "JPG" : i.mimeType === "image/png" ? "PNG" : i.mimeType === "application/pdf" ? "PDF" : i.mimeType === "image/svg+xml" ? "SVG" : i.mimeType === "image/gif" ? "GIF" : i.mimeType === "image/webp" ? "WebP" : "File");
 type View = "large" | "small" | "list";
@@ -122,7 +125,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
 
   if (!isJira) return <p className="text-sm text-muted">{title} appear once sign-in is turned on. They&apos;re read from the brand team&apos;s Google Drive.</p>;
   if (error) return <p className="card max-w-3xl p-6 text-sm text-muted">{error}</p>;
-  if (!data) return <p className="text-sm text-muted">Loading {title.toLowerCase()}…</p>;
+  if (!data) return <div className="flex justify-center py-24"><Goldie size={48} label={`Loading ${title.toLowerCase()}`} /></div>;
   if (!data.configured) {
     return (
       <div className="card max-w-3xl p-6">
@@ -190,11 +193,10 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
 
       {files.length > 0 && view !== "list" && (
         <ul className={`grid gap-4 ${view === "large" ? "grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}`}>
-          {files.map((f) => (
+          {files.map((f, n) => (
             <li key={f.id} className={`card overflow-hidden ${view === "small" ? "rounded-tight" : ""}`}>
-              <button onClick={() => setOpen(f)} className={`block aspect-[4/3] w-full ${bgOf(f)}`} aria-label={`Preview ${f.name}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={file(kind, f.id, "thumb", view === "large" ? 800 : 320)} alt="" loading="lazy" className="h-full w-full object-cover" />
+              <button onClick={() => setOpen(f)} className={`relative block aspect-[4/3] w-full ${bgOf(f)}`} aria-label={`Preview ${f.name}`}>
+                <LoadingImg src={thumb(kind, f.id, f.mimeType, view === "large" ? 800 : 320)} eager={n < 6} className="h-full w-full object-cover" />
               </button>
               {view === "large" ? (
                 <div className="flex items-center justify-between gap-2 p-4">
@@ -219,9 +221,9 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
         <ul className="card divide-y divide-line overflow-hidden">
           {files.map((f) => (
             <li key={f.id} className="flex items-center gap-4 p-4">
-              <button onClick={() => setOpen(f)} className={`block h-12 w-16 shrink-0 overflow-hidden rounded-tight ${bgOf(f)}`} aria-label={`Preview ${f.name}`}>
+              <button onClick={() => setOpen(f)} className={`relative block h-12 w-16 shrink-0 overflow-hidden rounded-tight ${bgOf(f)}`} aria-label={`Preview ${f.name}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={file(kind, f.id, "thumb", 160)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                <img src={thumb(kind, f.id, f.mimeType, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </button>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold" title={f.name}>{f.name}</p>
@@ -257,7 +259,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
             <div className="min-h-0 flex-1 overflow-auto">
               <div className="flex items-center justify-center bg-n-150 p-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={file(kind, open.id, "thumb", 1600)} alt={open.name} className={`max-h-[60vh] max-w-full object-contain ${bgOf(open)}`} />
+                <img src={thumb(kind, open.id, open.mimeType, 1600)} alt={open.name} className={`max-h-[60vh] max-w-full object-contain ${bgOf(open)}`} />
               </div>
               <div className="space-y-6 p-6">
                 {tags[open.id] && (
@@ -281,9 +283,8 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
                     <ul className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2">
                       {related.map((rid) => (
                         <li key={rid}>
-                          <button onClick={() => setOpen({ id: rid, name: tags[rid].n, mimeType: tags[rid].m, folder: false, size: tags[rid].s })} className={`block aspect-[4/3] w-full overflow-hidden rounded-tight ${bgOf({ mimeType: tags[rid].m } as Item)}`} aria-label={`Open ${tags[rid].n}`}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={file(kind, rid, "thumb", 320)} alt="" loading="lazy" className="h-full w-full object-cover" />
+                          <button onClick={() => setOpen({ id: rid, name: tags[rid].n, mimeType: tags[rid].m, folder: false, size: tags[rid].s })} className={`relative block aspect-[4/3] w-full overflow-hidden rounded-tight ${bgOf({ mimeType: tags[rid].m } as Item)}`} aria-label={`Open ${tags[rid].n}`}>
+                            <LoadingImg src={thumb(kind, rid, tags[rid].m, 320)} className="h-full w-full object-cover" />
                           </button>
                         </li>
                       ))}

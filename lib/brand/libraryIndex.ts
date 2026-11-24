@@ -11,7 +11,7 @@ export async function libraryIndex(kind: BrandKind): Promise<Pic[]> {
   const root = cfg[kind];
   const owner = cfg.owner;
   if (!root || !owner) return [];
-  const { value } = await cached("brand", `index|${kind}|${root}`, 10 * 60_000, async () => {
+  const { value } = await cached("brand", `index|${kind}|${root}`, 30 * 60_000, async () => {
     const out: Pic[] = [];
     let level = [root];
     for (let depth = 0; depth < 6 && level.length && out.length < 5000; depth++) {

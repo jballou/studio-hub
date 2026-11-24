@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoadingImg } from "@/components/ui/Goldie";
 
 export type WallItem = { id: string; name: string; mimeType: string; size?: number; width?: number; height?: number };
 type Kind = "photos" | "illustrations";
@@ -24,9 +25,8 @@ export function InspirationWall({ kind, onOpen }: { kind: Kind; onOpen: (i: Wall
       <ul className="-mx-4 grid auto-rows-[14rem] grid-cols-2 grid-flow-dense gap-2 md:-mx-8 md:auto-rows-[16rem] md:grid-cols-4">
         {items.map((i, n) => (
           <li key={i.id} className={`${SHAPES[n % SHAPES.length]} motion-safe:animate-[wall-in_480ms_ease-out_both]`} style={{ animationDelay: `${n * 60}ms` }}>
-            <button onClick={() => onOpen(i)} aria-label={`Preview ${i.name}`} className={`group block h-full w-full overflow-hidden rounded-tight ${i.mimeType === "image/png" ? "checker" : "bg-n-150"}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/api/brand/drive/file/${i.id}?kind=${kind}&mode=thumb&s=1000`} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <button onClick={() => onOpen(i)} aria-label={`Preview ${i.name}`} className={`group relative block h-full w-full overflow-hidden rounded-tight ${i.mimeType === "image/png" ? "checker" : "bg-n-150"}`}>
+              <LoadingImg src={`/api/brand/drive/file/${i.id}?kind=${kind}&mode=thumb&s=1000&m=${i.mimeType === "image/png" ? "png" : "x"}`} eager={n < 4} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
             </button>
           </li>
         ))}
