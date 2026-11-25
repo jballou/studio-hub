@@ -68,7 +68,9 @@ export async function tagImage(image: Uint8Array, mediaType: string, opts: { mod
     system: SYSTEM,
     messages: [{ role: "user", content: [{ type: "text", text: "Label this image." }, { type: "file", data: image, mediaType }] }],
     output: Output.object({ schema: Form }),
-    abortSignal: AbortSignal.timeout(30_000),
+    // Google's lighter models answer "high demand" in bursts, so back off and retry longer than the default.
+    maxRetries: 6,
+    abortSignal: AbortSignal.timeout(60_000),
     maxOutputTokens: 500,
     providerOptions: { gateway: { zeroDataRetention: true, tags: ["brand-image-tags"] } },
   });

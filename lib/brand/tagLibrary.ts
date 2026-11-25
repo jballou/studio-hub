@@ -15,7 +15,7 @@ export async function tagBatch(kind: BrandKind, budgetMs: number): Promise<{ don
   const todo = (await libraryIndex(kind)).filter((p) => TAGGABLE.test(p.mimeType) && !have[p.id]);
   const stop = Date.now() + budgetMs;
   let i = 0, done = 0, failed = 0, error: string | undefined;
-  await Promise.all(Array.from({ length: 4 }, async () => {
+  await Promise.all(Array.from({ length: 3 }, async () => {
     while (i < todo.length && Date.now() < stop && !(done === 0 && failed >= 6)) {
       const p = todo[i++];
       try {
