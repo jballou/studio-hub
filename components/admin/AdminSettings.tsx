@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Callout } from "@/components/ui/Tag";
 import { settingsRepo } from "@/lib/data";
 import { LOOKBACK_MAX, LOOKBACK_MIN, LOOKBACK_PRESETS, lookbackLabel, parseLookback } from "@/lib/settings";
-import { PageTitle } from "@/components/PageTitle";
 
 const CUSTOM = "custom";
 
@@ -44,8 +43,7 @@ export function AdminSettings() {
   };
 
   return (
-    <main className="page [&>*:not(.fixed)]:max-w-3xl">
-      <PageTitle>Settings</PageTitle>
+    <div>
       <p className="mb-6 text-sm text-muted">Organization-wide. Changes apply to everyone the next time they load a page.</p>
 
       <section className="card p-6" aria-labelledby="lookback">
@@ -92,6 +90,6 @@ export function AdminSettings() {
           {saved !== null && <span className="text-sm text-muted">Currently {saved} days.</span>}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

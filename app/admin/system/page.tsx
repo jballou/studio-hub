@@ -1,5 +1,6 @@
-import { AdminSystem } from "@/components/admin/AdminSystem";
+import { redirect } from "next/navigation";
 
+/** System checks now live with the other settings. */
 export default function SystemPage() {
-  return <AdminSystem />;
+  redirect("/admin/settings");
 }

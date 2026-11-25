@@ -282,7 +282,7 @@ export function TeamView() {
         <>
           <Queue list={unassigned} members={members} today={today} canAssign={me?.role === "creative"} busy={busy} onAssign={assign} />
           {lanes.length === 0 ? (
-            <p className="rounded-tight border border-dashed border-control p-10 text-center text-sm text-muted">No creative team members found yet. People appear here once they&apos;ve signed in and are set as creative in Team &amp; access.</p>
+            <p className="rounded-tight border border-dashed border-control p-10 text-center text-sm text-muted">No creative team members found yet. People appear here once they&apos;ve signed in and are set as creative in Users.</p>
           ) : view === "kanban" ? <Kanban lanes={lanes} today={today} /> : view === "gantt" ? <Gantt lanes={lanes} today={today} /> : <CalendarGrid lanes={lanes} today={today} />}
         </>
       )}

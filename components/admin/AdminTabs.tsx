@@ -7,14 +7,13 @@ import { useMe } from "@/hooks/useMe";
 
 const TABS: { href: string; label: string; adminOnly: boolean; icon: IconName }[] = [
   { href: "/admin/brief", label: "Brief builder", adminOnly: false, icon: "flowVertical" },
-  { href: "/admin/users", label: "Team & access", adminOnly: true, icon: "folderUsers" },
+  { href: "/admin/users", label: "Users", adminOnly: true, icon: "folderUsers" },
   { href: "/admin/okr", label: "OKRs", adminOnly: true, icon: "goal" },
   { href: "/admin/brand", label: "Brand library", adminOnly: true, icon: "bookType" },
   { href: "/admin/tags", label: "Image tags", adminOnly: false, icon: "tags" },
   { href: "/admin/agent", label: "Bot sandbox", adminOnly: true, icon: "bot" },
   { href: "/admin/activity", label: "Activity", adminOnly: true, icon: "activity" },
-  { href: "/admin/settings", label: "Settings", adminOnly: true, icon: "cog" },
-  { href: "/admin/system", label: "System", adminOnly: true, icon: "wrench" },
+  { href: "/admin/settings", label: "System settings", adminOnly: true, icon: "cog" },
   { href: "/admin/trash", label: "Trash", adminOnly: false, icon: "trash" },
 ];
 

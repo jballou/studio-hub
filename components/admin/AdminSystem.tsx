@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Callout, Tag } from "@/components/ui/Tag";
 import { isJira } from "@/lib/data/mode";
-import { PageTitle } from "@/components/PageTitle";
 
 type Check = { id: string; label: string; ok: boolean; detail: string };
 type Result = { checks: Check[]; build: { env: string; commit: string | null; site: string | null } };
@@ -32,12 +31,12 @@ export function AdminSystem() {
     if (isJira) load();
   }, [load]);
 
-  if (!isJira) return <main className="page [&>*:not(.fixed)]:max-w-3xl"><p className="text-sm text-muted">System status appears once sign-in is turned on.</p></main>;
+  if (!isJira) return <p className="text-sm text-muted">System status appears once sign-in is turned on.</p>;
 
   return (
-    <main className="page">
+    <div>
       <div className="mb-4 flex items-center gap-4">
-        <PageTitle>System</PageTitle>
+        <h2 className="text-lg font-bold">System status</h2>
         <button onClick={load} disabled={loading} className="btn btn-md btn-secondary ml-auto">{loading ? "Checking…" : "Re-check"}</button>
       </div>
       <p className="mb-4 text-sm text-muted">Is everything the app depends on connected? Shows names and counts only, never secret values. Useful when handing this over.</p>
@@ -58,6 +57,6 @@ export function AdminSystem() {
         </dl>
       )}
       <p className="mt-6 text-xs text-muted">Handing this over? See <code>docs/HANDOFF.md</code> in the repository for accounts, owners and settings to transfer.</p>
-    </main>
+    </div>
   );
 }
