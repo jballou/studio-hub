@@ -149,13 +149,13 @@ export function Sidebar() {
     : undefined;
 
   const row = (active: boolean) =>
-    `relative flex items-center gap-2 rounded-tight py-2 text-sm font-medium ${collapsed ? "justify-center px-2" : "px-4"} ${active ? "bg-white text-ink shadow-sm" : "text-n-800 hover:bg-white/60"}`;
+    `relative flex h-8 items-center gap-2 rounded-tight text-sm font-medium max-md:h-10 ${collapsed ? "justify-center px-2" : "px-4"} ${active ? "bg-white text-ink shadow-sm" : "text-n-800 hover:bg-white/60"}`;
 
   const navLink = (i: Item, badge?: number) => {
     const active = i.match(pathname);
     return (
       <Link key={i.href} href={i.href} data-tour={i.tour} title={i.label} aria-label={badge ? `${i.label}, ${badge} waiting` : i.label} aria-current={active ? "page" : undefined} className={row(active)}>
-        <Icon name={i.icon} size={18} />
+        <Icon name={i.icon} size={16} />
         {!collapsed && <span className="flex-1">{i.label}</span>}
         {!!badge && (collapsed
           ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-round bg-bad-fg ring-2 ring-white" />
@@ -187,9 +187,9 @@ export function Sidebar() {
       <nav
         aria-label="Main"
         inert={phone && !drawer}
-        className={`sticky top-0 z-40 flex h-screen shrink-0 flex-col p-4 motion-safe:transition-[width] motion-safe:duration-150 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-64 max-md:bg-(--shell) max-md:shadow-xl motion-safe:max-md:transition-transform motion-safe:max-md:duration-200 ${drawer ? "" : "max-md:-translate-x-full"} ${collapsed ? "w-16" : "w-64"}`}
+        className={`sticky top-0 z-40 flex h-screen shrink-0 flex-col px-4 py-2 motion-safe:transition-[width] motion-safe:duration-150 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-64 max-md:bg-(--shell) max-md:shadow-xl motion-safe:max-md:transition-transform motion-safe:max-md:duration-200 ${drawer ? "" : "max-md:-translate-x-full"} ${collapsed ? "w-16" : "w-64"}`}
       >
-        <div className={`mb-4 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
+        <div className={`mb-2 flex ${collapsed ? "flex-col items-center gap-2" : "items-center gap-2"}`}>
           <Link href="/my-day" title="Brand Creative Hub" className={`flex min-w-0 flex-1 items-center gap-2 text-sm font-bold text-ink ${collapsed ? "justify-center" : ""}`}>
             <Logo size={32} />
             {!collapsed && <span className="truncate">Brand Creative Hub</span>}
@@ -201,34 +201,33 @@ export function Sidebar() {
           onClick={() => setSearchOpen(true)}
           aria-label="Search"
           title="Search (⌘K)"
-          className={`btn btn-md btn-secondary mb-4 w-full font-normal text-n-700 ${collapsed ? "!px-0" : ""}`}
+          className={`btn btn-sm btn-secondary mb-2 w-full text-sm font-normal text-n-700 ${collapsed ? "!px-0" : ""}`}
         >
           <Icon name="search" size={16} />
           {!collapsed && (<><span className="flex-1 text-left">Search</span><kbd className="text-xs">⌘K</kbd></>)}
         </button>
 
         {!collapsed && (
-          <button onClick={toggleWork} aria-expanded={workOpen} className="mb-2 flex w-full items-center gap-2 rounded-tight px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
-            <span className="flex-1 text-left">Workspace</span>
-            <span className={workOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
+          <button onClick={toggleWork} aria-expanded={workOpen} className="flex h-8 w-full items-center gap-2 rounded-tight px-4 text-xs font-medium text-muted hover:bg-white/60 max-md:h-10">
+            <span>Workspace</span>
+            <span className={workOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={12} /></span>
           </button>
         )}
         {(collapsed || workOpen) && <div className="flex flex-col">{ITEMS.filter((i) => (!i.forRequesters || !isJira || me?.role === "requester") && (!i.forCreatives || !isJira || me?.role === "creative")).map((i) => navLink(i, i.href === "/blocking" ? waiting : undefined))}</div>}
 
         {/* Brand Assets and Favorites folders share one scrolling area so a short window never pushes into the user row */}
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
         {/* Brand Assets folder */}
         <div>
           {collapsed ? (
             <Link href="/brand" title="Brand Assets" aria-label="Brand Assets" aria-current={pathname.startsWith("/brand") ? "page" : undefined} className={row(pathname.startsWith("/brand"))}>
-              <Icon name="palette" size={18} />
+              <Icon name="palette" size={16} />
             </Link>
           ) : (
             <section aria-label="Brand Assets">
-              <button onClick={toggleBrand} aria-expanded={brandOpen} className="flex w-full items-center gap-2 rounded-tight px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
-                <Icon name="palette" size={14} />
-                <span className="flex-1 text-left">Brand Assets</span>
-                <span className={brandOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
+              <button onClick={toggleBrand} aria-expanded={brandOpen} className="flex h-8 w-full items-center gap-2 rounded-tight px-4 text-xs font-medium text-muted hover:bg-white/60 max-md:h-10">
+                <span>Brand Assets</span>
+                <span className={brandOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={12} /></span>
               </button>
               {brandOpen && (
                 <ul>
@@ -237,8 +236,8 @@ export function Sidebar() {
                     return (
                       <li key={b.href}>
                         <Link href={b.href} aria-current={on ? "page" : undefined} className={row(on)}>{b.icon === "goldie"
-                          ? <span aria-hidden className="inline-block h-[18px] w-[18px] bg-current" style={{ WebkitMask: "url(/library/logos/surveymonkey/logomark-black.svg) center / contain no-repeat", mask: "url(/library/logos/surveymonkey/logomark-black.svg) center / contain no-repeat" }} />
-                          : <Icon name={b.icon} size={18} />}<span className="flex-1">{b.label}</span></Link>
+                          ? <span aria-hidden className="inline-block h-4 w-4 bg-current" style={{ WebkitMask: "url(/library/logos/surveymonkey/logomark-black.svg) center / contain no-repeat", mask: "url(/library/logos/surveymonkey/logomark-black.svg) center / contain no-repeat" }} />
+                          : <Icon name={b.icon} size={16} />}<span className="flex-1">{b.label}</span></Link>
                       </li>
                     );
                   })}
@@ -252,18 +251,17 @@ export function Sidebar() {
         <div className="mt-2">
           {collapsed ? (
             <button onClick={() => setMode("expanded")} title="Favorites" aria-label="Show favorites" className={row(false)}>
-              <Icon name="star" size={18} />
+              <Icon name="star" size={16} />
             </button>
           ) : (
             <section aria-label="Favorites">
-              <button onClick={toggleFav} aria-expanded={favOpen} className="flex w-full items-center gap-2 rounded-tight px-4 py-2 text-n-700 hover:bg-white/60 eyebrow">
-                <Icon name="star" size={14} />
-                <span className="flex-1 text-left">Favorites</span>
-                <span className={favOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={14} /></span>
+              <button onClick={toggleFav} aria-expanded={favOpen} className="flex h-8 w-full items-center gap-2 rounded-tight px-4 text-xs font-medium text-muted hover:bg-white/60 max-md:h-10">
+                <span>Favorites</span>
+                <span className={favOpen ? "" : "-rotate-90"}><Icon name="chevronDown" size={12} /></span>
               </button>
               {favOpen && (
                 favs.items.length === 0 ? (
-                  <p className="px-4 py-2 text-xs text-muted">Star a project to pin it here.</p>
+                  <p className="flex h-8 items-center px-4 text-xs text-muted">Star a project to pin it here.</p>
                 ) : (
                   <ul className="mt-0 space-y-0">
                     {favs.items.map((f) => (
@@ -272,7 +270,7 @@ export function Sidebar() {
                           href={`/projects/${f.key}`}
                           title={`${f.key} · ${f.title}`}
                           aria-current={pathname === `/projects/${f.key}` ? "page" : undefined}
-                          className={`block truncate rounded-tight py-2 pl-10 pr-4 text-sm ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}
+                          className={`block h-8 truncate rounded-tight px-4 text-sm leading-8 max-md:h-10 max-md:leading-10 ${pathname === `/projects/${f.key}` ? "bg-n-200 font-medium text-ink" : "text-n-800 hover:bg-white/60"}`}
                         >
                           {f.title}
                         </Link>
@@ -292,7 +290,7 @@ export function Sidebar() {
           {(!isJira || me?.role === "creative") && navLink(ANALYTICS_ITEM)}
           {(me?.isAdmin || me?.role === "creative") && navLink(ADMIN_ITEM)}
           <button onClick={() => setHelpOpen(true)} data-tour="help" title="Help" aria-label="Help" aria-haspopup="dialog" className={`w-full ${row(false)}`}>
-            <Icon name="help" size={18} />
+            <Icon name="help" size={16} />
             {!collapsed && <span className="flex-1 text-left">Help</span>}
           </button>
         </div>
