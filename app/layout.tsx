@@ -17,6 +17,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* Sets the saved (or system) theme before first paint so dark mode doesn't flash light. */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('hub-theme');if(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)t='dark';if(t==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}` }} />
+        {/* Keeps Chrome's install prompt (when it offers one) so the Help tour can point at it. */}
+        <script dangerouslySetInnerHTML={{ __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__hubInstall=e});window.addEventListener('appinstalled',function(){window.__hubInstall=null})` }} />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://prod.smassets.net/assets/static/fonts/national2/regular.woff2" />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="https://prod.smassets.net/assets/static/fonts/national2/bold.woff2" />
       </head>
