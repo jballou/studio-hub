@@ -1,5 +1,6 @@
 import type { BriefSubmission } from "@/lib/types";
 import { JiraError, jiraRequest, requestorField, type JiraAuth } from "./client";
+import { ILLUSTRATION_EPIC } from "@/lib/brief/illustration";
 import { HUB_LABEL, PROJECT_KEY } from "./map";
 
 type Adf = { type: string; version?: number; content?: unknown[]; attrs?: Record<string, unknown>; text?: string };
@@ -33,7 +34,7 @@ export function validateBrief(input: unknown): BriefSubmission {
   const stakeholders = Array.isArray(b.stakeholders) ? b.stakeholders.filter((p) => p?.id && p?.name).slice(0, 30).map((p) => ({ id: String(p.id), name: String(p.name), email: p.email ? String(p.email) : undefined })) : [];
   // Extra labels may only be simple words, so nothing odd reaches Jira.
   const labels = Array.isArray(b.labels) ? [...new Set(b.labels.map((l) => String(l).toLowerCase()).filter((l) => /^[a-z0-9][a-z0-9_-]{0,39}$/.test(l)))].slice(0, 3) : [];
-  return { issueTypeId: String(b.issueTypeId), typeLabel: String(b.typeLabel ?? "").slice(0, 80), ...(labels.length ? { labels } : {}), title, deadline: b.deadline || undefined, stakeholders, sections };
+  return { issueTypeId: String(b.issueTypeId), typeLabel: String(b.typeLabel ?? "").slice(0, 80), ...(labels.length ? { labels } : {}), title, deadline: b.deadline || undefined, stakeholders, sections, ...(b.parentKey === ILLUSTRATION_EPIC ? { parentKey: ILLUSTRATION_EPIC } : {}) };
 }
 
 /**
@@ -46,6 +47,7 @@ export async function createBriefIssue(a: JiraAuth, input: BriefSubmission, who:
     project: { key: PROJECT_KEY },
     issuetype: { id: input.issueTypeId },
     summary: input.title,
+    ...(input.parentKey ? { parent: { key: input.parentKey } } : {}),
     description: briefToAdf(input, who.name),
     labels: [HUB_LABEL, ...(input.labels ?? []).filter((l) => l !== HUB_LABEL)],
     ...(input.deadline ? { duedate: input.deadline } : {}),

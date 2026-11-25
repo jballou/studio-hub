@@ -29,7 +29,18 @@ function Assistant({ children }: { children: React.ReactNode }) {
  * Asks for a brief one question at a time. The questions come from the flow (editable in Admin), so each request
  * type gets its own questions. In preview mode (used by the editor) nothing is saved or sent.
  */
-export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; preview?: boolean }) {
+export function BriefWizard({ flow: flowProp, preview = false, parentKey, heading = "New brief", draftKey = DRAFT_KEY, before, doneNote }: {
+  flow?: Flow; preview?: boolean;
+  /** Create the ticket under this Epic. */
+  parentKey?: string;
+  heading?: string;
+  /** Where the draft is kept, so different kinds of request don't pick up each other's answers. */
+  draftKey?: string;
+  /** Shown above the questions. */
+  before?: React.ReactNode;
+  /** Shown after the ticket is created. */
+  doneNote?: React.ReactNode;
+}) {
   const [loaded, setLoaded] = useState<Flow | null>(null);
   const [answers, setAnswers] = useState<Answers>({});
   const [editing, setEditing] = useState<string | null>(null);
@@ -56,7 +67,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
   useEffect(() => {
     if (preview) return;
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const raw = localStorage.getItem(draftKey);
       if (raw) {
         const saved = JSON.parse(raw) as Answers;
         if (Object.keys(saved).length) {
@@ -66,11 +77,11 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
         }
       }
     } catch { /* ignore a bad draft */ }
-  }, [preview]);
+  }, [preview, draftKey]);
   useEffect(() => {
     if (preview || created) return;
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(answers)); } catch { /* storage unavailable */ }
-  }, [answers, preview, created]);
+    try { localStorage.setItem(draftKey, JSON.stringify(answers)); } catch { /* storage unavailable */ }
+  }, [answers, preview, created, draftKey]);
 
   const w = useMemo(() => (flow ? walk(flow, answers) : null), [flow, answers]);
   const answeredCount = w?.path.length ?? 0;
@@ -79,17 +90,17 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
   if (!flow || !w) return <p className="p-8 text-sm text-muted">{error ?? "Loading…"}</p>;
 
   const answer = (node: QNode, v: AnswerValue) => { setAnswers((a) => ({ ...a, [node.field]: v })); setEditing(null); setError(null); };
-  const startOver = () => { setAnswers({}); setEditing(null); setResumed(false); setError(null); try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ } };
+  const startOver = () => { setAnswers({}); setEditing(null); setResumed(false); setError(null); try { localStorage.removeItem(draftKey); } catch { /* ignore */ } };
   const q = (n: QNode) => interpolate(n.prompt, flow, answers);
 
   const submit = async () => {
     setBusy(true);
     setError(null);
     try {
-      const base = toSubmission(flow, answers);
+      const base = { ...toSubmission(flow, answers), ...(parentKey ? { parentKey } : {}) };
       const krLabel = kr === NO_KR ? NO_KR_LABEL : kr;
       const res = await projectsRepo.createBrief(krLabel ? { ...base, labels: [...(base.labels ?? []), krLabel] } : base, "u-riley");
-      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       setCreated(res.jiraKey);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't create the ticket.");
@@ -102,6 +113,7 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
       <main className="page [&>*:not(.fixed)]:max-w-2xl">
         <h1 className="mb-2 text-2xl font-bold">Brief submitted</h1>
         <p className="mb-4">Created <Link href={`/projects/${created}`} className="rounded-tight bg-line px-2 py-0 font-mono text-sm text-brand hover:underline">{created}</Link>. It&apos;s in <Link href="/briefs" className="text-brand underline">My briefs</Link>, where you can follow it.</p>
+        {doneNote && <div className="mb-4 text-sm text-muted">{doneNote}</div>}
         <div className="flex gap-2">
           <Link href="/briefs" className="btn btn-md btn-primary">See it in My briefs</Link>
           <Link href={`/projects/${created}`} className="btn btn-md btn-secondary">Open project</Link>
@@ -117,10 +129,11 @@ export function BriefWizard({ flow: flowProp, preview = false }: { flow?: Flow; 
     <main className={`page [&>*:not(.fixed)]:max-w-2xl ${preview ? "!py-4" : ""}`}>
       {!preview && (
         <div className="mb-6 flex items-center gap-4">
-          <PageTitle>New brief</PageTitle>
+          <PageTitle>{heading}</PageTitle>
           {answeredCount > 0 && <button onClick={startOver} className="ml-auto text-sm font-medium text-muted hover:underline">Start over</button>}
         </div>
       )}
+      {before && !preview && <div className="mb-6">{before}</div>}
       {resumed && !preview && answeredCount > 0 && <div className="mb-4"><Callout tone="info" icon="check">Picked up where you left off. Your answers are saved on this device.</Callout></div>}
 
       <div className="space-y-4" aria-live="polite">

@@ -52,7 +52,7 @@ function PreviewImage({ src, name, className }: { src: string; name: string; cla
   );
 }
 
-export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
+export function DriveLibrary({ kind, title, action, noMatch }: { kind: Kind; title: string; /** A button for the toolbar, beside the search (for example "Request an illustration") */ action?: React.ReactNode; /** Shown under "nothing matches" (for example a way to request what is missing) */ noMatch?: React.ReactNode }) {
   const me = useMe();
   const [folder, setFolder] = useState<string | null>(null);
   // The folder lives in the address (?folder=<id>) so a link lands in the same place.
@@ -184,8 +184,9 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="image" size={16} /></span>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="What are you looking for?" className="block h-12 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
         </label>
+        {action && <div className="ml-auto flex h-12 items-center">{action}</div>}
         {files.length > 0 && (
-          <div role="radiogroup" aria-label="View" className="ml-auto flex h-12 items-center gap-2 rounded-tight border border-control bg-white px-2">
+          <div role="radiogroup" aria-label="View" className={`${action ? "" : "ml-auto "}flex h-12 items-center gap-2 rounded-tight border border-control bg-white px-2`}>
             {VIEWS.map((v) => (
               <button key={v.id} role="radio" aria-checked={view === v.id} aria-label={v.label} title={v.label} onClick={() => pick(v.id)}
                 className={`flex h-8 w-8 items-center justify-center rounded-tight ${view === v.id ? "bg-brand-soft text-brand" : "text-n-800 hover:bg-n-150"}`}>
@@ -259,7 +260,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
           ))}
         </ul>
       )}
-      {shown.length === 0 && <p className="card p-6 text-sm text-muted">{term ? (found?.q === term ? `Nothing matches “${term}” in any folder.` : "Searching…") : "This folder is empty."}</p>}
+      {shown.length === 0 && <div className="card p-6 text-sm text-muted">{term ? (found?.q === term ? <>Nothing matches “{term}” in any folder.{noMatch && <> {noMatch}</>}</> : "Searching…") : "This folder is empty."}</div>}
 
       {open && (
         <div role="dialog" aria-modal="true" aria-label={open.name} className="fixed inset-0 z-50 flex items-center justify-center bg-n-1000/80 p-6" onClick={() => setOpen(null)}>

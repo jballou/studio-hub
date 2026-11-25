@@ -259,6 +259,8 @@ export type BriefSubmission = {
   /** YYYY-MM-DD, from the "deadline" question when asked */
   deadline?: string;
   stakeholders: Person[];
+  /** Create the ticket under this Epic (only the illustration Epic is accepted). */
+  parentKey?: string;
   /** Everything else, in the order it was asked. Becomes the ticket description. */
   sections: { label: string; value: string }[];
 };
