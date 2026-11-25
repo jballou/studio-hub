@@ -158,6 +158,9 @@ html { scrollbar-gutter: stable; }
   /* Cards: soft corners, a hairline border and a faint lift. */
   .card { background: var(--card); border: 1px solid var(--color-line); border-radius: var(--radius-loose); box-shadow: 0 1px 2px rgb(30 40 35 / 0.04), 0 8px 24px -12px rgb(30 40 35 / 0.12); }
   .card-hover { transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease; }
+  /* Brand library tiles: outline color change and a small lift, no shadow. */
+  .tile-hover { box-shadow: none; transition: transform 160ms ease, border-color 160ms ease; }
+  .tile-hover:hover { border-color: var(--color-brand); transform: translateY(-2px); }
   .card-hover:hover { border-color: var(--color-brand); box-shadow: 0 2px 4px rgb(30 40 35 / 0.06), 0 16px 32px -12px rgb(30 40 35 / 0.18); transform: translateY(-1px); }
 }
 
@@ -224,7 +227,7 @@ body {
   .rise { animation: none; }
   /* Motion that only decorates a change of state: the state still changes, it just doesn't travel. */
   .seg[data-ready]::before { transition: none; }
-  .seg-item, .btn, .card-hover { transition: none; }
+  .seg-item, .btn, .card-hover, .tile-hover { transition: none; }
 }
 
 /* ---- Light values for the pieces that aren't palette tokens ---- */

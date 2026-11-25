@@ -179,7 +179,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
         <ul className="mb-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
           {folders.map((f) => (
             <li key={f.id}>
-              <button onClick={() => go(f.id)} className="card card-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
+              <button onClick={() => go(f.id)} className="card tile-hover flex w-full items-center gap-4 rounded-tight p-4 text-left">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tight bg-brand-soft"><Icon name="folder" size={20} /></span>
                 <span className="min-w-0 truncate text-sm font-bold">{f.name}</span>
               </button>
@@ -195,7 +195,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
       {files.length > 0 && view !== "list" && (
         <ul className={`grid gap-4 ${view === "large" ? "grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}`}>
           {files.map((f, n) => (
-            <li key={f.id} className={`card overflow-hidden ${view === "small" ? "rounded-tight" : ""}`}>
+            <li key={f.id} className={`card tile-hover overflow-hidden ${view === "small" ? "rounded-tight" : ""}`}>
               <button onClick={() => setOpen(f)} className={`relative block aspect-[4/3] w-full ${bgOf(f)}`} aria-label={`Preview ${f.name}`}>
                 <LoadingImg src={thumb(kind, f.id, f.mimeType, view === "large" ? 800 : 320)} eager={n < 6} className="h-full w-full object-cover" />
               </button>

@@ -45,7 +45,7 @@ export function IconLibrary() {
         <label className="relative block">
           <span className="sr-only">Search icons</span>
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"><Icon name="search" size={16} /></span>
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${icons.length} icons`} className="block h-10 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${icons.length} icons`} className="block h-12 w-full rounded-tight border border-control bg-white pl-10 pr-4 text-sm" />
         </label>
         <p className="mb-4 mt-4 text-sm text-muted" aria-live="polite">{shown.length} {shown.length === 1 ? "icon" : "icons"}</p>
         {shown.length === 0 ? (
@@ -54,7 +54,7 @@ export function IconLibrary() {
           <ul className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(7rem,1fr))]">
             {shown.map((i) => (
               <li key={i.name}>
-                <button onClick={() => setSelected(i.name)} aria-pressed={selected === i.name} title={i.name} className="card card-hover rounded-tight flex h-24 w-full flex-col items-center justify-center gap-2 p-2 aria-pressed:border-brand aria-pressed:bg-brand-soft">
+                <button onClick={() => setSelected(i.name)} aria-pressed={selected === i.name} title={i.name} className="card tile-hover rounded-tight flex h-24 w-full flex-col items-center justify-center gap-2 p-2 aria-pressed:border-brand aria-pressed:bg-brand-soft">
                   <Glyph i={i} size={24} color="#0F2E21" />
                   <span className="w-full truncate text-center text-xs text-muted">{i.name}</span>
                 </button>
