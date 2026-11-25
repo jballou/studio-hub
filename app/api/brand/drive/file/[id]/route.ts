@@ -1,10 +1,12 @@
 import { waitUntil } from "@vercel/functions";
 import sharp from "sharp";
+import { toWebp } from "@/lib/brand/previews";
 import { readThumb, saveThumb, snapSize } from "@/lib/brand/thumbCache";
 import { driveMedia, driveNode, driveThumbnail } from "@/lib/google/client";
 import { apiError } from "@/lib/google/http";
 import { jiraSession } from "@/lib/jira/session";
 import { getBrandConfig, inBrandTree } from "@/lib/store/brand";
+import { alphaFlags } from "@/lib/store/previews";
 import { AdminError } from "@/lib/store/users";
 
 export const maxDuration = 60;
@@ -41,11 +43,12 @@ export async function GET(req: Request, ctx: RouteContext<"/api/brand/drive/file
     // The page says whether it's a PNG, which saves a Drive round trip per image; without the hint we ask Drive.
     const hint = u.searchParams.get("m");
     const png = hint ? hint === "png" : (await driveNode(cfg.owner, id).catch(() => null))?.mimeType === "image/png";
-    if (png) {
+    // A PNG known to be fully opaque (the warm-up checked it) is a plain photo, so Drive's own small thumbnail will do and is much quicker.
+    if (png && (await alphaFlags(kind).catch(() => ({} as Record<string, 0 | 1>)))[id] !== 0) {
       // Drive's own preview flattens transparency to black, which makes a cut-out look like a photo on a black
-      // background. For PNGs we shrink the original ourselves and keep the transparent pixels (as WebP).
-      const up = await driveMedia(cfg.owner, id, null);
-      const out = await sharp(Buffer.from(await up.arrayBuffer())).rotate().resize({ width: size, withoutEnlargement: true }).webp({ quality: 82, alphaQuality: 90 }).toBuffer();
+      // background. For PNGs that might be see-through we shrink the original ourselves and keep the transparent pixels (as WebP).
+      const original = Buffer.from(await (await driveMedia(cfg.owner, id, null)).arrayBuffer());
+      const out = await toWebp(original, size);
       waitUntil(saveThumb(kind, id, size, new Uint8Array(out), "image/webp"));
       return new Response(new Uint8Array(out), { status: 200, headers: { "Content-Type": "image/webp", "Content-Length": String(out.length), "Cache-Control": "private, max-age=86400, stale-while-revalidate=604800" } });
     }

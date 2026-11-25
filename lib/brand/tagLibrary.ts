@@ -1,3 +1,4 @@
+import { warmPreviews } from "@/lib/brand/previews";
 import { tagImage } from "@/lib/brand/tagger";
 import { libraryIndex } from "@/lib/brand/libraryIndex";
 import { driveThumbnail } from "@/lib/google/client";
@@ -39,9 +40,11 @@ export async function tagBatch(kind: BrandKind, budgetMs: number): Promise<{ don
 export async function kickTagging(kind: BrandKind): Promise<void> {
   try {
     if (!(await takeTagLock(kind, 280_000))) return;
-    const r = await tagBatch(kind, 240_000);
-    // Nothing left: leave it alone for half an hour. Failures: try again in five minutes.
-    await releaseTagLock(kind, r.remaining === 0 ? 30 * 60_000 : r.done === 0 ? 5 * 60_000 : 0);
+    // Tags first, then the cached previews, so the first time anyone opens a photo it is already ready.
+    const r = await tagBatch(kind, 120_000);
+    const w = await warmPreviews(kind, 110_000).catch(() => ({ done: 0, failed: 1, remaining: 1 }));
+    // Nothing left: leave it alone for half an hour. Failures with no progress: try again in five minutes.
+    await releaseTagLock(kind, r.remaining + w.remaining === 0 ? 30 * 60_000 : r.done + w.done === 0 ? 5 * 60_000 : 0);
   } catch {
     await releaseTagLock(kind, 5 * 60_000).catch(() => {});
   }
