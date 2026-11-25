@@ -39,7 +39,7 @@ export function ContrastGuide() {
   const combo = COMBOS.find((c) => c.bg === bg);
 
   return (
-    <aside aria-label="Accessibility" className="card w-full p-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto">
+    <aside aria-label="Accessibility" className="card w-full p-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto [scrollbar-width:thin] [scrollbar-color:var(--color-n-200)_transparent]">
       <h2 className="text-lg font-bold">Accessibility</h2>
       <ul className="mt-2 list-disc space-y-2 pl-4 text-sm text-muted">
         <li>Body text needs a contrast ratio of at least 4.5:1.</li>
