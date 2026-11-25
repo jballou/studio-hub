@@ -13,12 +13,14 @@ export function TopBar() {
   const pathname = usePathname();
   const inWorkspace = /^\/review\/[^/]+/.test(pathname);
   if (inWorkspace || pathname === "/signin" || pathname === "/welcome") return null;
+  // Preferences has its own tab strip right below, so the bar drops its title and its rule to avoid a double stripe.
+  const prefs = pathname.startsWith("/admin");
   return (
-    <header className="shrink-0 border-b border-line text-sm text-muted">
+    <header className={`shrink-0 text-sm text-muted ${prefs ? "" : "border-b border-line"}`}>
       <div className="column flex h-16 items-center gap-4">
         {/* Phones: the sidebar is a drawer, opened from here. */}
         <button onClick={() => window.dispatchEvent(new Event("sidebar-open"))} aria-label="Open menu" className="btn btn-ghost btn-icon -ml-2 shrink-0 md:hidden"><Icon name="menu" size={20} /></button>
-        <div id="page-title" className="min-w-0 truncate text-xl font-bold text-ink empty:hidden" />
+        {!prefs && <div id="page-title" className="min-w-0 truncate text-xl font-bold text-ink empty:hidden" />}
         <div className="ml-auto"><NewProjectButton /></div>
       </div>
     </header>
