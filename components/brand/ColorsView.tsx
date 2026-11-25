@@ -14,7 +14,7 @@ function Swatch({ s, onCopy, onMove, onEnter, onLeave }: { s: Shade; onCopy: () 
   const rule = <span aria-hidden="true" className="block h-px w-full bg-current opacity-30" />;
   return (
     <button onClick={onCopy} onPointerEnter={onEnter} onPointerLeave={onLeave} onPointerMove={(e) => onMove(e.clientX, e.clientY)}
-      onFocus={(e) => { const r = e.currentTarget.getBoundingClientRect(); onEnter(); onMove(r.left + 16, r.top + 16); }} onBlur={onLeave}
+      onFocus={(e) => { if (!e.currentTarget.matches(":focus-visible")) return; const r = e.currentTarget.getBoundingClientRect(); onEnter(); onMove(r.left + 16, r.top + 16); }} onBlur={onLeave}
       aria-label={`Copy ${s.name}, ${s.hex}`} style={{ background: s.hex, color: textOn(s.hex) }} className="card tile-hover relative flex aspect-square flex-col justify-between overflow-hidden rounded-tight p-4 text-left">
       <span className="flex w-full flex-col gap-2 text-xs font-medium">
         <span>{s.hex}</span>{rule}
