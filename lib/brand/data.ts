@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 
 export type BrandIcon = { name: string; vb: string; svg: string };
+/** A larger two-color icon. `svg` holds {{line}}, {{mid}} and {{accent}} where the colors go. */
+export type DetailedIcon = { name: string; vb: string; svg: string; /** its own accent, for the few icons (status icons) that aren't primary green */ a?: string };
 export type Logo = { id: string; brand: string; kind: string; variant: string; path: string; w: number | null; h: number | null };
 export type Shade = { name: string; step: number; hex: string; rgb: string; cmyk: string; pms: string };
 export type ColorFamily = { name: string; shades: Shade[] };
@@ -30,8 +32,16 @@ function useLibrary<T, R>(file: string, pick: (j: T) => R): { data: R | null; er
 }
 
 export const useIcons = () => useLibrary<{ icons: BrandIcon[] }, BrandIcon[]>("icons.json", (j) => j.icons);
+export const useDetailedIcons = () => useLibrary<{ icons: DetailedIcon[] }, DetailedIcon[]>("detailed-icons.json", (j) => j.icons);
 export const useLogos = () => useLibrary<{ logos: Logo[] }, Logo[]>("logos.json", (j) => j.logos);
 export const useColors = () => useLibrary<{ families: ColorFamily[] }, ColorFamily[]>("colors.json", (j) => j.families);
+
+/** A detailed icon painted with its three colors: line (outlines), mid (the fixed gray) and accent. */
+export const paintDetailed = (svg: string, c: { line: string; mid: string; accent: string }) => svg.replace(/\{\{line\}\}/g, c.line).replace(/\{\{mid\}\}/g, c.mid).replace(/\{\{accent\}\}/g, c.accent);
+
+/** Complete SVG document for a detailed icon at a size. */
+export const detailedSvg = (i: DetailedIcon, size: number, c: { line: string; mid: string; accent: string }) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${i.vb}" fill="none">${paintDetailed(i.svg, c)}</svg>`;
 
 /** Complete SVG document for an icon at a size and color. */
 export function iconSvg(i: BrandIcon, size: number, color: string): string {
