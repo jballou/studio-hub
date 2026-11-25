@@ -31,6 +31,27 @@ const VIEWS: { id: View; label: string; icon: IconName }[] = [
 const mb = (n?: number) => (n ? (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1000))} KB`) : "");
 
 /** A Drive-backed library: folders become categories, images show Drive's own previews, downloads stream through the Hub. */
+/** The large preview. Remounted for each image (by its key) so the previous picture never lingers: the loader and a message show at once, then the image fades in. */
+function PreviewImage({ src, name, className }: { src: string; name: string; className: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <>
+      {!done && (
+        <div role="status" className="flex h-[60vh] w-full flex-col items-center justify-center gap-4 text-brand">
+          <LogoLoader size={96} label={`Loading ${name}`} />
+          <p className="max-w-full truncate px-4 text-sm font-medium text-n-800">Loading {name}…</p>
+        </div>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={(el) => { if (el && el.complete && el.naturalWidth > 0) setDone(true); }}
+        src={src} alt={name} onLoad={() => setDone(true)} onError={() => setDone(true)}
+        className={`${className} transition-opacity duration-300 ${done ? "opacity-100" : "hidden opacity-0"}`}
+      />
+    </>
+  );
+}
+
 export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
   const me = useMe();
   const [folder, setFolder] = useState<string | null>(null);
@@ -259,8 +280,7 @@ export function DriveLibrary({ kind, title }: { kind: Kind; title: string }) {
             </div>
             <div className="min-h-0 flex-1 overflow-auto">
               <div className="flex items-center justify-center bg-n-150 p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={thumb(kind, open.id, open.mimeType, 1600)} alt={open.name} className={`max-h-[60vh] max-w-full object-contain ${bgOf(open)}`} />
+                <PreviewImage key={open.id} src={thumb(kind, open.id, open.mimeType, 1600)} name={open.name} className={`max-h-[60vh] max-w-full object-contain ${bgOf(open)}`} />
               </div>
               <div className="space-y-6 p-6">
                 {tags[open.id] && (
