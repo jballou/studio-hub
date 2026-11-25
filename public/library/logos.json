@@ -252,6 +252,78 @@
    "path": "/library/logos/getfeedback/symbol-white.svg",
    "w": 129,
    "h": 129
+  },
+  {
+   "id": "7139:3326",
+   "brand": "surveymonkey",
+   "kind": "avatar",
+   "variant": "square",
+   "path": "/library/logos/avatars/surveymonkey-square.svg",
+   "w": 167,
+   "h": 167
+  },
+  {
+   "id": "7175:102",
+   "brand": "surveymonkey",
+   "kind": "avatar",
+   "variant": "soft-square",
+   "path": "/library/logos/avatars/surveymonkey-soft-square.svg",
+   "w": 167,
+   "h": 167
+  },
+  {
+   "id": "7139:3355",
+   "brand": "surveymonkey",
+   "kind": "avatar",
+   "variant": "round",
+   "path": "/library/logos/avatars/surveymonkey-round.svg",
+   "w": 167,
+   "h": 167
+  },
+  {
+   "id": "7211:3706",
+   "brand": "launchpad",
+   "kind": "avatar",
+   "variant": "square",
+   "path": "/library/logos/avatars/launchpad-square.svg",
+   "w": 167,
+   "h": 167
+  },
+  {
+   "id": "7211:3708",
+   "brand": "launchpad",
+   "kind": "avatar",
+   "variant": "soft-square",
+   "path": "/library/logos/avatars/launchpad-soft-square.svg",
+   "w": 167,
+   "h": 167
+  },
+  {
+   "id": "7211:3710",
+   "brand": "launchpad",
+   "kind": "avatar",
+   "variant": "round",
+   "path": "/library/logos/avatars/launchpad-round.svg",
+   "w": 167,
+   "h": 167
+  },
+  {
+   "id": "7563:1047",
+   "brand": "surveymonkey",
+   "kind": "favicon",
+   "variant": "round",
+   "path": "/library/logos/avatars/surveymonkey-favicon.svg",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "id": "7139:3349",
+   "brand": "surveymonkey",
+   "kind": "appicon",
+   "variant": "soft-square",
+   "path": "/library/logos/avatars/surveymonkey-app-icon.svg",
+   "w": 92,
+   "h": 92
   }
  ]
 }
