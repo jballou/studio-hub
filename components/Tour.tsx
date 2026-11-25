@@ -118,8 +118,9 @@ function InstallStep({ i, total, last, step, onBack, onClose }: { i: number; tot
   };
   return (
     <div className="fixed inset-0 z-[70] bg-[rgb(20_28_24/0.6)]" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={`Tour, step ${i + 1} of ${total}`} onMouseDown={(e) => e.stopPropagation()} className="fixed right-4 top-4 w-80 max-w-[calc(100vw-2rem)]">
-        <span aria-hidden="true" className="mr-16 flex justify-end text-n-50 motion-safe:animate-bounce"><span className="rotate-180"><Icon name="arrowDown" size={32} /></span></span>
+      {/* Chrome puts the Install button at the right end of the address bar, to the left of the extension icons and profile. This aims for where it usually lands. */}
+      <span aria-hidden="true" className="pointer-events-none fixed right-[368px] top-2 hidden text-n-50 motion-safe:animate-bounce md:block"><span className="block rotate-180"><Icon name="arrowDown" size={32} /></span></span>
+      <div role="dialog" aria-modal="true" aria-label={`Tour, step ${i + 1} of ${total}`} onMouseDown={(e) => e.stopPropagation()} className="fixed right-4 top-16 w-80 max-w-[calc(100vw-2rem)]">
         <div className="rounded-loose border border-line bg-white p-4 shadow-xl">
           <p className="text-muted eyebrow">Step {i + 1} of {total}</p>
           <h2 className="mt-2 font-bold">{step.title}</h2>
