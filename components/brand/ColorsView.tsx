@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { copyText } from "@/lib/brand/download";
 import { useColors, type Shade } from "@/lib/brand/data";
@@ -36,6 +36,49 @@ const COMBOS: { name: string; bg: string; text: Pair[] }[] = [
 ];
 const grade = (r: number) => (r >= 7 ? "AAA" : r >= 4.5 ? "AA" : r >= 3 ? "Large text" : "Fails");
 
+/** One color card. The "Click to copy" pill follows the pointer inside the card, and morphs from the copy icon to the clipboard-check icon once copied. */
+function Swatch({ s, done, onCopy }: { s: Shade; done: boolean; onCopy: () => void }) {
+  const card = useRef<HTMLButtonElement>(null);
+  const pill = useRef<HTMLSpanElement>(null);
+  const i = s.name.lastIndexOf(" ");
+  const [family, step] = i > 0 ? [s.name.slice(0, i), s.name.slice(i + 1)] : [s.name, ""];
+  const rule = <span aria-hidden="true" className="block h-px w-full bg-current opacity-30" />;
+  const last = useRef<{ x: number; y: number } | null>(null);
+  const place = (cx: number, cy: number) => {
+    const c = card.current, p = pill.current;
+    if (!c || !p) return;
+    const r = c.getBoundingClientRect();
+    const right = cx - r.left + 16;
+    const x = right + p.offsetWidth > r.width - 8 ? cx - r.left - 16 - p.offsetWidth : right;
+    const below = cy - r.top + 16;
+    const y = below + p.offsetHeight > r.height - 8 ? cy - r.top - 16 - p.offsetHeight : below;
+    c.style.setProperty("--tx", `${Math.max(8, x)}px`);
+    c.style.setProperty("--ty", `${Math.max(8, y)}px`);
+  };
+  const follow = (e: PointerEvent<HTMLButtonElement>) => { last.current = { x: e.clientX, y: e.clientY }; place(e.clientX, e.clientY); };
+  // The pill gets wider once it says "Copied to clipboard!", so place it again at the last pointer position.
+  useEffect(() => { if (last.current) place(last.current.x, last.current.y); });
+  const morph = "absolute inset-0 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none";
+  return (
+    <button ref={card} onClick={onCopy} onPointerMove={follow} aria-label={`Copy ${s.name}, ${s.hex}`} style={{ background: s.hex, color: textOn(s.hex), "--tx": "16px", "--ty": "16px" } as React.CSSProperties} className="card tile-hover group relative flex aspect-square flex-col justify-between overflow-hidden rounded-tight p-4 text-left">
+      <span className="flex w-full flex-col gap-2 text-xs font-medium">
+        <span>{s.hex}</span>{rule}
+        <span>{s.rgb.replace(/, /g, " / ")}</span>{rule}
+        <span>{s.cmyk.replace(/, /g, " / ")}</span>
+        {s.pms && <>{rule}<span>PMS: {s.pms}</span></>}
+      </span>
+      <span className="block text-base font-bold leading-none">{family}<br />{step}</span>
+      <span ref={pill} aria-hidden="true" style={{ transform: "translate(var(--tx), var(--ty))" }} className={`pointer-events-none absolute left-0 top-0 inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-round bg-n-1000 px-2 text-xs font-medium text-n-50 shadow-lg transition-opacity duration-150 ${done ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"}`}>
+        <span className="relative block h-4 w-4">
+          <span className={`${morph} ${done ? "scale-50 -rotate-12 opacity-0" : "scale-100 rotate-0 opacity-100"}`}><Icon name="copy" size={16} /></span>
+          <span className={`${morph} ${done ? "scale-100 rotate-0 opacity-100" : "scale-50 rotate-12 opacity-0"}`}><Icon name="clipboardCheck" size={16} /></span>
+        </span>
+        {done ? "Copied to clipboard!" : "Click to copy"}
+      </span>
+    </button>
+  );
+}
+
 export function ColorsView() {
   const { data, error } = useColors();
   const [copied, setCopied] = useState<string | null>(null);
@@ -57,28 +100,7 @@ export function ColorsView() {
   const all = families.flatMap((f) => f.shades);
   const primary = ["Green 500", "Neutral 50", "Green 900"].map((n) => all.find((s) => s.name === n)).filter((s): s is Shade => !!s);
 
-  const chip = (s: Shade) => {
-    const i = s.name.lastIndexOf(" ");
-    const [family, step] = i > 0 ? [s.name.slice(0, i), s.name.slice(i + 1)] : [s.name, ""];
-    const ink = textOn(s.hex);
-    const rule = <span aria-hidden="true" className="block h-px w-full bg-current opacity-30" />;
-    return (
-      <button key={s.name} onClick={() => copy(s)} aria-label={`Copy ${s.name}, ${s.hex}`} style={{ background: s.hex, color: ink }} className="card tile-hover group relative flex aspect-square flex-col justify-between overflow-hidden rounded-tight p-4 text-left">
-        <span className="flex w-full flex-col gap-2 text-xs font-medium">
-          <span>{s.hex}</span>{rule}
-          <span>{s.rgb.replace(/, /g, " / ")}</span>{rule}
-          <span>{s.cmyk.replace(/, /g, " / ")}</span>
-          {s.pms && <>{rule}<span>PMS: {s.pms}</span></>}
-        </span>
-        <span className="block text-base font-bold leading-none">{family}<br />{step}</span>
-        <span aria-hidden="true" className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-150 ${copied === s.name ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"}`}>
-          <span className="inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-round bg-n-1000 px-2 text-xs font-medium text-n-50 shadow-lg">
-            <Icon name={copied === s.name ? "clipboardCheck" : "copy"} size={16} />{copied === s.name ? "Copied to clipboard!" : "Click to copy"}
-          </span>
-        </span>
-      </button>
-    );
-  };
+  const chip = (s: Shade) => <Swatch key={s.name} s={s} done={copied === s.name} onCopy={() => copy(s)} />;
 
   return (
     <div className="space-y-8">

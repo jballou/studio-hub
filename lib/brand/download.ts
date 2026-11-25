@@ -9,7 +9,16 @@ export function saveBlob(blob: Blob, filename: string) {
 export const saveText = (text: string, filename: string, type = "image/svg+xml") => saveBlob(new Blob([text], { type }), filename);
 
 export async function copyText(text: string): Promise<boolean> {
-  try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+  try { await navigator.clipboard.writeText(text); return true; } catch { /* fall through to the older route */ }
+  // Older route for pages without clipboard permission (an unfocused frame, a plain-HTTP preview).
+  try {
+    const t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", ""); t.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.appendChild(t); t.select();
+    const ok = document.execCommand("copy");
+    t.remove();
+    return ok;
+  } catch { return false; }
 }
 
 /** Rasterises an SVG string to a PNG at the given pixel width (height follows the aspect ratio). */
