@@ -1,8 +1,8 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import { useEffect } from "react";
 import Link from "next/link";
-import { Icon } from "@/components/ui/Icon";
 import { Tag } from "@/components/ui/Tag";
 import { formatTime } from "@/lib/calendar/csv";
 import { dayLabel } from "@/lib/calendar/dates";
@@ -56,7 +56,7 @@ export function ItemPanel({
         className="fixed right-0 top-0 z-40 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-white p-6 shadow-xl"
         onKeyDown={(e) => e.key === "Escape" && onClose()}
       >
-        <button onClick={onClose} aria-label="Close" className="mb-2 flex h-8 w-8 items-center justify-center self-end rounded-round hover:bg-n-150"><Icon name="x" size={16} /></button>
+        <CloseButton onClick={onClose} className="mb-2 self-end" />
 
         {panel.kind === "day" && (
           <>

@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
@@ -276,7 +277,7 @@ export function DriveLibrary({ kind, title, action, noMatch }: { kind: Kind; tit
                     <button onClick={() => next && setOpen(next)} disabled={!next} aria-label="Next image" title="Next" className="btn btn-icon btn-icon-lg btn-secondary"><Icon name="chevronRight" size={16} /></button>
                   </div>
                 )}
-                <button onClick={() => setOpen(null)} className="btn btn-icon btn-icon-lg btn-secondary" aria-label="Close" title="Close" autoFocus><Icon name="x" size={16} /></button>
+                <CloseButton onClick={() => setOpen(null)} autoFocus />
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto">

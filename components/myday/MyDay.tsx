@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -455,7 +456,7 @@ function TileDialog({ kind, items, tz, today, onClose, onDone }: { kind: TileKin
             <h2 className="text-lg font-bold">{copy.title}</h2>
             <p className="text-sm text-muted">{day} · {plural(total, "item", "items")} ({plural(items.tickets.length, "Jira ticket", "Jira tickets")}, {plural(items.tasks.length, "task", "tasks")})</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tight hover:bg-n-150"><Icon name="x" size={16} /></button>
+          <CloseButton onClick={onClose} />
         </div>
         {total === 0 ? (
           <p className="mt-4 rounded-tight border border-dashed border-control p-4 text-center text-sm text-muted">{copy.empty}</p>

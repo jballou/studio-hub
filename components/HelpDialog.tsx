@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import { useEffect, useRef } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { HELP } from "@/lib/help";
@@ -37,7 +38,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
             <h2 id="help-title" className="text-xl font-bold">Help</h2>
             <p className="mt-2 text-sm text-muted">The Brand Creative team is happy to help. Ask {HELP.contacts.join(" or ")}, or start with {HELP.slackChannel}.</p>
           </div>
-          <button ref={first} onClick={onClose} aria-label="Close" className="btn btn-ghost btn-icon"><Icon name="close" size={18} /></button>
+          <CloseButton ref={first} onClick={onClose} />
         </div>
         <ul className="mt-6 space-y-4">
           <Row

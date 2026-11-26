@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Callout, Tag } from "@/components/ui/Tag";
@@ -189,7 +190,7 @@ export function FlowEditor() {
           <div role="dialog" aria-modal="true" aria-label="Preview" className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-loose border border-line bg-paper shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-line bg-white px-4 py-2">
               <p className="text-sm font-bold">Preview{dirty ? " (with your unsaved changes)" : ""}</p>
-              <button onClick={() => setPreview(false)} aria-label="Close preview" className="ml-auto flex h-8 w-8 items-center justify-center rounded-round hover:bg-n-150"><Icon name="x" size={16} /></button>
+              <CloseButton onClick={() => setPreview(false)} label="Close preview" className="ml-auto" />
             </div>
             <div className="overflow-y-auto"><BriefWizard flow={draft} preview /></div>
           </div>

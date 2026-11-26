@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,7 +44,7 @@ export function NewProjectButton() {
                 <h2 id="new-project-title" className="text-xl font-bold">New project</h2>
                 <p className="mt-2 text-sm text-muted">What do you want to start?</p>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="btn btn-ghost btn-icon"><Icon name="close" size={18} /></button>
+              <CloseButton onClick={() => setOpen(false)} />
             </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {OPTIONS.map((o, i) => (

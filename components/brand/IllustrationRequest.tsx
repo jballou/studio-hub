@@ -1,5 +1,6 @@
 "use client";
 
+import { CloseButton } from "@/components/ui/CloseButton";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
@@ -30,7 +31,7 @@ export function IllustrationRequest({ variant = "primary" }: { variant?: "primar
                 <h2 id="ill-req-title" className="text-xl font-bold">Request an illustration</h2>
                 <p className="mt-2 text-sm text-muted">Here&apos;s how illustration requests work.</p>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="btn btn-ghost btn-icon"><Icon name="close" size={18} /></button>
+              <CloseButton onClick={() => setOpen(false)} />
             </div>
             <div className="mt-6"><IllustrationSteps /></div>
             <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
