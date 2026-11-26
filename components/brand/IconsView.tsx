@@ -23,7 +23,7 @@ export function IconsView() {
   return (
     <>
       <div suppressHydrationWarning className="seg mb-6" role="group" aria-label="Icon set">
-        {([["ui", "UI icons", "sliders"], ["detailed", "Detailed icons", "layoutDashboard"]] as const).map(([id, label, icon]) => (
+        {([["ui", "UI icons", "droplet"], ["detailed", "Detailed icons", "droplets"]] as const).map(([id, label, icon]) => (
           <button key={id} onClick={() => choose(id)} aria-pressed={set === id} className="seg-item"><Icon name={icon} size={14} />{label}</button>
         ))}
       </div>
